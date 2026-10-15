@@ -1,7 +1,10 @@
-import "./App.css";
+import { HashRouter } from "react-router-dom";
+import Router from "./router/router.tsx";
 
-function App() {
-	return <div>111</div>;
+export default function App() {
+	return (
+		<HashRouter>
+			<Router />
+		</HashRouter>
+	);
 }
-
-export default App;

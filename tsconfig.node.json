@@ -1,23 +1,46 @@
 {
-  "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-    "target": "es2023",
-    "lib": ["ES2023"],
-    "types": ["node"],
-    "skipLibCheck": true,
-
-    /* Bundler mode */
-    "module": "nodenext",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-
-    /* Linting */
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
-  },
-  "include": ["vite.config.ts"]
+	"compilerOptions": {
+		// 增量编译缓存文件路径，与 app 配置分开独立缓存
+		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+		// 编译目标：ES2023（Node.js 环境支持更新的语法）
+		"target": "es2023",
+		// 标准库：仅 ES2023，Node 环境不需要 DOM
+		"lib": ["ES2023"],
+		// 声明文件类型：引入 Node.js 内置类型（如 process、path、__dirname）
+		"types": ["node"],
+		// 跳过第三方 .d.ts 声明文件的类型检查，加快编译速度
+		"skipLibCheck": true,
+		/* ===== Bundler 模式（配合 Vite） ===== */
+		// 模块系统：Node.js 原生 ESM/CJS 混合解析模式
+		"module": "nodenext",
+		// 允许 import 时写 .ts 后缀
+		"allowImportingTsExtensions": true,
+		// 保留 import/export 的原始写法，type 和 value 严格区分
+		"verbatimModuleSyntax": true,
+		// 强制将所有文件视为 ES Module
+		"moduleDetection": "force",
+		// 不输出编译产物，只做类型检查
+		"noEmit": true,
+		/* ===== 类型检查严格度（与 app 配置保持一致） ===== */
+		// 开启所有严格类型检查
+		"strict": true,
+		// 报错：声明了但未使用的局部变量
+		"noUnusedLocals": true,
+		// 报错：声明了但未使用的函数参数
+		"noUnusedParameters": true,
+		// 仅允许可擦除的 TS 语法，禁止 enum/namespace 等运行时特性
+		"erasableSyntaxOnly": true,
+		// 报错：switch 语句中 case 穿透的情况
+		"noFallthroughCasesInSwitch": true,
+		// 支持 import 老式 CommonJS 模块（如 import _ from 'lodash'）
+		"esModuleInterop": true,
+		// 强制文件名大小写一致，避免跨平台部署翻车
+		"forceConsistentCasingInFileNames": true,
+		// 允许 import JSON 文件（如 import pkg from './package.json'）
+		"resolveJsonModule": true,
+		// 每个文件必须可独立转译，配合 Vite/esbuild 单文件编译模式
+		"isolatedModules": true
+	},
+	// 只包含 vite.config.ts 一个文件进行类型检查
+	"include": ["vite.config.ts"]
 }

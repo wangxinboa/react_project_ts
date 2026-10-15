@@ -1,26 +1,50 @@
 {
-  "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "target": "es2023",
-    "lib": ["ES2023", "DOM"],
-    "module": "esnext",
-    "types": ["vite/client"],
-    "allowArbitraryExtensions": true,
-    "skipLibCheck": true,
-
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-    "jsx": "react-jsx",
-
-    /* Linting */
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
-  },
-  "include": ["src"]
+	"compilerOptions": {
+		// 增量编译缓存文件路径，加快二次编译速度，放 node_modules 里不进 git
+		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+		// 编译目标：输出为 ES2023 语法的 JS
+		"target": "es2023",
+		// 可用的标准库类型：ES2023 语法 + DOM（浏览器 API 如 window/document）
+		"lib": ["ES2023", "DOM"],
+		// 模块系统：使用最新的 ES Module 规范（import/export）
+		"module": "esnext",
+		// 声明文件类型：引入 Vite 客户端类型（如 import.meta.env、import.meta.glob）
+		"types": ["vite/client"],
+		// 允许导入带任意扩展名的文件（如 .json、.css），由打包工具处理
+		"allowArbitraryExtensions": true,
+		// 跳过第三方 .d.ts 声明文件的类型检查，加快编译速度
+		"skipLibCheck": true,
+		// 模块解析策略：使用打包工具（Vite/esbuild）的解析方式
+		"moduleResolution": "bundler",
+		// 允许 import 时写 .ts/.tsx 后缀，Vite 会自动去掉
+		"allowImportingTsExtensions": true,
+		// 保留 import/export 的原始写法，type 和 value 严格区分
+		"verbatimModuleSyntax": true,
+		// 强制将所有文件视为 ES Module
+		"moduleDetection": "force",
+		// 不输出编译产物，只做类型检查（打包由 Vite 完成）
+		"noEmit": true,
+		// JSX 转换方式：React 17+ 自动运行时，无需手动 import React
+		"jsx": "react-jsx",
+		// 开启所有严格类型检查
+		"strict": true,
+		// 报错：声明了但未使用的局部变量
+		"noUnusedLocals": true,
+		// 报错：声明了但未使用的函数参数
+		"noUnusedParameters": true,
+		// 仅允许可擦除的 TS 语法，禁止 enum/namespace 等运行时特性
+		"erasableSyntaxOnly": true,
+		// 报错：switch 语句中 case 穿透的情况
+		"noFallthroughCasesInSwitch": true,
+		// 支持 import 老式 CommonJS 模块（如 import _ from 'lodash'）
+		"esModuleInterop": true,
+		// 强制文件名大小写一致，避免跨平台部署翻车
+		"forceConsistentCasingInFileNames": true,
+		// 允许 import JSON 文件（如 import pkg from './package.json'）
+		"resolveJsonModule": true,
+		// 每个文件必须可独立转译，配合 Vite/esbuild 单文件编译模式
+		"isolatedModules": true
+	},
+	// 只包含 src 目录下的文件进行类型检查
+	"include": ["src"]
 }
