@@ -1,0 +1,54 @@
+/*css 级通用样式*/
+
+/*文本溢出显示省略号*/
+.preventTextOverflow {
+	overflow: hidden;
+	/*文本溢出显示省略号*/
+	text-overflow: ellipsis;
+	/*文本不会换行*/
+	white-space: nowrap;
+}
+
+/*隐藏的input按钮*/
+.hiddenInputButton {
+	position: absolute;
+	font-size: 0;
+	outline: 0;
+	padding: 0;
+	border: 0;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	cursor: pointer;
+}
+
+/*填满父级盒子*/
+.fill {
+	width: 100%;
+	height: 100%;
+}
+
+/*绝对定位,存放信息*/
+.absoluteInfo {
+	position: absolute;
+	max-width: 100%;
+	z-index: 1;
+}
+
+.absoluteInfo.top {
+	top: 0;
+}
+
+.absoluteInfo.bottom {
+	bottom: 0;
+}
+
+.absoluteInfo.left {
+	left: 0;
+}
+
+.absoluteInfo.right {
+	right: 0;
+}
