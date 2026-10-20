@@ -1,7 +1,7 @@
 import { useRoutes, type RouteObject } from "react-router-dom";
 import type { ComponentType } from "react";
 
-const modules: Record<string, { default: ComponentType }> = import.meta.glob("../pages/**/*.tsx", { eager: true });
+const modules: Record<string, { default: ComponentType }> = import.meta.glob("../pages/**/index.tsx", { eager: true });
 
 const INDEX_PAGE = "index";
 const routeMap: Record<string, { Component: ComponentType }> = {};
