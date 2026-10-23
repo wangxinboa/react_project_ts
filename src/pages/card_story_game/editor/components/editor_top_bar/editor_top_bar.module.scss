@@ -1,0 +1,90 @@
+.topBar {
+	height: 0.5rem;
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 0.16rem;
+	background: #1a1714;
+	border-bottom: 1px solid #2e2a25;
+
+	> .topLeft {
+		display: flex;
+		align-items: center;
+
+		> .configName {
+			width: 2.2rem;
+			background: transparent;
+			border: none;
+			border-bottom: 1px dashed #3a352e;
+			color: #e6ddcc;
+			font-size: 0.15rem;
+			padding: 0.02rem 0.04rem;
+			outline: none;
+			user-select: text;
+
+			&:focus {
+				border-bottom-color: #c9a227;
+			}
+		}
+	}
+
+	> .topActions {
+		display: flex;
+		align-items: center;
+		gap: 0.1rem;
+
+		> .toolButton {
+			padding: 0.06rem 0.14rem;
+			background: transparent;
+			border: 1px solid #3a352e;
+			border-radius: 0.03rem;
+			color: #b8ae9e;
+			font-size: 0.13rem;
+			cursor: pointer;
+			transition:
+				border-color 0.15s,
+				color 0.15s,
+				background-color 0.15s;
+
+			&:hover {
+				border-color: #c9a227;
+				color: #c9a227;
+			}
+
+			&.primary {
+				background: #8b2a2a;
+				border-color: #8b2a2a;
+				color: #f0e6d8;
+
+				&:hover {
+					background: #a83a3a;
+					border-color: #a83a3a;
+					color: #f0e6d8;
+				}
+			}
+		}
+
+		// 三种状态徽章共用的基础样式
+		> .statusBadge {
+			font-size: 0.13rem;
+			padding: 0.04rem 0.1rem;
+			border-radius: 0.03rem;
+		}
+
+		> .statusOk {
+			color: #4ade80;
+			background: rgba(74, 222, 128, 0.08);
+		}
+
+		> .statusWarning {
+			color: #fbbf24;
+			background: rgba(251, 191, 36, 0.08);
+		}
+
+		> .statusError {
+			color: #f87171;
+			background: rgba(248, 113, 113, 0.08);
+		}
+	}
+}

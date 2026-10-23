@@ -1,0 +1,302 @@
+// ============================================================
+// 编辑器整体样式 v3
+// 组织方式：按 DOM 父子关系嵌套，直接子元素统一使用 > .child
+// 色板：
+//   底：      #12100e
+//   面板：    #15120f
+//   边框：    #2e2a25
+//   次色：    #6b6459 / #8a8276 / #a89f90
+//   主色：    #d9d2c7 / #e6ddcc
+//   强调：    #c9a227（金）
+//   危险：    #8b2a2a（暗红）
+// ============================================================
+
+.editor {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	background: #12100e;
+	color: #d9d2c7;
+	overflow: hidden;
+
+	> .main {
+		flex: 1;
+		min-height: 0;
+
+		> .splitter {
+			height: 100%;
+			background-color: transparent !important;
+
+			// ============================================================
+			// 1. 贯穿线与分割条容器
+			// ============================================================
+			:global(.ant-splitter-bar) {
+				background-color: transparent !important;
+				border: none !important;
+
+				&::before,
+				&::after {
+					background-color: #2e2a25 !important; // 贯穿线默认极暗
+					transition: background-color 0.2s;
+				}
+			}
+
+			// 悬停时贯穿线变金
+			:global(.ant-splitter-bar:hover)::before,
+			:global(.ant-splitter-bar:hover)::after {
+				background-color: #c9a227 !important;
+			}
+
+			// ============================================================
+			// 2. 拖拽手柄（用于改变面板宽度的透明抓取区）
+			// ============================================================
+			:global(.ant-splitter-bar-dragger) {
+				// 清除默认的拖拽点样式
+				&::before,
+				&::after {
+					background-color: #4a443b !important;
+					transition: background-color 0.2s;
+				}
+			}
+
+			// 鼠标悬停或拖拽时，才显现深色底和金色箭头
+			:global(.ant-splitter-bar-dragger:hover),
+			:global(.ant-splitter-bar-dragger-active) {
+				&::before,
+				&::after {
+					background-color: #c9a227 !important;
+				}
+			}
+
+			:global(.ant-splitter-bar-collapse-bar) {
+				background: transparent !important;
+				border: none !important;
+
+				// 按钮内部的实际图标方块
+				:global(.ant-splitter-bar-collapse-icon) {
+					height: 100%;
+					background-color: #1c1917 !important; // 核心：替换掉白底
+					border: 1px solid #3a352e !important;
+					border-radius: 4px !important;
+					color: #8a8276 !important; // 默认图标颜色（暗灰）
+					box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+					transition: all 0.2s !important;
+					z-index: 10 !important; // 确保盖在贯穿线上面
+				}
+				// 确保内部 SVG 箭头跟随文字颜色
+				:global(.anticon) {
+					color: inherit !important;
+					font-size: 12px !important;
+				}
+				// 鼠标悬停时变亮、变金
+				&:hover :global(.ant-splitter-bar-collapse-icon) {
+					background-color: #2a2620 !important;
+					border-color: #c9a227 !important;
+					color: #c9a227 !important;
+				}
+			}
+		}
+	}
+}
+
+// ============================================================
+// 三栏面板（独立定义，作为 Splitter.Panel 内的容器）
+// ============================================================
+.leftPanel {
+	width: 100%;
+	height: 100%;
+	padding: 0.12rem;
+	background: #15120f;
+	overflow-y: auto;
+
+	// ============================================================
+	// 树分组
+	// ============================================================
+	> .treeGroup {
+		display: flex;
+		flex-direction: column;
+		gap: 0.04rem;
+
+		> .treeGroupHeader {
+			display: flex;
+			align-items: center;
+			gap: 0.06rem;
+			padding: 0.02rem 0;
+
+			// 折叠/展开按钮：箭头、标题、计数整体可点
+			> .treeGroupToggle {
+				flex: 1;
+				min-width: 0;
+				display: flex;
+				align-items: center;
+				gap: 0.06rem;
+				padding: 0.04rem;
+				background: transparent;
+				border: none;
+				color: inherit;
+				font: inherit;
+				cursor: pointer;
+				text-align: left;
+
+				&:hover > .treeGroupTitle {
+					color: #e6ddcc;
+				}
+
+				> .treeGroupArrow {
+					font-size: 0.1rem;
+					color: #8a8276;
+					transition: color 0.12s;
+				}
+
+				> .treeGroupTitle {
+					font-size: 0.13rem;
+					color: #c9a227;
+					letter-spacing: 0.02rem;
+					transition: color 0.12s;
+				}
+
+				> .treeGroupCount {
+					font-size: 0.11rem;
+					color: #6b6459;
+					margin-left: 0.02rem;
+				}
+			}
+
+			> .treeGroupAdd {
+				width: 0.2rem;
+				height: 0.2rem;
+				flex-shrink: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background: transparent;
+				border: 1px solid #3a352e;
+				border-radius: 0.03rem;
+				color: #b8ae9e;
+				font-size: 0.14rem;
+				line-height: 1;
+				cursor: pointer;
+				transition:
+					border-color 0.15s,
+					color 0.15s;
+
+				&:hover {
+					border-color: #c9a227;
+					color: #c9a227;
+				}
+			}
+		}
+
+		> .treeItems {
+			display: flex;
+			flex-direction: column;
+			gap: 0.02rem;
+			padding-left: 0.1rem;
+
+			// 关键：恒定 border-left + 恒定 padding-left，避免选中时布局抖动
+			> .treeItem {
+				display: flex;
+				align-items: center;
+				gap: 0.04rem;
+				font-size: 0.13rem;
+				color: #a89f90;
+				padding: 0.05rem 0.08rem 0.05rem 0.06rem;
+				border-left: 2px solid transparent;
+				border-radius: 0 0.03rem 0.03rem 0;
+				cursor: pointer;
+				transition:
+					background-color 0.12s,
+					color 0.12s;
+
+				&:hover {
+					background: #1c1917;
+					color: #d9d2c7;
+
+					> .treeItemDelete {
+						opacity: 1;
+					}
+				}
+
+				&.treeItemActive {
+					background: #2a2620;
+					color: #e6ddcc;
+					border-left-color: #c9a227;
+				}
+
+				> .treeItemLabel {
+					flex: 1;
+					min-width: 0;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+				}
+
+				> .treeItemDelete {
+					width: 0.16rem;
+					height: 0.16rem;
+					flex-shrink: 0;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					background: transparent;
+					border: none;
+					border-radius: 0.02rem;
+					color: #6b6459;
+					font-size: 0.14rem;
+					line-height: 1;
+					cursor: pointer;
+					opacity: 0;
+					transition:
+						opacity 0.12s,
+						color 0.12s,
+						background-color 0.12s;
+
+					&:hover {
+						color: #f87171;
+						background: rgba(248, 113, 113, 0.1);
+					}
+				}
+			}
+
+			> .treeEmpty {
+				font-size: 0.12rem;
+				color: #4a443b;
+				padding: 0.06rem 0.08rem;
+				font-style: italic;
+			}
+		}
+	}
+}
+
+.centerPanel {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #12100e;
+	padding: 0.16rem;
+
+	> .placeholder {
+		font-size: 0.13rem;
+		color: #4a443b;
+		text-align: center;
+	}
+}
+
+.rightPanel {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #15120f;
+	padding: 0.16rem;
+
+	> .placeholder {
+		font-size: 0.13rem;
+		color: #4a443b;
+		text-align: center;
+	}
+}

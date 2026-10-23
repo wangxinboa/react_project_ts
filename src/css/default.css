@@ -19,7 +19,7 @@ html {
 }
 
 body {
-	font-size: 0.2rem;
+	font-size: 0.16rem;
 }
 
 div,
@@ -28,6 +28,7 @@ pre,
 textarea,
 input,
 iframe,
+section,
 img,
 p,
 canvas,
