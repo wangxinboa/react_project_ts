@@ -8,7 +8,7 @@ export interface EditorValidationState {
 	warningCount: number;
 }
 
-interface Props {
+interface EditorTopBarProps {
 	configName: string;
 	onConfigNameChange: (name: string) => void;
 	onImport: (content: string) => void;
@@ -16,7 +16,7 @@ interface Props {
 	validation: EditorValidationState;
 }
 
-export default function EditorTopBar({ configName, onConfigNameChange, onImport, onExport, validation }: Props) {
+export default function EditorTopBar({ configName, onConfigNameChange, onImport, onExport, validation }: EditorTopBarProps) {
 	return (
 		<header className={style.topBar}>
 			<div className={style.topLeft}>

@@ -1,26 +1,47 @@
-import { useCallback, useEffect, useState } from "react";
-import { Splitter, Spin, message, Modal } from "antd";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { App as AntApp, Splitter, Spin } from "antd";
 import { CaretDownOutlined, CaretRightOutlined } from "@ant-design/icons";
 
 import EditorTopBar, { type EditorValidationState } from "./components/editor_top_bar/editor_top_bar.tsx";
+import EditPanel from "./components/edit_panel/edit_panel.tsx";
 import type { TagItem } from "../card_story_game_types.ts";
+import { normalizeTags, parseConfigShape, validateTags } from "../card_story_game_validate.ts";
 import { serviceGetDefaultConfig } from "../../../services/card_story_game.ts";
 import { downloadJSON } from "../../../utils/file_download.ts";
 
 import style from "./editor.module.scss";
 
 export default function Editor() {
+	const { message, modal } = AntApp.useApp();
+
 	const [tags, setTags] = useState<TagItem[]>([]);
-	const [selectedTag, setSelectedTag] = useState<string | null>(null);
+	// 选中态以 id 为准：key 可以随时改名，id 不会变
+	const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
 	const [tagGroupExpanded, setTagGroupExpanded] = useState(true);
 	const [isLoading, setIsLoading] = useState(true);
 
 	const [configName, setConfigName] = useState("game_config");
-	const [validation] = useState<EditorValidationState>({
-		status: "ok",
-		errorCount: 0,
-		warningCount: 0,
-	});
+
+	// 目前只有标签，先做标签层的语义校验：key 不能为空、不能重名。
+	// 规则 / 模板的结构与引用校验，等它们落地后再补。
+	const validation = useMemo<EditorValidationState>(() => {
+		const issues = validateTags(tags);
+
+		return {
+			status: issues.length > 0 ? "error" : "ok",
+			errorCount: issues.length,
+			warningCount: 0,
+		};
+	}, [tags]);
+
+	const selectedTag = useMemo(() => {
+		for (let i = 0; i < tags.length; i++) {
+			if (tags[i].id === selectedTagId) {
+				return tags[i];
+			}
+		}
+		return null;
+	}, [tags, selectedTagId]);
 
 	const handleExport = useCallback(() => {
 		// 1. 组装数据
@@ -35,27 +56,36 @@ export default function Editor() {
 
 	const handleImport = useCallback((content: string) => {
 		try {
-			const data = JSON.parse(content);
+			const data: unknown = JSON.parse(content);
+			const result = parseConfigShape(data);
 
-			if (!data || typeof data !== "object" || !Array.isArray(data.allTags)) {
-				Modal.error({
+			if (!result.ok) {
+				modal.error({
 					title: "导入失败",
-					content: "文件格式不正确，根节点的 allTags 必须是数组。",
+					content: (
+						<div>
+							{result.issues.map((issue) => (
+								<div key={issue.path}>
+									{issue.path}：{issue.message}
+								</div>
+							))}
+						</div>
+					),
 				});
 				return;
 			}
 
-			setTags(data.allTags);
-			setSelectedTag(null);
+			setTags(normalizeTags(result.allTags));
+			setSelectedTagId(null);
 
-			message.success("成功导入");
+			message.success(`成功导入 ${result.allTags.length} 个标签`);
 		} catch (err) {
-			Modal.error({
+			modal.error({
 				title: "解析错误",
 				content: err instanceof Error ? err.message : "JSON 格式有误。",
 			});
 		}
-	}, []);
+	}, [message, modal]);
 
 	// ============================================================
 	// 2. 树操作逻辑
@@ -65,27 +95,63 @@ export default function Editor() {
 	}, []);
 
 	const handleAddTag = useCallback(() => {
-		let idx = tags.length + 1;
-		let newKey = `新标签${idx}`;
-		// 检查 key 是否重复
-		const existed = new Set(tags.map((t) => t.key));
-		while (existed.has(newKey)) {
-			idx++;
-			newKey = `新标签${idx}`;
+		let maxId = 0;
+		for (let i = 0; i < tags.length; i++) {
+			if (tags[i].id > maxId) {
+				maxId = tags[i].id;
+			}
 		}
-		setTags((prev) => [...prev, { key: newKey, desc: "" }]);
-		setSelectedTag(newKey);
+
+		let index = tags.length + 1;
+		let newKey = `新标签${index}`;
+		let duplicated = true;
+
+		while (duplicated) {
+			duplicated = false;
+			for (let i = 0; i < tags.length; i++) {
+				if (tags[i].key === newKey) {
+					duplicated = true;
+					index++;
+					newKey = `新标签${index}`;
+					break;
+				}
+			}
+		}
+
+		setTags((prev) => [...prev, { id: maxId + 1, key: newKey, desc: "" }]);
+		setSelectedTagId(maxId + 1);
 		setTagGroupExpanded(true);
 	}, [tags]);
 
-	const handleDeleteTag = useCallback((e: React.MouseEvent, key: string) => {
+	const handleDeleteTag = useCallback((e: React.MouseEvent, id: number) => {
 		e.stopPropagation();
-		setTags((prev) => prev.filter((t) => t.key !== key));
-		setSelectedTag((prev) => (prev === key ? null : prev));
+
+		setTags((prev) => {
+			const next: TagItem[] = [];
+			for (let i = 0; i < prev.length; i++) {
+				if (prev[i].id !== id) {
+					next.push(prev[i]);
+				}
+			}
+			return next;
+		});
+
+		setSelectedTagId((prev) => (prev === id ? null : prev));
 	}, []);
 
-	const handleSelectTag = useCallback((key: string) => {
-		setSelectedTag(key);
+	const handleSelectTag = useCallback((id: number) => {
+		setSelectedTagId(id);
+	}, []);
+
+	const handleUpdateTag = useCallback((id: number, patch: Partial<Pick<TagItem, "key" | "desc">>) => {
+		setTags((prev) => {
+			const next: TagItem[] = [];
+			for (let i = 0; i < prev.length; i++) {
+				const tag = prev[i];
+				next.push(tag.id === id ? { ...tag, ...patch } : tag);
+			}
+			return next;
+		});
 	}, []);
 
 	// 初始化加载
@@ -100,7 +166,7 @@ export default function Editor() {
 			.finally(() => {
 				setIsLoading(false);
 			});
-	}, []);
+	}, [message]);
 
 	return (
 		<div className={style.editor}>
@@ -149,16 +215,15 @@ export default function Editor() {
 											<>
 												{tags.map((tag) => (
 													<div
-														// 注意：这里把 key 和比较判断由原来的 tag.name 改成了 tag.key
-														key={tag.key}
-														className={`${style.treeItem} ${selectedTag === tag.key ? style.treeItemActive : ""}`}
-														onClick={() => handleSelectTag(tag.key)}
+														key={tag.id}
+														className={`${style.treeItem} ${selectedTagId === tag.id ? style.treeItemActive : ""}`}
+														onClick={() => handleSelectTag(tag.id)}
 													>
-														<span className={style.treeItemLabel}>{tag.key}</span>
+														<span className={style.treeItemLabel}>{tag.key.trim() || "未命名"}</span>
 														<button
 															className={style.treeItemDelete}
 															title="删除"
-															onClick={(e) => handleDeleteTag(e, tag.key)}
+															onClick={(e) => handleDeleteTag(e, tag.id)}
 														>
 															×
 														</button>
@@ -173,13 +238,9 @@ export default function Editor() {
 						</div>
 					</Splitter.Panel>
 
-					{/* 中间：编辑区（占位） */}
+					{/* 中间：标签编辑区 */}
 					<Splitter.Panel>
-						<div className={style.centerPanel}>
-							<div className={style.placeholder}>
-								{selectedTag ? `编辑区 · 当前选中「${selectedTag}」` : "编辑区 · 请选择左侧节点"}
-							</div>
-						</div>
+						<EditPanel tag={selectedTag} tags={tags} onUpdateTag={handleUpdateTag} />
 					</Splitter.Panel>
 
 					{/* 右侧：预览 / 校验（占位） */}

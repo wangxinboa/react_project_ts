@@ -7,25 +7,25 @@ export interface ValidationIssue {
 	message: string;
 }
 
+export type ConfigShapeResult = { ok: true; allTags: unknown[] } | { ok: false; issues: ValidationIssue[] };
+
 /**
- * 结构校验：只拦“读不懂”的数据，请求加载和导入共用。
+ * 结构校验 + 提取 allTags，请求加载和导入共用。
+ * 返回可辨识联合：ok 时直接把通过校验的 allTags 带出来，调用方不需要再写类型断言。
  * - id 缺失是允许的，normalizeTags 会补
  * - key / desc 缺失也允许，补空串后由 validateTags 作为语义问题提示
  */
-export function validateConfigShape(raw: unknown): ValidationIssue[] {
-	const issues: ValidationIssue[] = [];
-
+export function parseConfigShape(raw: unknown): ConfigShapeResult {
 	if (!isPlainObject(raw)) {
-		issues.push({ path: "root", message: "必须是对象" });
-		return issues;
+		return { ok: false, issues: [{ path: "root", message: "必须是对象" }] };
 	}
 
-	const allTags = raw.allTags;
-
-	if (!Array.isArray(allTags)) {
-		issues.push({ path: "allTags", message: "必须是数组" });
-		return issues;
+	if (!Array.isArray(raw.allTags)) {
+		return { ok: false, issues: [{ path: "allTags", message: "必须是数组" }] };
 	}
+
+	const allTags: unknown[] = raw.allTags;
+	const issues: ValidationIssue[] = [];
 
 	for (let i = 0; i < allTags.length; i++) {
 		const tag = allTags[i];
@@ -57,7 +57,11 @@ export function validateConfigShape(raw: unknown): ValidationIssue[] {
 		issues.push({ path: "cardTemplates", message: "必须是数组" });
 	}
 
-	return issues;
+	if (issues.length > 0) {
+		return { ok: false, issues };
+	}
+
+	return { ok: true, allTags };
 }
 
 /**

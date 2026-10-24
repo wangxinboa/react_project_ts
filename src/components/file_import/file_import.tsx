@@ -2,7 +2,7 @@ import { useRef, useCallback } from "react";
 import type { ReactNode, ChangeEvent } from "react";
 import styles from "./file_import.module.scss";
 
-interface Props {
+interface FileImportProps {
 	/** 允许选择的文件后缀，默认只允许 .json */
 	accept?: string;
 	/** 文件读取成功后的回调，抛出文件内容字符串 */
@@ -15,7 +15,7 @@ interface Props {
 	children: ReactNode;
 }
 
-export default function FileImport({ accept = ".json", onFileLoaded, onError, className, children }: Props) {
+export default function FileImport({ accept = ".json", onFileLoaded, onError, className, children }: FileImportProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	// 1. 处理文件读取成功的回调
