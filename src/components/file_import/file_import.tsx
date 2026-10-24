@@ -11,17 +11,18 @@ interface FileImportProps {
 	onError?: (error: Error) => void;
 	/** 外部传入的类名，可用于覆盖样式（如把它变成按钮） */
 	className?: string;
+	/** 禁用时不可点击、不可选文件 */
+	disabled?: boolean;
 	/** 触发文件选择的 UI 元素或文本 */
 	children: ReactNode;
 }
 
-export default function FileImport({ accept = ".json", onFileLoaded, onError, className, children }: FileImportProps) {
+export default function FileImport({ accept = ".json", onFileLoaded, onError, className, disabled = false, children }: FileImportProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	// 1. 处理文件读取成功的回调
 	const handleFileRead = useCallback(
 		(event: ProgressEvent<FileReader>) => {
-			console.log("文件读取成功 event:", event);
 			const content = event.target?.result as string;
 			if (content) {
 				onFileLoaded(content);
@@ -54,12 +55,22 @@ export default function FileImport({ accept = ".json", onFileLoaded, onError, cl
 
 	// 4. 处理点击容器触发 input 点击
 	const handleClick = useCallback(() => {
+		if (disabled) {
+			return;
+		}
 		inputRef.current?.click();
-	}, []);
+	}, [disabled]);
 
 	return (
-		<div className={`${styles.container} ${className || ""}`} onClick={handleClick}>
-			<input type="file" ref={inputRef} accept={accept} onChange={handleChange} className={styles.hiddenInput} />
+		<div className={`${styles.container} ${className || ""} ${disabled ? styles.disabled : ""}`} onClick={handleClick}>
+			<input
+				type="file"
+				ref={inputRef}
+				accept={accept}
+				onChange={handleChange}
+				disabled={disabled}
+				className={styles.hiddenInput}
+			/>
 			{children}
 		</div>
 	);

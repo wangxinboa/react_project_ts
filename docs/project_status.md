@@ -7,7 +7,7 @@
 
 - 先做配置编辑器，游戏本体后做。
 - 编辑器目前只覆盖“标签”这一层。
-- `allRules`、`cardTemplates` 还没进入编辑器，导出时是空占位。
+- `allRules`、`cardTemplates` 还没有编辑界面，但会随配置原样保留。
 
 ## 代码组织现状
 
@@ -17,10 +17,10 @@
 ## 已完成
 
 - 路由：HashRouter + `pages/**/index.tsx` 自动注册，子组件不会变成野路由。
-- 编辑器骨架：顶栏、三栏 Splitter、暗色样式。
+- 编辑器骨架：顶栏、左右两栏 Splitter、暗色样式。
 - 标签：新增 / 删除 / 重命名 / 描述编辑，`id` 唯一标识，选中态跟随 `id`。
-- 数据加载：从 `public/card_story_game_default_config.json` 读取，按 `BASE_URL` 拼路径，支持子路径部署。
-- 导入导出：纯 JSON、全量覆盖；缺失 / 重复 `id` 自动补号，旧文件可直接导入。
+- 数据加载：从 `public/card_story_game_default_config.json` 读取完整 `GameConfig`，按 `BASE_URL` 拼路径；加载完成前显示 Spin 并禁用导入导出。
+- 导入导出：纯 JSON、全量覆盖；缺失 / 重复 `id` 自动补号；`allRules` / `cardTemplates` 原样保留，不因编辑器暂无界面而丢失。
 - 校验：结构校验阻断加载与导入；标签语义校验（空 key、重名）只提示，并在顶栏计数。
 - 编辑器主题：编辑器路由层包 ConfigProvider + `darkAlgorithm` + 暖色 token，Modal / message 通过 `App.useApp()` 继承主题；首页和后续游戏页不受影响。
 
@@ -47,7 +47,7 @@
 | 草稿保存 / localStorage | 不做 | 已定 | 目前只有导出，没有保存概念 | 编辑时间长到怕刷新丢失时 |
 | 标签 `category` | 暂不引入 | 已定 | 现在没有使用场景，加了也是空字段 | 需要标签分组或互斥语义时 |
 | antd Form | 采用：Form 持输入态，`tags` 是模型，校验仍在 validate | 已定 | 统一表单外观与交互，并为规则/模板表单立模式；双状态用 `onValuesChange` + `key` 重挂载控制 | 规则/模板的嵌套数组表单（Form.List）落地时再评估 |
-| 右侧预览 / 完整校验 | 先占位，等规则和模板落地 | 已定 | 校验对象还不存在，先做会空转 | `allRules` 编辑器开始做时 |
+| 右侧预览 / 完整校验 | 暂时移除占位，等规则和模板落地再做 | 已定 | 占位没有实际内容，先让编辑区占满宽度 | `allRules` 编辑器开始做时 |
 | 模块化拆分 / 冲突检测 / 版本迁移 | 不做 | 已定 | 单文件阶段没必要提前设计 | 配置文件大到单文件难维护时 |
 | 撤销 / 重做 | 尚未讨论 | 待定 | 实现成本高，当前编辑量小 | 误操作开始造成实际损失时 |
 
@@ -59,7 +59,7 @@
 - `file_import.tsx` 里还有 `as string` 断言，可改为 `typeof` 判断；
 - Splitter 的分割线 / 折叠按钮仍靠 `editor.module.scss` 的 `:global` 覆盖，等组件 token 能覆盖时再收敛；
 - 中栏底部的“标签 JSON”是临时放置，右侧预览做出来后可能迁移；
-- 导出的 `allRules` / `cardTemplates` 仍是空占位，不是真实数据；
+- `allRules` / `cardTemplates` 还没有编辑界面，编辑器只做原样保留；
 - 顶栏的 `warningCount` 还没有产生来源，语义问题目前都记为 error。
 
 ## 文档分工

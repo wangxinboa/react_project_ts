@@ -14,9 +14,18 @@ interface EditorTopBarProps {
 	onImport: (content: string) => void;
 	onExport: () => void;
 	validation: EditorValidationState;
+	/** 配置加载中时禁用导入 / 导出，避免和初始化竞态 */
+	disabled?: boolean;
 }
 
-export default function EditorTopBar({ configName, onConfigNameChange, onImport, onExport, validation }: EditorTopBarProps) {
+export default function EditorTopBar({
+	configName,
+	onConfigNameChange,
+	onImport,
+	onExport,
+	validation,
+	disabled = false,
+}: EditorTopBarProps) {
 	return (
 		<header className={style.topBar}>
 			<div className={style.topLeft}>
@@ -30,19 +39,25 @@ export default function EditorTopBar({ configName, onConfigNameChange, onImport,
 			</div>
 
 			<div className={style.topActions}>
-				<FileImport className={style.toolButton} onFileLoaded={onImport}>
+				<FileImport
+					className={`${style.toolButton} ${disabled ? style.toolButtonDisabled : ""}`}
+					onFileLoaded={onImport}
+					disabled={disabled}
+				>
 					导入
 				</FileImport>
-				<button className={style.toolButton} onClick={onExport}>
+				<button className={style.toolButton} onClick={onExport} disabled={disabled}>
 					导出
 				</button>
-				{validation.status === "error" && (
+				{!disabled && validation.status === "error" && (
 					<span className={`${style.statusBadge} ${style.statusError}`}>✗ {validation.errorCount} 错误</span>
 				)}
-				{validation.status === "warning" && (
+				{!disabled && validation.status === "warning" && (
 					<span className={`${style.statusBadge} ${style.statusWarning}`}>⚠ {validation.warningCount} 警告</span>
 				)}
-				{validation.status === "ok" && <span className={`${style.statusBadge} ${style.statusOk}`}>✓ 校验通过</span>}
+				{!disabled && validation.status === "ok" && (
+					<span className={`${style.statusBadge} ${style.statusOk}`}>✓ 校验通过</span>
+				)}
 			</div>
 		</header>
 	);

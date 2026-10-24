@@ -1,170 +1,101 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { App as AntApp, Splitter, Spin } from "antd";
-import { CaretDownOutlined, CaretRightOutlined } from "@ant-design/icons";
 
-import EditorTopBar, { type EditorValidationState } from "./components/editor_top_bar/editor_top_bar.tsx";
+import EditorTopBar from "./components/editor_top_bar/editor_top_bar.tsx";
 import EditPanel from "./components/edit_panel/edit_panel.tsx";
-import type { TagItem } from "../card_story_game_types.ts";
-import { normalizeTags, parseConfigShape, validateTags } from "../card_story_game_validate.ts";
+import TagTree from "./components/tag_tree/tag_tree.tsx";
+import { useTagEditor } from "./hooks/use_tag_editor.ts";
+import type { GameConfig, TagItem } from "../card_story_game_types.ts";
+import { normalizeConfig, parseConfigShape } from "../card_story_game_validate.ts";
 import { serviceGetDefaultConfig } from "../../../services/card_story_game.ts";
 import { downloadJSON } from "../../../utils/file_download.ts";
 
 import style from "./editor.module.scss";
 
+const EMPTY_CONFIG: GameConfig = {
+	allTags: [],
+	allRules: {},
+	cardTemplates: [],
+};
+
 export default function Editor() {
 	const { message, modal } = AntApp.useApp();
 
-	const [tags, setTags] = useState<TagItem[]>([]);
-	// 选中态以 id 为准：key 可以随时改名，id 不会变
-	const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
-	const [tagGroupExpanded, setTagGroupExpanded] = useState(true);
-	const [isLoading, setIsLoading] = useState(true);
+	const [config, setConfig] = useState<GameConfig>(EMPTY_CONFIG);
+	const [isConfigLoading, setIsConfigLoading] = useState(true);
+	const [configName, setConfigName] = useState("card_story_game_default_config");
 
-	const [configName, setConfigName] = useState("game_config");
+	const tags = config.allTags;
 
-	// 目前只有标签，先做标签层的语义校验：key 不能为空、不能重名。
-	// 规则 / 模板的结构与引用校验，等它们落地后再补。
-	const validation = useMemo<EditorValidationState>(() => {
-		const issues = validateTags(tags);
+	// 只更新 allTags，保留 allRules / cardTemplates
+	const updateTags = useCallback((updater: (prev: TagItem[]) => TagItem[]) => {
+		setConfig((prev) => ({ ...prev, allTags: updater(prev.allTags) }));
+	}, []);
 
-		return {
-			status: issues.length > 0 ? "error" : "ok",
-			errorCount: issues.length,
-			warningCount: 0,
-		};
-	}, [tags]);
-
-	const selectedTag = useMemo(() => {
-		for (let i = 0; i < tags.length; i++) {
-			if (tags[i].id === selectedTagId) {
-				return tags[i];
-			}
-		}
-		return null;
-	}, [tags, selectedTagId]);
+	const {
+		selectedTag,
+		selectedTagId,
+		selectedTagKeyError,
+		validation,
+		tagFormRef,
+		selectTag,
+		addTag,
+		updateTag,
+		deleteTag,
+		clearSelection,
+	} = useTagEditor({ tags, updateTags });
 
 	const handleExport = useCallback(() => {
-		// 1. 组装数据
-		const exportData = {
-			allTags: tags,
-			allRules: {},
-			cardTemplates: [],
-		};
-		// 2. 调用工具方法下载
-		downloadJSON(exportData, configName.trim() || "game_config");
-	}, [tags, configName]);
+		downloadJSON(config, configName.trim() || "game_config");
+	}, [config, configName]);
 
-	const handleImport = useCallback((content: string) => {
-		try {
-			const data: unknown = JSON.parse(content);
-			const result = parseConfigShape(data);
+	const handleImport = useCallback(
+		(content: string) => {
+			try {
+				const data: unknown = JSON.parse(content);
+				const result = parseConfigShape(data);
 
-			if (!result.ok) {
+				if (!result.ok) {
+					modal.error({
+						title: "导入失败",
+						content: (
+							<div>
+								{result.issues.map((issue) => (
+									<div key={issue.path}>
+										{issue.path}：{issue.message}
+									</div>
+								))}
+							</div>
+						),
+					});
+					return;
+				}
+
+				setConfig(normalizeConfig(result.config));
+				clearSelection();
+
+				message.success(`成功导入 ${result.config.allTags.length} 个标签`);
+			} catch (err) {
 				modal.error({
-					title: "导入失败",
-					content: (
-						<div>
-							{result.issues.map((issue) => (
-								<div key={issue.path}>
-									{issue.path}：{issue.message}
-								</div>
-							))}
-						</div>
-					),
+					title: "解析错误",
+					content: err instanceof Error ? err.message : "JSON 格式有误。",
 				});
-				return;
 			}
+		},
+		[message, modal, clearSelection],
+	);
 
-			setTags(normalizeTags(result.allTags));
-			setSelectedTagId(null);
-
-			message.success(`成功导入 ${result.allTags.length} 个标签`);
-		} catch (err) {
-			modal.error({
-				title: "解析错误",
-				content: err instanceof Error ? err.message : "JSON 格式有误。",
-			});
-		}
-	}, [message, modal]);
-
-	// ============================================================
-	// 2. 树操作逻辑
-	// ============================================================
-	const handleToggleTagGroup = useCallback(() => {
-		setTagGroupExpanded((v) => !v);
-	}, []);
-
-	const handleAddTag = useCallback(() => {
-		let maxId = 0;
-		for (let i = 0; i < tags.length; i++) {
-			if (tags[i].id > maxId) {
-				maxId = tags[i].id;
-			}
-		}
-
-		let index = tags.length + 1;
-		let newKey = `新标签${index}`;
-		let duplicated = true;
-
-		while (duplicated) {
-			duplicated = false;
-			for (let i = 0; i < tags.length; i++) {
-				if (tags[i].key === newKey) {
-					duplicated = true;
-					index++;
-					newKey = `新标签${index}`;
-					break;
-				}
-			}
-		}
-
-		setTags((prev) => [...prev, { id: maxId + 1, key: newKey, desc: "" }]);
-		setSelectedTagId(maxId + 1);
-		setTagGroupExpanded(true);
-	}, [tags]);
-
-	const handleDeleteTag = useCallback((e: React.MouseEvent, id: number) => {
-		e.stopPropagation();
-
-		setTags((prev) => {
-			const next: TagItem[] = [];
-			for (let i = 0; i < prev.length; i++) {
-				if (prev[i].id !== id) {
-					next.push(prev[i]);
-				}
-			}
-			return next;
-		});
-
-		setSelectedTagId((prev) => (prev === id ? null : prev));
-	}, []);
-
-	const handleSelectTag = useCallback((id: number) => {
-		setSelectedTagId(id);
-	}, []);
-
-	const handleUpdateTag = useCallback((id: number, patch: Partial<Pick<TagItem, "key" | "desc">>) => {
-		setTags((prev) => {
-			const next: TagItem[] = [];
-			for (let i = 0; i < prev.length; i++) {
-				const tag = prev[i];
-				next.push(tag.id === id ? { ...tag, ...patch } : tag);
-			}
-			return next;
-		});
-	}, []);
-
-	// 初始化加载
+	// 初始化加载完整配置
 	useEffect(() => {
 		serviceGetDefaultConfig()
-			.then((loadedTags) => {
-				setTags(loadedTags);
+			.then((loadedConfig) => {
+				setConfig(loadedConfig);
 			})
 			.catch((err) => {
 				message.error(`加载默认配置失败: ${err.message}`);
 			})
 			.finally(() => {
-				setIsLoading(false);
+				setIsConfigLoading(false);
 			});
 	}, [message]);
 
@@ -177,79 +108,39 @@ export default function Editor() {
 				onImport={handleImport}
 				onExport={handleExport}
 				validation={validation}
+				disabled={isConfigLoading}
 			/>
 
-			{/* 主体三栏 */}
+			{/* 主体：加载完成后才渲染编辑器 */}
 			<div className={style.main}>
-				<Splitter className={style.splitter}>
-					{/* 左栏：结构树 */}
-					<Splitter.Panel defaultSize={300} collapsible>
-						<div className={style.leftPanel}>
-							<div className={style.treeGroup}>
-								<div className={style.treeGroupHeader}>
-									<button
-										className={style.treeGroupToggle}
-										onClick={handleToggleTagGroup}
-										title={tagGroupExpanded ? "收起" : "展开"}
-									>
-										{tagGroupExpanded ? (
-											<CaretDownOutlined className={style.treeGroupArrow} />
-										) : (
-											<CaretRightOutlined className={style.treeGroupArrow} />
-										)}
-										<span className={style.treeGroupTitle}>标签定义</span>
-										<span className={style.treeGroupCount}>{tags.length}</span>
-									</button>
-									<button className={style.treeGroupAdd} title="添加标签" onClick={handleAddTag}>
-										+
-									</button>
-								</div>
+				{isConfigLoading ? (
+					<div className={style.loading}>
+						<Spin size="large" />
+					</div>
+				) : (
+					<Splitter className={style.splitter}>
+						{/* 左栏：标签树 */}
+						<Splitter.Panel defaultSize={300} collapsible>
+							<TagTree
+								tags={tags}
+								selectedTagId={selectedTagId}
+								onSelectTag={selectTag}
+								onAddTag={addTag}
+								onDeleteTag={deleteTag}
+							/>
+						</Splitter.Panel>
 
-								{tagGroupExpanded && (
-									<div className={style.treeItems}>
-										{isLoading ? (
-											<div style={{ padding: "0.1rem", textAlign: "center" }}>
-												<Spin size="small" />
-											</div>
-										) : (
-											<>
-												{tags.map((tag) => (
-													<div
-														key={tag.id}
-														className={`${style.treeItem} ${selectedTagId === tag.id ? style.treeItemActive : ""}`}
-														onClick={() => handleSelectTag(tag.id)}
-													>
-														<span className={style.treeItemLabel}>{tag.key.trim() || "未命名"}</span>
-														<button
-															className={style.treeItemDelete}
-															title="删除"
-															onClick={(e) => handleDeleteTag(e, tag.id)}
-														>
-															×
-														</button>
-													</div>
-												))}
-												{tags.length === 0 && !isLoading && <div className={style.treeEmpty}>暂无标签</div>}
-											</>
-										)}
-									</div>
-								)}
-							</div>
-						</div>
-					</Splitter.Panel>
-
-					{/* 中间：标签编辑区 */}
-					<Splitter.Panel>
-						<EditPanel tag={selectedTag} tags={tags} onUpdateTag={handleUpdateTag} />
-					</Splitter.Panel>
-
-					{/* 右侧：预览 / 校验（占位） */}
-					<Splitter.Panel defaultSize={300} collapsible>
-						<div className={style.rightPanel}>
-							<div className={style.placeholder}>预览 / 校验（待实现）</div>
-						</div>
-					</Splitter.Panel>
-				</Splitter>
+						{/* 中间：标签编辑区 */}
+						<Splitter.Panel>
+							<EditPanel
+								tag={selectedTag}
+								keyError={selectedTagKeyError}
+								tagFormRef={tagFormRef}
+								onUpdateTag={updateTag}
+							/>
+						</Splitter.Panel>
+					</Splitter>
+				)}
 			</div>
 		</div>
 	);

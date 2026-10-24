@@ -13,7 +13,7 @@
 		align-items: center;
 
 		> .configName {
-			width: 2.2rem;
+			width: 3rem;
 			background: transparent;
 			border: none;
 			border-bottom: 1px dashed #3a352e;
@@ -50,6 +50,17 @@
 			&:hover {
 				border-color: #c9a227;
 				color: #c9a227;
+			}
+
+			&:disabled,
+			&.toolButtonDisabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+
+				&:hover {
+					border-color: #3a352e;
+					color: #b8ae9e;
+				}
 			}
 
 			&.primary {

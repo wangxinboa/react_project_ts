@@ -20,7 +20,8 @@ src/
 │           ├── index.tsx                  路由入口
 │           ├── editor.module.scss         页面骨架样式
 │           ├── editor_theme.ts            编辑器 antd 主题
-│           └── components/                页面专用组件
+│           ├── hooks/                     编辑器专用 hooks（use_tag_editor）
+│           └── components/                页面专用组件（editor_top_bar / tag_tree / edit_panel）
 ├── services/                              只做 IO（fetch），不定义类型、不弹 UI
 ├── components/                            跨页面通用 UI（目前只有 file_import）
 └── utils/                                 与业务无关的工具（文件下载、类型判断、基类）
@@ -54,7 +55,11 @@ src/
 - 单页状态放在页面组件内，跨页面共享之前不引入状态库；
 - 派生数据用 `useMemo` 计算，不另存一份 state；
 - **新值依赖旧值时用函数式更新**（toggle、追加、删除、条件替换）。理由是闭包里的 state 是渲染快照，同一事件里连续更新会丢；直接传值则更直观，适合事件参数、接口数据、常量这类与旧值无关的场景；
-- 不要在 updater 里做提示、请求、改 ref 等副作用，开发模式下 updater 可能被调用两次。
+- 不要在 updater 里做提示、请求、改 ref 等副作用，开发模式下 updater 可能被调用两次；
+- 用户操作触发的状态设置在事件处理函数里直接完成，不要用 `useEffect` 监听状态后再设置另一个状态；effect 只用于和外部系统同步（请求、订阅、DOM 等），否则会多一轮渲染，数据流也更绕；
+- 需要由父组件主动设置表单或子组件的内部值时，用 `useImperativeHandle` 暴露方法，在触发事件里调用，而不是用 effect 回填；
+- 普通键值查找默认用对象 `{}`，不要默认上 `Map`；只有键不是字符串 / 数字、需要稳定插入顺序、频繁增删或需要 `.size` 时才用 `Map`；
+- 但裸 `{}` 不是空的：它继承 `Object.prototype`。用户输入的 key 如果叫 `toString` / `constructor`，会读到原型上的值；如果叫 `__proto__`，赋值会触发 setter 而不是创建自有属性，计数和查找会静默出错。所以键来自用户输入（如标签 key）时，用 `Object.create(null)` 或 `Map`，不要用裸 `{}`。
 
 ## 校验
 

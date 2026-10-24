@@ -1,6 +1,7 @@
 import { useMemo } from "react";
+import type { Ref } from "react";
 
-import TagForm from "./tag_form/tag_form.tsx";
+import TagForm, { type TagFormHandle } from "./tag_form/tag_form.tsx";
 import type { TagItem } from "../../../card_story_game_types.ts";
 
 import style from "./edit_panel.module.scss";
@@ -8,12 +9,14 @@ import style from "./edit_panel.module.scss";
 interface EditPanelProps {
 	/** 当前选中的标签，null 表示未选中 */
 	tag: TagItem | null;
-	/** 全部标签，用于 key 查重 */
-	tags: TagItem[];
+	/** 当前 key 的语义错误，由页面统一计算后传入 */
+	keyError: string;
+	/** 交给页面在选中标签的事件里调用 setValues */
+	tagFormRef: Ref<TagFormHandle>;
 	onUpdateTag: (id: number, patch: Partial<Pick<TagItem, "key" | "desc">>) => void;
 }
 
-export default function EditPanel({ tag, tags, onUpdateTag }: EditPanelProps) {
+export default function EditPanel({ tag, keyError, tagFormRef, onUpdateTag }: EditPanelProps) {
 	const tagJson = useMemo(() => (tag ? JSON.stringify(tag, null, 2) : ""), [tag]);
 
 	return (
@@ -30,7 +33,7 @@ export default function EditPanel({ tag, tags, onUpdateTag }: EditPanelProps) {
 			{tag ? (
 				<>
 					<div className={style.formCard}>
-						<TagForm tag={tag} tags={tags} onUpdateTag={onUpdateTag} />
+						<TagForm ref={tagFormRef} tag={tag} keyError={keyError} onUpdateTag={onUpdateTag} />
 					</div>
 
 					<div className={style.preview}>

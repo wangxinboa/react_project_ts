@@ -1,4 +1,4 @@
-import type { TagItem } from "./card_story_game_types.ts";
+import type { GameConfig, TagItem } from "./card_story_game_types.ts";
 import { isPlainObject, isPositiveInteger, isString } from "../../utils/type_guard.ts";
 
 export interface ValidationIssue {
@@ -7,13 +7,20 @@ export interface ValidationIssue {
 	message: string;
 }
 
-export type ConfigShapeResult = { ok: true; allTags: unknown[] } | { ok: false; issues: ValidationIssue[] };
+/** 通过结构校验后的原始配置：标签还没补 id，其余根字段原样保留 */
+export interface ParsedGameConfig {
+	allTags: unknown[];
+	allRules: Record<string, unknown>;
+	cardTemplates: unknown[];
+}
+
+export type ConfigShapeResult = { ok: true; config: ParsedGameConfig } | { ok: false; issues: ValidationIssue[] };
 
 /**
- * 结构校验 + 提取 allTags，请求加载和导入共用。
- * 返回可辨识联合：ok 时直接把通过校验的 allTags 带出来，调用方不需要再写类型断言。
- * - id 缺失是允许的，normalizeTags 会补
+ * 结构校验 + 提取三个根字段，请求加载和导入共用。
+ * - id 缺失是允许的，normalizeConfig 会补
  * - key / desc 缺失也允许，补空串后由 validateTags 作为语义问题提示
+ * - allRules / cardTemplates 现在没有编辑界面，但必须原样保留
  */
 export function parseConfigShape(raw: unknown): ConfigShapeResult {
 	if (!isPlainObject(raw)) {
@@ -48,7 +55,6 @@ export function parseConfigShape(raw: unknown): ConfigShapeResult {
 		}
 	}
 
-	// allRules / cardTemplates 还没实现，但既然配置里带了，就顺手校验类型
 	if ("allRules" in raw && !isPlainObject(raw.allRules)) {
 		issues.push({ path: "allRules", message: "必须是对象" });
 	}
@@ -61,7 +67,14 @@ export function parseConfigShape(raw: unknown): ConfigShapeResult {
 		return { ok: false, issues };
 	}
 
-	return { ok: true, allTags };
+	return {
+		ok: true,
+		config: {
+			allTags,
+			allRules: isPlainObject(raw.allRules) ? raw.allRules : {},
+			cardTemplates: Array.isArray(raw.cardTemplates) ? raw.cardTemplates : [],
+		},
+	};
 }
 
 /**
@@ -110,37 +123,55 @@ export function normalizeTags(rawTags: unknown[]): TagItem[] {
 	return tags;
 }
 
-/**
- * 单个标签的 key 问题。
- * TagForm 的行内提示和 validateTags 的全局统计共用这一份判断，避免两处各写一遍。
- */
-export function getTagKeyError(tag: TagItem, tags: TagItem[]): string | null {
-	const key = tag.key.trim();
+/** 归一化完整配置：标签补 id，allRules / cardTemplates 原样保留 */
+export function normalizeConfig(parsed: ParsedGameConfig): GameConfig {
+	return {
+		allTags: normalizeTags(parsed.allTags),
+		allRules: parsed.allRules,
+		cardTemplates: parsed.cardTemplates,
+	};
+}
 
-	if (key === "") {
-		return "标签 key 不能为空";
-	}
+export interface TagValidationResult {
+	/** tagId -> 错误信息，供表单直接使用；id 是正整数，用对象即可 */
+	errorsByTagId: Record<number, string>;
+	issues: ValidationIssue[];
+}
+
+/**
+ * 语义校验：只提示，不阻断加载 / 导入。
+ * 先用一次遍历统计 key 出现次数，再遍历一次生成错误，复杂度 O(n)。
+ */
+export function validateTags(tags: TagItem[]): TagValidationResult {
+	// key 来自用户输入，用 Map 避免 __proto__ 等原型键冲突
+	const keyCounts = new Map<string, number>();
 
 	for (let i = 0; i < tags.length; i++) {
-		const other = tags[i];
-		if (other.id !== tag.id && other.key.trim() === key) {
-			return "key 已被其他标签占用";
+		const key = tags[i].key.trim();
+		if (key !== "") {
+			keyCounts.set(key, (keyCounts.get(key) ?? 0) + 1);
 		}
 	}
 
-	return null;
-}
-
-/** 语义校验：只提示，不阻断加载 / 导入 */
-export function validateTags(tags: TagItem[]): ValidationIssue[] {
+	const errorsByTagId: Record<number, string> = {};
 	const issues: ValidationIssue[] = [];
 
 	for (let i = 0; i < tags.length; i++) {
-		const message = getTagKeyError(tags[i], tags);
+		const tag = tags[i];
+		const key = tag.key.trim();
+		let message: string | null = null;
+
+		if (key === "") {
+			message = "标签 key 不能为空";
+		} else if ((keyCounts.get(key) ?? 0) > 1) {
+			message = "key 已被其他标签占用";
+		}
+
 		if (message !== null) {
+			errorsByTagId[tag.id] = message;
 			issues.push({ path: `allTags[${i}].key`, message });
 		}
 	}
 
-	return issues;
+	return { errorsByTagId, issues };
 }
