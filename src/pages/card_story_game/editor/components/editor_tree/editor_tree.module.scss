@@ -1,9 +1,12 @@
 // ============================================================
-// 标签树（从 editor.module.scss 迁出）
+// 编辑区左树：标签 + 动作
 // ============================================================
 .leftPanel {
 	width: 100%;
 	height: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 0.14rem;
 	padding: 0.12rem;
 	background: #15120f;
 	overflow-y: auto;
@@ -128,6 +131,13 @@
 					overflow: hidden;
 					text-overflow: ellipsis;
 					white-space: nowrap;
+				}
+
+				> .treeItemMeta {
+					flex-shrink: 0;
+					color: #5b5449;
+					font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+					font-size: 0.1rem;
 				}
 
 				> .treeItemDelete {

@@ -1,0 +1,29 @@
+.params {
+	display: flex;
+	flex-direction: column;
+	gap: 0.06rem;
+}
+
+.addParam {
+	align-self: flex-start;
+}
+
+.paramRow {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 0.9rem 0.9rem auto;
+	align-items: center;
+	gap: 0.06rem;
+}
+
+.emptyParams {
+	padding: 0.06rem 0;
+	color: #4a443b;
+	font-size: 0.12rem;
+	font-style: italic;
+}
+
+.jsonTextarea {
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	font-size: 0.12rem;
+	line-height: 1.5;
+}

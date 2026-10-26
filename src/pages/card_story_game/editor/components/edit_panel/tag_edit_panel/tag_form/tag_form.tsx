@@ -1,8 +1,8 @@
 import { forwardRef, useCallback, useImperativeHandle, useMemo } from "react";
 import { Form, Input } from "antd";
 
-import type { TagItem } from "../../../../card_story_game_types.ts";
-import { isString } from "../../../../../../utils/type_guard.ts";
+import type { TagItem } from "../../../../../card_story_game_types.ts";
+import { isString } from "../../../../../../../utils/type_guard.ts";
 
 import style from "./tag_form.module.scss";
 

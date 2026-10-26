@@ -34,18 +34,22 @@
       "id": 7,
       "key": "衰朽",
       "desc": "生命力接近枯竭"
-    },
-    {
-      "id": 8,
-      "key": "",
-      "desc": ""
-    },
-    {
-      "id": 9,
-      "key": "",
-      "desc": ""
     }
   ],
-  "allRules": {},
+  "allRules": [
+    {
+      "id": 1,
+      "verb": "new_action",
+      "params": [
+        {
+          "name": "arg1",
+          "type": "card"
+        }
+      ],
+      "targets": [],
+      "conditions": [],
+      "effects": []
+    }
+  ],
   "cardTemplates": []
 }

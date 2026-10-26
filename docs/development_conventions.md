@@ -15,13 +15,20 @@ src/
 │   ├── index.tsx
 │   └── card_story_game/                   专项业务：页面 + 专项业务模块
 │       ├── card_story_game_types.ts       专项业务类型
-│       ├── card_story_game_validate.ts    结构校验 / 归一化 / 语义校验
+│       ├── validate/                      结构校验 / 归一化 / 语义校验
+│       │   ├── index.ts                   公开 API
+│       │   ├── validate_types.ts          校验结果类型
+│       │   ├── common.ts                  共享解析工具
+│       │   ├── tags.ts                    标签结构 / 归一化 / 语义校验
+│       │   ├── actions.ts                 动作与参数解析
+│       │   ├── templates.ts               模板、引用、字段初始值
+│       │   └── config.ts                  根配置解析 / normalizeConfig
 │       └── editor/
 │           ├── index.tsx                  路由入口
 │           ├── editor.module.scss         页面骨架样式
 │           ├── editor_theme.ts            编辑器 antd 主题
-│           ├── hooks/                     编辑器专用 hooks（use_tag_editor）
-│           └── components/                页面专用组件（editor_top_bar / tag_tree / edit_panel）
+│           ├── hooks/                     编辑器专用 hooks（use_tag_editor / use_action_editor）
+│           └── components/                页面专用组件（editor_top_bar / editor_tree / edit_panel）
 ├── services/                              只做 IO（fetch），不定义类型、不弹 UI
 ├── components/                            跨页面通用 UI（目前只有 file_import）
 └── utils/                                 与业务无关的工具（文件下载、类型判断、基类）
@@ -39,9 +46,9 @@ src/
 ## 命名
 
 - 文件、目录用 snake_case；React 组件名用 PascalCase。
-- 专项业务文件带前缀：`card_story_game_types.ts`、`card_story_game_validate.ts`。文件名是全局搜索时的第一锚点，`types.ts` 这类大众脸在搜索结果里无法一眼分辨。
-- 组件一个文件夹，内含同名 `.tsx` 和 `.module.scss`：`editor_top_bar/editor_top_bar.tsx`。
-- 只有路由入口叫 `index.tsx`，其余组件不用 `index.tsx`，也不要加 `index.ts` 重导出——多一层跳转没有收益。
+- 专项业务的根层文件带域名前缀：`card_story_game_types.ts`；页面内子文件夹用短角色名：`editor/`、`validate/`，内部文件不再重复域名前缀。文件名是全局搜索时的第一锚点；子文件夹里的通用文件名（如 `types.ts`）如果容易冲突，可用角色前缀（如 `validate_types.ts`）区分。
+- 组件一个文件夹，内含同名 `.tsx` 和 `.module.scss`：`editor_top_bar/editor_top_bar.tsx`；复合组件内部的私有子组件可以平铺在父目录并共用父级样式（如 `editor_tree/tag_tree.tsx`），只有需要对外独立复用的组件才单独建文件夹。
+- 只有路由入口叫 `index.tsx`；领域模块可以用 `index.ts` 作为唯一公开出口（如 `validate/index.ts`），组件目录不要加 `index.ts` 重导出。
 - 样式类名用 camelCase（`treeItemActive`），与 TS 变量一致。
 - 组件的 props 类型统一叫 `<组件名>Props`（如 `TagFormProps`），不要用泛化的 `Props`；全局搜索时能直接定位。
 

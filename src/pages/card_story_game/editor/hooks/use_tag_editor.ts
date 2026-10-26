@@ -2,8 +2,8 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import type { RefObject } from "react";
 
 import type { TagItem } from "../../card_story_game_types.ts";
-import { validateTags } from "../../card_story_game_validate.ts";
-import type { TagFormHandle } from "../components/edit_panel/tag_form/tag_form.tsx";
+import { validateTags } from "../../validate/index.ts";
+import type { TagFormHandle } from "../components/edit_panel/tag_edit_panel/tag_form/tag_form.tsx";
 
 export interface TagEditorValidation {
 	status: "ok" | "error";

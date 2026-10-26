@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { App as AntApp, Splitter, Spin } from "antd";
 
+import ActionEditPanel from "./components/edit_panel/action_edit_panel/action_edit_panel.tsx";
+import EmptyEditPanel from "./components/edit_panel/empty_edit_panel.tsx";
 import EditorTopBar from "./components/editor_top_bar/editor_top_bar.tsx";
-import EditPanel from "./components/edit_panel/edit_panel.tsx";
-import TagTree from "./components/tag_tree/tag_tree.tsx";
+import TagEditPanel from "./components/edit_panel/tag_edit_panel/tag_edit_panel.tsx";
+import EditorTree from "./components/editor_tree/editor_tree.tsx";
+import { useActionEditor } from "./hooks/use_action_editor.ts";
 import { useTagEditor } from "./hooks/use_tag_editor.ts";
-import type { GameConfig, TagItem } from "../card_story_game_types.ts";
-import { normalizeConfig, parseConfigShape } from "../card_story_game_validate.ts";
+import type { GameConfig, RuleAction, TagItem } from "../card_story_game_types.ts";
+import { parseConfigShape } from "../validate/index.ts";
 import { serviceGetDefaultConfig } from "../../../services/card_story_game.ts";
 import { downloadJSON } from "../../../utils/file_download.ts";
 
@@ -14,7 +17,7 @@ import style from "./editor.module.scss";
 
 const EMPTY_CONFIG: GameConfig = {
 	allTags: [],
-	allRules: {},
+	allRules: [],
 	cardTemplates: [],
 };
 
@@ -26,10 +29,16 @@ export default function Editor() {
 	const [configName, setConfigName] = useState("card_story_game_default_config");
 
 	const tags = config.allTags;
+	const actions = config.allRules;
+	const templates = config.cardTemplates;
 
 	// 只更新 allTags，保留 allRules / cardTemplates
 	const updateTags = useCallback((updater: (prev: TagItem[]) => TagItem[]) => {
 		setConfig((prev) => ({ ...prev, allTags: updater(prev.allTags) }));
+	}, []);
+
+	const updateActions = useCallback((updater: (prev: RuleAction[]) => RuleAction[]) => {
+		setConfig((prev) => ({ ...prev, allRules: updater(prev.allRules) }));
 	}, []);
 
 	const {
@@ -42,8 +51,68 @@ export default function Editor() {
 		addTag,
 		updateTag,
 		deleteTag,
-		clearSelection,
+		clearSelection: clearTagSelection,
 	} = useTagEditor({ tags, updateTags });
+
+	const {
+		selectedActionId,
+		selectedAction,
+		selectAction,
+		addAction,
+		updateAction,
+		deleteAction,
+		clearSelection: clearActionSelection,
+	} = useActionEditor({ actions, templates, updateActions });
+
+	const handleSelectTag = useCallback(
+		(id: number) => {
+			clearActionSelection();
+			selectTag(id);
+		},
+		[clearActionSelection, selectTag],
+	);
+
+	const handleAddTag = useCallback(() => {
+		clearActionSelection();
+		addTag();
+	}, [clearActionSelection, addTag]);
+
+	const handleSelectAction = useCallback(
+		(id: number) => {
+			clearTagSelection();
+			selectAction(id);
+		},
+		[clearTagSelection, selectAction],
+	);
+
+	const handleAddAction = useCallback(() => {
+		clearTagSelection();
+		addAction();
+	}, [clearTagSelection, addAction]);
+
+	const handleDeleteAction = useCallback(
+		(id: number) => {
+			const result = deleteAction(id);
+			if (!result.blocked) {
+				return;
+			}
+
+			modal.warning({
+				title: "无法删除动作",
+				content: (
+					<div>
+						<div>该动作正被以下模板引用：</div>
+						{result.references.map((ref, index) => (
+							<div key={`${ref.templateId}-${ref.group}-${index}`}>
+								{ref.templateKey} / {ref.group}
+							</div>
+						))}
+					</div>
+				),
+			});
+		},
+		[deleteAction, modal],
+	);
 
 	const handleExport = useCallback(() => {
 		downloadJSON(config, configName.trim() || "game_config");
@@ -71,10 +140,11 @@ export default function Editor() {
 					return;
 				}
 
-				setConfig(normalizeConfig(result.config));
-				clearSelection();
+				setConfig(result.config);
+				clearTagSelection();
+				clearActionSelection();
 
-				message.success(`成功导入 ${result.config.allTags.length} 个标签`);
+				message.success(`成功导入 ${result.config.allTags.length} 个标签、${result.config.allRules.length} 个动作`);
 			} catch (err) {
 				modal.error({
 					title: "解析错误",
@@ -82,7 +152,7 @@ export default function Editor() {
 				});
 			}
 		},
-		[message, modal, clearSelection],
+		[message, modal, clearTagSelection, clearActionSelection],
 	);
 
 	// 初始化加载完整配置
@@ -119,25 +189,36 @@ export default function Editor() {
 					</div>
 				) : (
 					<Splitter className={style.splitter}>
-						{/* 左栏：标签树 */}
+						{/* 左栏：标签 + 动作 */}
 						<Splitter.Panel defaultSize={300} collapsible>
-							<TagTree
+							<EditorTree
 								tags={tags}
+								actions={actions}
 								selectedTagId={selectedTagId}
-								onSelectTag={selectTag}
-								onAddTag={addTag}
+								selectedActionId={selectedActionId}
+								onSelectTag={handleSelectTag}
+								onAddTag={handleAddTag}
 								onDeleteTag={deleteTag}
+								onSelectAction={handleSelectAction}
+								onAddAction={handleAddAction}
+								onDeleteAction={handleDeleteAction}
 							/>
 						</Splitter.Panel>
 
-						{/* 中间：标签编辑区 */}
+						{/* 中间：标签 / 动作编辑区 */}
 						<Splitter.Panel>
-							<EditPanel
-								tag={selectedTag}
-								keyError={selectedTagKeyError}
-								tagFormRef={tagFormRef}
-								onUpdateTag={updateTag}
-							/>
+							{selectedAction ? (
+								<ActionEditPanel action={selectedAction} onUpdateAction={updateAction} />
+							) : selectedTag ? (
+								<TagEditPanel
+									tag={selectedTag}
+									keyError={selectedTagKeyError}
+									tagFormRef={tagFormRef}
+									onUpdateTag={updateTag}
+								/>
+							) : (
+								<EmptyEditPanel />
+							)}
 						</Splitter.Panel>
 					</Splitter>
 				)}
