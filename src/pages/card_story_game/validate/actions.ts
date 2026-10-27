@@ -19,6 +19,66 @@ function isActionParamType(value: unknown): value is ActionParamType {
 	return false;
 }
 
+export interface ActionValidationResult {
+	issues: ValidationIssue[];
+}
+
+/** 编辑器侧动作语义校验：verb 不能为空，参数名不能为空 / 重复 */
+export function validateActions(actions: RuleAction[]): ActionValidationResult {
+	const issues: ValidationIssue[] = [];
+
+	for (let i = 0; i < actions.length; i++) {
+		const action = actions[i];
+		const path = `allRules[${i}]`;
+
+		if (action.verb.trim() === "") {
+			issues.push({ path: `${path}.verb`, message: "verb 不能为空" });
+		}
+
+		const names = new Set<string>();
+		for (let j = 0; j < action.params.length; j++) {
+			const name = action.params[j].name.trim();
+			if (name === "") {
+				issues.push({ path: `${path}.params[${j}].name`, message: "参数名不能为空" });
+				continue;
+			}
+			if (names.has(name)) {
+				issues.push({ path: `${path}.params[${j}].name`, message: `参数名「${name}」重复` });
+				continue;
+			}
+			names.add(name);
+		}
+	}
+
+	return { issues };
+}
+
+/** 返回重复的参数名；空名由字段级 required 处理，这里跳过 */
+export function getDuplicateActionParamName(params: ActionParam[]): string | null {
+	const names = new Set<string>();
+	for (let i = 0; i < params.length; i++) {
+		const name = params[i].name.trim();
+		if (name === "") {
+			continue;
+		}
+		if (names.has(name)) {
+			return name;
+		}
+		names.add(name);
+	}
+	return null;
+}
+
+/** 动作参数的领域规则：card 参数不允许带 default */
+export function normalizeActionParams(params: ActionParam[]): ActionParam[] {
+	return params.map((param) => {
+		if (param.type === ActionParamType.CARD && "default" in param) {
+			return { name: param.name, type: param.type };
+		}
+		return param;
+	});
+}
+
 function parseParams(raw: unknown, path: string, issues: ValidationIssue[]): ActionParam[] {
 	if (raw === undefined) {
 		return [];
@@ -70,7 +130,7 @@ function parseParams(raw: unknown, path: string, issues: ValidationIssue[]): Act
 		params.push(param);
 	}
 
-	return params;
+	return normalizeActionParams(params);
 }
 
 export function parseActions(raw: unknown, issues: ValidationIssue[]): RuleAction[] {

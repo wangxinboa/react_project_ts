@@ -2,13 +2,14 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import type { RefObject } from "react";
 
 import type { TagItem } from "../../card_story_game_types.ts";
-import { validateTags } from "../../validate/index.ts";
+import { validateTags, type ValidationIssue } from "../../validate/index.ts";
 import type { TagFormHandle } from "../components/edit_panel/tag_edit_panel/tag_form/tag_form.tsx";
 
 export interface TagEditorValidation {
 	status: "ok" | "error";
 	errorCount: number;
 	warningCount: number;
+	issues: ValidationIssue[];
 }
 
 interface UseTagEditorOptions {
@@ -45,6 +46,7 @@ export function useTagEditor({ tags, updateTags }: UseTagEditorOptions): TagEdit
 			status: tagValidation.issues.length > 0 ? "error" : "ok",
 			errorCount: tagValidation.issues.length,
 			warningCount: 0,
+			issues: tagValidation.issues,
 		};
 	}, [tagValidation]);
 

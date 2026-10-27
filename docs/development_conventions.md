@@ -22,7 +22,7 @@ src/
 │       │   ├── tags.ts                    标签结构 / 归一化 / 语义校验
 │       │   ├── actions.ts                 动作与参数解析
 │       │   ├── templates.ts               模板、引用、字段初始值
-│       │   └── config.ts                  根配置解析 / normalizeConfig
+│       │   └── config.ts                  根配置解析 / 归一化
 │       └── editor/
 │           ├── index.tsx                  路由入口
 │           ├── editor.module.scss         页面骨架样式
@@ -47,10 +47,12 @@ src/
 
 - 文件、目录用 snake_case；React 组件名用 PascalCase。
 - 专项业务的根层文件带域名前缀：`card_story_game_types.ts`；页面内子文件夹用短角色名：`editor/`、`validate/`，内部文件不再重复域名前缀。文件名是全局搜索时的第一锚点；子文件夹里的通用文件名（如 `types.ts`）如果容易冲突，可用角色前缀（如 `validate_types.ts`）区分。
-- 组件一个文件夹，内含同名 `.tsx` 和 `.module.scss`：`editor_top_bar/editor_top_bar.tsx`；复合组件内部的私有子组件可以平铺在父目录并共用父级样式（如 `editor_tree/tag_tree.tsx`），只有需要对外独立复用的组件才单独建文件夹。
+- 组件一个文件夹，内含同名 `.tsx` 和 `.module.scss`：`editor_top_bar/editor_top_bar.tsx`；复合组件内部的私有子组件可以平铺在父目录并共用父级样式（如 `editor_tree/tag_tree.tsx`），其中通用的、无业务数据的子组件放到 `components/` 子目录（如 `editor_tree/components/tree_item.tsx`）。
 - 只有路由入口叫 `index.tsx`；领域模块可以用 `index.ts` 作为唯一公开出口（如 `validate/index.ts`），组件目录不要加 `index.ts` 重导出。
 - 样式类名用 camelCase（`treeItemActive`），与 TS 变量一致。
 - 组件的 props 类型统一叫 `<组件名>Props`（如 `TagFormProps`），不要用泛化的 `Props`；全局搜索时能直接定位。
+- 事件处理函数优先在组件内定义成具名函数，再传给 JSX；避免在 JSX 里写多行内联回调。简单的一次性闭包（如列表项 `onSelect={() => select(id)}`）可以保留。
+- 不要有冗余的 JSX 标签：能直接作为父节点的子元素时，不要再包一层无意义的 `<div>`；只有需要布局、样式或事件边界时才加容器。
 
 ## 类型与复用
 

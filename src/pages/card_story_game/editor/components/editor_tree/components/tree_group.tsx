@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import type { ReactNode } from "react";
 import { CaretDownOutlined, CaretRightOutlined } from "@ant-design/icons";
 
-import style from "./editor_tree.module.scss";
+import style from "../editor_tree.module.scss";
 
 interface TreeGroupProps {
 	title: string;

@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { App as AntApp, Splitter, Spin } from "antd";
 
 import ActionEditPanel from "./components/edit_panel/action_edit_panel/action_edit_panel.tsx";
 import EmptyEditPanel from "./components/edit_panel/empty_edit_panel.tsx";
-import EditorTopBar from "./components/editor_top_bar/editor_top_bar.tsx";
+import EditorTopBar, { type EditorValidationState } from "./components/editor_top_bar/editor_top_bar.tsx";
 import TagEditPanel from "./components/edit_panel/tag_edit_panel/tag_edit_panel.tsx";
 import EditorTree from "./components/editor_tree/editor_tree.tsx";
 import { useActionEditor } from "./hooks/use_action_editor.ts";
 import { useTagEditor } from "./hooks/use_tag_editor.ts";
 import type { GameConfig, RuleAction, TagItem } from "../card_story_game_types.ts";
-import { parseConfigShape } from "../validate/index.ts";
+import { parseConfigShape, type ValidationIssue } from "../validate/index.ts";
 import { serviceGetDefaultConfig } from "../../../services/card_story_game.ts";
 import { downloadJSON } from "../../../utils/file_download.ts";
 
@@ -45,7 +45,7 @@ export default function Editor() {
 		selectedTag,
 		selectedTagId,
 		selectedTagKeyError,
-		validation,
+		validation: tagValidation,
 		tagFormRef,
 		selectTag,
 		addTag,
@@ -57,12 +57,23 @@ export default function Editor() {
 	const {
 		selectedActionId,
 		selectedAction,
+		validation: actionValidation,
 		selectAction,
 		addAction,
 		updateAction,
 		deleteAction,
 		clearSelection: clearActionSelection,
 	} = useActionEditor({ actions, templates, updateActions });
+
+	const validation = useMemo<EditorValidationState & { issues: ValidationIssue[] }>(() => {
+		const issues = [...tagValidation.issues, ...actionValidation.issues];
+		return {
+			status: issues.length > 0 ? "error" : "ok",
+			errorCount: issues.length,
+			warningCount: 0,
+			issues,
+		};
+	}, [tagValidation, actionValidation]);
 
 	const handleSelectTag = useCallback(
 		(id: number) => {
@@ -115,8 +126,25 @@ export default function Editor() {
 	);
 
 	const handleExport = useCallback(() => {
+		if (validation.issues.length > 0) {
+			modal.error({
+				title: "无法导出",
+				content: (
+					<div>
+						<div>配置存在以下问题：</div>
+						{validation.issues.map((issue) => (
+							<div key={issue.path}>
+								{issue.path}：{issue.message}
+							</div>
+						))}
+					</div>
+				),
+			});
+			return;
+		}
+
 		downloadJSON(config, configName.trim() || "game_config");
-	}, [config, configName]);
+	}, [config, configName, validation, modal]);
 
 	const handleImport = useCallback(
 		(content: string) => {

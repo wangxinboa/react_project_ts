@@ -1,55 +1,59 @@
 {
-  "allTags": [
-    {
-      "id": 1,
-      "key": "碳基生物",
-      "desc": "由碳基有机分子构成的生物体"
-    },
-    {
-      "id": 2,
-      "key": "活体",
-      "desc": "当前处于存活状态"
-    },
-    {
-      "id": 3,
-      "key": "已死亡",
-      "desc": "生命迹象已消失"
-    },
-    {
-      "id": 4,
-      "key": "幼年",
-      "desc": "生长发育阶段"
-    },
-    {
-      "id": 5,
-      "key": "壮年",
-      "desc": "生命力巅峰阶段"
-    },
-    {
-      "id": 6,
-      "key": "老年",
-      "desc": "生命力开始衰退"
-    },
-    {
-      "id": 7,
-      "key": "衰朽",
-      "desc": "生命力接近枯竭"
-    }
-  ],
-  "allRules": [
-    {
-      "id": 1,
-      "verb": "new_action",
-      "params": [
-        {
-          "name": "arg1",
-          "type": "card"
-        }
-      ],
-      "targets": [],
-      "conditions": [],
-      "effects": []
-    }
-  ],
-  "cardTemplates": []
+	"allTags": [
+		{
+			"id": 1,
+			"key": "碳基生物",
+			"desc": "由碳基有机分子构成的生物体"
+		},
+		{
+			"id": 2,
+			"key": "活体",
+			"desc": "当前处于存活状态"
+		},
+		{
+			"id": 3,
+			"key": "已死亡",
+			"desc": "生命迹象已消失"
+		},
+		{
+			"id": 4,
+			"key": "幼年",
+			"desc": "生长发育阶段"
+		},
+		{
+			"id": 5,
+			"key": "壮年",
+			"desc": "生命力巅峰阶段"
+		},
+		{
+			"id": 6,
+			"key": "老年",
+			"desc": "生命力开始衰退"
+		},
+		{
+			"id": 7,
+			"key": "衰朽",
+			"desc": "生命力接近枯竭"
+		}
+	],
+	"allRules": [
+		{
+			"id": 1,
+			"verb": "new_action",
+			"params": [
+				{
+					"name": "arg1",
+					"type": "card"
+				},
+				{
+					"name": "arg2",
+					"type": "number"
+				}
+			],
+			"targets": [],
+			"conditions": [],
+			"effects": []
+		}
+	],
+	"cardTemplates": []
 }

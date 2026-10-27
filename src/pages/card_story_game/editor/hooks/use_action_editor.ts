@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import type { CardTemplate, RuleAction } from "../../card_story_game_types.ts";
+import { validateActions, type ValidationIssue } from "../../validate/index.ts";
 
 export type ActionTriggerGroup = "auto" | "outgoing" | "incoming";
 
@@ -22,9 +23,17 @@ export interface DeleteActionResult {
 	references: ActionReference[];
 }
 
+export interface ActionEditorValidation {
+	status: "ok" | "error";
+	errorCount: number;
+	warningCount: number;
+	issues: ValidationIssue[];
+}
+
 export interface ActionEditor {
 	selectedActionId: number | null;
 	selectedAction: RuleAction | null;
+	validation: ActionEditorValidation;
 	selectAction: (id: number) => void;
 	addAction: () => void;
 	updateAction: (id: number, patch: Partial<Omit<RuleAction, "id">>) => void;
@@ -33,7 +42,7 @@ export interface ActionEditor {
 }
 
 /**
- * 动作库的选中、增删改，以及“动作被哪些模板引用”的索引。
+ * 动作库的选中、增删改、语义校验，以及“动作被哪些模板引用”的索引。
  * 动作 id 全局唯一，新增时取当前最大值 + 1。
  */
 export function useActionEditor({ actions, templates, updateActions }: UseActionEditorOptions): ActionEditor {
@@ -80,6 +89,17 @@ export function useActionEditor({ actions, templates, updateActions }: UseAction
 		}
 		return null;
 	}, [actions, selectedActionId]);
+
+	const actionValidation = useMemo(() => validateActions(actions), [actions]);
+
+	const validation = useMemo<ActionEditorValidation>(() => {
+		return {
+			status: actionValidation.issues.length > 0 ? "error" : "ok",
+			errorCount: actionValidation.issues.length,
+			warningCount: 0,
+			issues: actionValidation.issues,
+		};
+	}, [actionValidation]);
 
 	const selectAction = useCallback((id: number) => {
 		setSelectedActionId(id);
@@ -150,6 +170,7 @@ export function useActionEditor({ actions, templates, updateActions }: UseAction
 	return {
 		selectedActionId,
 		selectedAction,
+		validation,
 		selectAction,
 		addAction,
 		updateAction,

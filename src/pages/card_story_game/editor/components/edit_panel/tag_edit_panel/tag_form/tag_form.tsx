@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useImperativeHandle, useMemo } from "react";
+import { forwardRef, useCallback, useImperativeHandle } from "react";
 import { Form, Input } from "antd";
 
 import type { TagItem } from "../../../../../card_story_game_types.ts";
@@ -45,14 +45,6 @@ const TagForm = forwardRef<TagFormHandle, TagFormProps>(function TagForm({ tag, 
 		}
 	}, [form, onUpdateTag, tag.id]);
 
-	// 说明和错误共用 help 槽位：出错时只换文字，explain 行高度不变
-	const keyExtra = useMemo(() => {
-		if (keyError) {
-			return <span className={style.fieldError}>{keyError}</span>;
-		}
-		return `可随时重命名；规则与卡牌模板通过 ID #${tag.id} 引用它，不依赖 key。`;
-	}, [keyError, tag.id]);
-
 	// 父组件切换标签时主动调用 setValues；initialValues 只在首次挂载时生效
 	useImperativeHandle(
 		ref,
@@ -73,7 +65,13 @@ const TagForm = forwardRef<TagFormHandle, TagFormProps>(function TagForm({ tag, 
 			initialValues={{ key: tag.key, desc: tag.desc }}
 			onValuesChange={handleValuesChange}
 		>
-			<Form.Item label="标签 key" name="key" validateStatus={keyError ? "error" : undefined} help={keyExtra}>
+			<Form.Item
+				label="标签 key"
+				name="key"
+				tooltip={`可随时重命名；规则与卡牌模板通过 ID #${tag.id} 引用它，不依赖 key。`}
+				validateStatus={keyError ? "error" : undefined}
+				help={keyError || undefined}
+			>
 				<Input
 					placeholder="例如：活体"
 					spellCheck={false}
@@ -83,7 +81,7 @@ const TagForm = forwardRef<TagFormHandle, TagFormProps>(function TagForm({ tag, 
 				/>
 			</Form.Item>
 
-			<Form.Item label="描述" name="desc" extra="纯文本，可以为空。">
+			<Form.Item label="描述" name="desc" tooltip="纯文本，可以为空。">
 				<Input.TextArea placeholder="这个标签代表什么？" rows={6} spellCheck={false} />
 			</Form.Item>
 		</Form>

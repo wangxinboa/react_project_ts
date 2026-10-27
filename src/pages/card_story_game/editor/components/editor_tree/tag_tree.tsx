@@ -1,8 +1,8 @@
 import type { TagItem } from "../../../card_story_game_types.ts";
 
 import style from "./editor_tree.module.scss";
-import TreeGroup from "./tree_group.tsx";
-import TreeItem from "./tree_item.tsx";
+import TreeGroup from "./components/tree_group.tsx";
+import TreeItem from "./components/tree_item.tsx";
 
 interface TagTreeProps {
 	tags: TagItem[];

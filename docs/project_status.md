@@ -19,10 +19,10 @@
 - 路由：HashRouter + `pages/**/index.tsx` 自动注册，子组件不会变成野路由。
 - 编辑器骨架：顶栏、左右两栏 Splitter、暗色样式。
 - 标签：新增 / 删除 / 重命名 / 描述编辑，`id` 唯一标识，选中态跟随 `id`。
-- 动作库：左树分组、动作新增 / 删除 / 选中；表单编辑 `verb`、参数、targets / conditions / effects（JSON 文本域）；删除被模板引用的动作会阻止并列出引用方。
+- 动作库：左树分组、动作新增 / 删除 / 选中；表单编辑 `verb`、参数（`Form.List` 管理，参数名做空值 / 重名校验）、targets / conditions / effects（JSON 文本域）；删除被模板引用的动作会阻止并列出引用方；动作的 verb / 参数名问题会汇总到顶栏，并阻止导出。
 - 数据加载：从 `public/card_story_game_default_config.json` 读取完整 `GameConfig`，按 `BASE_URL` 拼路径；加载完成前显示 Spin 并禁用导入导出。
 - 导入导出：纯 JSON、全量覆盖；缺失 / 重复标签 `id` 自动补号；动作和模板随配置完整保留。
-- 校验：结构校验阻断加载与导入；标签语义校验（空 key、重名）只提示，并在顶栏计数。
+- 校验：结构校验阻断加载与导入；标签 / 动作语义问题计入顶栏，存在任意错误时阻止导出；标签语义问题不阻断加载 / 导入。
 - 数据模型：`allRules` 是全局动作库（id / verb / params / targets / conditions / effects），`cardTemplates` 只保存动作 id 引用；动作 id、模板引用、标签引用和字段初始值都会做结构校验。
 - 编辑器主题：编辑器路由层包 ConfigProvider + `darkAlgorithm` + 暖色 token，Modal / message 通过 `App.useApp()` 继承主题；首页和后续游戏页不受影响。
 
@@ -48,7 +48,7 @@
 | DEV 守卫（线上隐藏编辑器） | 不做 | 已定 | 编辑器将来也要给玩家做故事，不只是开发工具 | 需要区分“玩家版 / 创作版”时 |
 | 草稿保存 / localStorage | 不做 | 已定 | 目前只有导出，没有保存概念 | 编辑时间长到怕刷新丢失时 |
 | 标签 `category` | 暂不引入 | 已定 | 现在没有使用场景，加了也是空字段 | 需要标签分组或互斥语义时 |
-| antd Form | 采用：Form 持输入态，`tags` 是模型，校验仍在 validate | 已定 | 统一表单外观与交互，并为规则/模板表单立模式；双状态用 `onValuesChange` + `key` 重挂载控制 | 规则/模板的嵌套数组表单（Form.List）落地时再评估 |
+| antd Form | 采用：Form 持输入态，`tags` 是模型，校验仍在 validate | 已定 | 统一表单外观与交互；动作参数已用 `Form.List`，双状态用 `onValuesChange` + `key` 重挂载控制 | 模板表单落地时沿用同一模式 |
 | 右侧预览 / 完整校验 | 暂时移除占位，等规则和模板落地再做 | 已定 | 占位没有实际内容，先让编辑区占满宽度 | 卡牌模板编辑器落地后 |
 | 模块化拆分 / 冲突检测 / 版本迁移 | 不做 | 已定 | 单文件阶段没必要提前设计 | 配置文件大到单文件难维护时 |
 | 撤销 / 重做 | 尚未讨论 | 待定 | 实现成本高，当前编辑量小 | 误操作开始造成实际损失时 |
@@ -61,7 +61,7 @@
 - Splitter 的分割线 / 折叠按钮仍靠 `editor.module.scss` 的 `:global` 覆盖，等组件 token 能覆盖时再收敛；
 - 中栏底部的“标签 / 动作 JSON”是临时放置，右侧预览做出来后可能迁移；
 - `cardTemplates` 还没有编辑界面；`allRules` 可编辑，但 targets / conditions / effects 仍是 JSON 文本域，只校验“合法 JSON 数组”，不校验 AST 语义；
-- 动作表单暂不阻止空 `verb` 或重名参数，导出后可能被导入校验拒绝；
+- 动作表单不在字段下提示空 `verb`，但顶栏会计数；任何顶栏错误都会阻止导出；
 - 顶栏的 `warningCount` 还没有产生来源，语义问题目前都记为 error。
 
 ## 文档分工

@@ -1,6 +1,6 @@
 import type { MouseEvent } from "react";
 
-import style from "./editor_tree.module.scss";
+import style from "../editor_tree.module.scss";
 
 interface TreeItemProps {
 	/** 当前节点是否选中 */

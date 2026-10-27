@@ -1,18 +1,41 @@
 .params {
 	display: flex;
 	flex-direction: column;
-	gap: 0.06rem;
+}
+
+.paramHeader {
+	display: flex;
+	align-items: center;
+	gap: 0.08rem;
+	margin-bottom: 0.02rem;
+	color: #6b6459;
+	font-size: 0.12rem;
+}
+
+.paramRow {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.08rem;
+}
+
+.nameField {
+	flex: 1;
+	min-width: 0;
+}
+
+.typeField,
+.defaultField {
+	flex: 0 0 0.9rem;
+}
+
+.rowAction {
+	flex: 0 0 0.28rem;
+	width: 0.28rem;
 }
 
 .addParam {
 	align-self: flex-start;
-}
-
-.paramRow {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) 0.9rem 0.9rem auto;
-	align-items: center;
-	gap: 0.06rem;
+	margin-top: 0.02rem;
 }
 
 .emptyParams {

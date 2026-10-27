@@ -31,7 +31,8 @@ export default function JsonArrayField({ label, value, onChange }: JsonArrayFiel
 	return (
 		<Form.Item
 			label={label}
-			help={error || "JSON 数组"}
+			tooltip="必须是合法的 JSON 数组"
+			help={error || undefined}
 			validateStatus={error ? "error" : undefined}
 		>
 			<Input.TextArea
