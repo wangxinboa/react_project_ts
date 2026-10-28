@@ -6,8 +6,8 @@
 ## 当前阶段
 
 - 先做配置编辑器，游戏本体后做。
-- 编辑器目前覆盖“标签 + 动作库”两层。
-- `cardTemplates` 还没有编辑界面，但会随配置原样保留。
+- 编辑器目前覆盖“标签 + 动作库 + 卡牌模板”三层。
+- 卡牌模板表单已接入；attributes 是 `{ name, value }[]` 数字初始值，字段类型 / 类字段待做。
 
 ## 代码组织现状
 
@@ -20,6 +20,7 @@
 - 编辑器骨架：顶栏、左右两栏 Splitter、暗色样式。
 - 标签：新增 / 删除 / 重命名 / 描述编辑，`id` 唯一标识，选中态跟随 `id`。
 - 动作库：左树分组、动作新增 / 删除 / 选中；表单编辑 `verb`、参数（`Form.List` 管理，参数名做空值 / 重名校验）、targets / conditions / effects（JSON 文本域）；删除被模板引用的动作会阻止并列出引用方；动作的 verb / 参数名问题会汇总到顶栏，并阻止导出。
+- 卡牌模板：左树分组、新增 / 删除 / 选中；表单编辑 key、tags、attributes、auto / outgoing / incoming 动作引用；模板 key 空 / 重名、字段名空 / 重名、标签 / 动作引用问题计入顶栏并阻止导出；删除被模板引用的标签 / 动作会阻止并列出模板。
 - 数据加载：从 `public/card_story_game_default_config.json` 读取完整 `GameConfig`，按 `BASE_URL` 拼路径；加载完成前显示 Spin 并禁用导入导出。
 - 导入导出：纯 JSON、全量覆盖；缺失 / 重复标签 `id` 自动补号；动作和模板随配置完整保留。
 - 校验：结构校验阻断加载与导入；标签 / 动作语义问题计入顶栏，存在任意错误时阻止导出；标签语义问题不阻断加载 / 导入。
@@ -29,13 +30,13 @@
 ## 待做
 
 - 规则编辑器：targets / conditions / effects 目前是 JSON 文本域，待结构化编辑与 AST 校验。
-- 卡牌模板编辑器。
+- 字段类型：`fieldTypes` + 类字段，把 attributes 从数字 key-value 升级为有类型 / 默认值 / 范围的字段。
 - 右侧预览与完整校验（引用存在性、字段完整性）。
 - 游戏本体页面。
 
 ## 当前数据状态
 
-- `public/card_story_game_default_config.json` 目前是标签测试数据，不是最终游戏内容。
+- `public/card_story_game_default_config.json` 目前是标签 + 动作 + 模板的测试数据，不是最终游戏内容。
 - 标签空 key / 重名会让顶栏显示错误，这是语义校验的预期行为，不阻断加载。
 
 ## 决策记录
@@ -60,7 +61,7 @@
 - `file_import.tsx` 里还有 `as string` 断言，可改为 `typeof` 判断；
 - Splitter 的分割线 / 折叠按钮仍靠 `editor.module.scss` 的 `:global` 覆盖，等组件 token 能覆盖时再收敛；
 - 中栏底部的“标签 / 动作 JSON”是临时放置，右侧预览做出来后可能迁移；
-- `cardTemplates` 还没有编辑界面；`allRules` 可编辑，但 targets / conditions / effects 仍是 JSON 文本域，只校验“合法 JSON 数组”，不校验 AST 语义；
+- attributes 已是 `{ name, value }[]`，但字段类型 / 类字段未实现；字段名空 / 重名由模型校验并阻止导出；`allRules` 可编辑，但 targets / conditions / effects 仍是 JSON 文本域，只校验“合法 JSON 数组”，不校验 AST 语义；
 - 动作表单不在字段下提示空 `verb`，但顶栏会计数；任何顶栏错误都会阻止导出；
 - 顶栏的 `warningCount` 还没有产生来源，语义问题目前都记为 error。
 

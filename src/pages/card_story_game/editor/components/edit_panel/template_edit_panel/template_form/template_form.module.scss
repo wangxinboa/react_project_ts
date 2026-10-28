@@ -1,0 +1,45 @@
+.attributes {
+	display: flex;
+	flex-direction: column;
+}
+
+.attributeHeader {
+	display: flex;
+	align-items: center;
+	gap: 0.08rem;
+	margin-bottom: 0.02rem;
+	color: #6b6459;
+	font-size: 0.12rem;
+}
+
+.attributeRow {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.08rem;
+}
+
+.attributeNameField {
+	flex: 1;
+	min-width: 0;
+}
+
+.attributeValueField {
+	flex: 0 0 0.9rem;
+}
+
+.attributeRowAction {
+	flex: 0 0 0.28rem;
+	width: 0.28rem;
+}
+
+.emptyAttributes {
+	padding: 0.06rem 0;
+	color: #4a443b;
+	font-size: 0.12rem;
+	font-style: italic;
+}
+
+.addAttribute {
+	align-self: flex-start;
+	margin-top: 0.02rem;
+}

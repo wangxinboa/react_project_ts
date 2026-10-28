@@ -55,5 +55,20 @@
 			"effects": []
 		}
 	],
-	"cardTemplates": []
+	"cardTemplates": [
+		{
+			"id": 1,
+			"key": "碳基生物",
+			"tags": [1, 2],
+			"attributes": [
+				{ "name": "age", "value": 0 },
+				{ "name": "life", "value": 10 },
+				{ "name": "lifeMax", "value": 10 },
+				{ "name": "spirit", "value": 0 }
+			],
+			"auto": [],
+			"outgoing": [1],
+			"incoming": []
+		}
+	]
 }

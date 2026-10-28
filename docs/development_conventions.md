@@ -27,7 +27,7 @@ src/
 │           ├── index.tsx                  路由入口
 │           ├── editor.module.scss         页面骨架样式
 │           ├── editor_theme.ts            编辑器 antd 主题
-│           ├── hooks/                     编辑器专用 hooks（use_tag_editor / use_action_editor）
+│           ├── hooks/                     编辑器专用 hooks（use_tag_editor / use_action_editor / use_template_editor）
 │           └── components/                页面专用组件（editor_top_bar / editor_tree / edit_panel）
 ├── services/                              只做 IO（fetch），不定义类型、不弹 UI
 ├── components/                            跨页面通用 UI（目前只有 file_import）
@@ -47,7 +47,7 @@ src/
 
 - 文件、目录用 snake_case；React 组件名用 PascalCase。
 - 专项业务的根层文件带域名前缀：`card_story_game_types.ts`；页面内子文件夹用短角色名：`editor/`、`validate/`，内部文件不再重复域名前缀。文件名是全局搜索时的第一锚点；子文件夹里的通用文件名（如 `types.ts`）如果容易冲突，可用角色前缀（如 `validate_types.ts`）区分。
-- 组件一个文件夹，内含同名 `.tsx` 和 `.module.scss`：`editor_top_bar/editor_top_bar.tsx`；复合组件内部的私有子组件可以平铺在父目录并共用父级样式（如 `editor_tree/tag_tree.tsx`），其中通用的、无业务数据的子组件放到 `components/` 子目录（如 `editor_tree/components/tree_item.tsx`）。
+- 组件一个文件夹，内含同名 `.tsx` 和 `.module.scss`：`editor_top_bar/editor_top_bar.tsx`；复合组件内部的私有子组件可以平铺在父目录并共用父级样式（如 `edit_panel/empty_edit_panel.tsx`），其中通用的、无业务数据的子组件放到 `components/` 子目录（如 `editor_tree/components/tree_item.tsx`）。
 - 只有路由入口叫 `index.tsx`；领域模块可以用 `index.ts` 作为唯一公开出口（如 `validate/index.ts`），组件目录不要加 `index.ts` 重导出。
 - 样式类名用 camelCase（`treeItemActive`），与 TS 变量一致。
 - 组件的 props 类型统一叫 `<组件名>Props`（如 `TagFormProps`），不要用泛化的 `Props`；全局搜索时能直接定位。
@@ -57,6 +57,7 @@ src/
 ## 类型与复用
 
 - 能从既有类型派生的不重复声明字段：可编辑字段用 `Pick`，排除内部字段用 `Omit`，可选覆盖用 `Partial`；表单值类型留在组件内，不放进业务 types。
+- 类型之间存在关联时，直接引用既有类型（如 `CardTemplate["attributes"]`、`TagItem["id"]`），不要重复写结构相同的类型。
 - 通用类型判断优先用 `src/utils/type_guard.ts` 里的 `isString` / `isPlainObject` / `isPositiveInteger`，不要在业务代码里复制同义判断。
 
 ## 数据与状态

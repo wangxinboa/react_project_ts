@@ -51,6 +51,11 @@ export interface RuleAction {
 // ============================================================
 // 卡牌模板（类）
 // ============================================================
+export interface TemplateAttribute {
+	name: string;
+	value: number;
+}
+
 export interface CardTemplate {
 	/** 模板的唯一 id */
 	id: number;
@@ -59,7 +64,7 @@ export interface CardTemplate {
 	/** 初始标签 id */
 	tags: number[];
 	/** 字段初始值；字段类型定义在后续版本补 */
-	attributes: Record<string, number>;
+	attributes: TemplateAttribute[];
 	/** 引用 allRules 中的动作 id，数组顺序即执行顺序 */
 	auto: number[];
 	outgoing: number[];
