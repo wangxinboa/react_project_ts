@@ -1,63 +1,49 @@
-import FileImport from "../../../../../components/file_import/file_import.tsx";
+import { CheckCircleFilled, CloseCircleFilled, ExportOutlined, ImportOutlined } from "@ant-design/icons";
+import { Button, Input } from "antd";
 
 import style from "./editor_top_bar.module.scss";
 
-export interface EditorValidationState {
-	status: "ok" | "warning" | "error";
-	errorCount: number;
-	warningCount: number;
-}
-
 interface EditorTopBarProps {
 	configName: string;
-	onConfigNameChange: (name: string) => void;
-	onImport: (content: string) => void;
-	onExport: () => void;
-	validation: EditorValidationState;
-	/** 配置加载中时禁用导入 / 导出，避免和初始化竞态 */
-	disabled?: boolean;
+	onConfigNameChange: (value: string) => void;
+	validationStatus?: "ok" | "error";
 }
 
 export default function EditorTopBar({
 	configName,
 	onConfigNameChange,
-	onImport,
-	onExport,
-	validation,
-	disabled = false,
+	validationStatus = "ok",
 }: EditorTopBarProps) {
+	const isError = validationStatus === "error";
+
 	return (
 		<header className={style.topBar}>
-			<div className={style.topLeft}>
-				<input
-					className={style.configName}
+			<div className={style.brand}>
+				<span className={style.brandMark}>◆</span>
+				<span className={style.brandText}>卡牌故事编辑器</span>
+			</div>
+
+			<div className={style.configName}>
+				<Input
 					value={configName}
 					onChange={(e) => onConfigNameChange(e.target.value)}
+					variant="borderless"
 					placeholder="配置名"
-					spellCheck={false}
+					aria-label="配置名"
 				/>
 			</div>
 
-			<div className={style.topActions}>
-				<FileImport
-					className={`${style.toolButton} ${disabled ? style.toolButtonDisabled : ""}`}
-					onFileLoaded={onImport}
-					disabled={disabled}
-				>
-					导入
-				</FileImport>
-				<button className={style.toolButton} onClick={onExport} disabled={disabled}>
-					导出
-				</button>
-				{!disabled && validation.status === "error" && (
-					<span className={`${style.statusBadge} ${style.statusError}`}>✗ {validation.errorCount} 错误</span>
-				)}
-				{!disabled && validation.status === "warning" && (
-					<span className={`${style.statusBadge} ${style.statusWarning}`}>⚠ {validation.warningCount} 警告</span>
-				)}
-				{!disabled && validation.status === "ok" && (
-					<span className={`${style.statusBadge} ${style.statusOk}`}>✓ 校验通过</span>
-				)}
+			<div className={style.actions}>
+				<Button icon={<ImportOutlined />}>导入</Button>
+				<Button icon={<ExportOutlined />}>导出</Button>
+				<span className={isError ? style.statusError : style.statusOk}>
+					{isError ? (
+						<CloseCircleFilled className={style.statusIcon} />
+					) : (
+						<CheckCircleFilled className={style.statusIcon} />
+					)}
+					{isError ? "校验未通过" : "校验通过"}
+				</span>
 			</div>
 		</header>
 	);

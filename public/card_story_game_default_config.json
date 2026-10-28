@@ -3,37 +3,44 @@
 		{
 			"id": 1,
 			"key": "碳基生物",
-			"desc": "由碳基有机分子构成的生物体"
+			"desc": "由碳基有机分子构成的生物体",
+			"createdAt": 1767225600000
 		},
 		{
 			"id": 2,
 			"key": "活体",
-			"desc": "当前处于存活状态"
+			"desc": "当前处于存活状态",
+			"createdAt": 1767312000000
 		},
 		{
 			"id": 3,
 			"key": "已死亡",
-			"desc": "生命迹象已消失"
+			"desc": "生命迹象已消失",
+			"createdAt": 1767398400000
 		},
 		{
 			"id": 4,
 			"key": "幼年",
-			"desc": "生长发育阶段"
+			"desc": "生长发育阶段",
+			"createdAt": 1767484800000
 		},
 		{
 			"id": 5,
 			"key": "壮年",
-			"desc": "生命力巅峰阶段"
+			"desc": "生命力巅峰阶段",
+			"createdAt": 1767571200000
 		},
 		{
 			"id": 6,
 			"key": "老年",
-			"desc": "生命力开始衰退"
+			"desc": "生命力开始衰退",
+			"createdAt": 1767657600000
 		},
 		{
 			"id": 7,
 			"key": "衰朽",
-			"desc": "生命力接近枯竭"
+			"desc": "生命力接近枯竭",
+			"createdAt": 1767744000000
 		}
 	],
 	"allRules": [
@@ -59,15 +66,32 @@
 		{
 			"id": 1,
 			"key": "碳基生物",
-			"tags": [1, 2],
+			"tags": [
+				1,
+				2
+			],
 			"attributes": [
-				{ "name": "age", "value": 0 },
-				{ "name": "life", "value": 10 },
-				{ "name": "lifeMax", "value": 10 },
-				{ "name": "spirit", "value": 0 }
+				{
+					"name": "age",
+					"value": 0
+				},
+				{
+					"name": "life",
+					"value": 10
+				},
+				{
+					"name": "lifeMax",
+					"value": 10
+				},
+				{
+					"name": "spirit",
+					"value": 0
+				}
 			],
 			"auto": [],
-			"outgoing": [1],
+			"outgoing": [
+				1
+			],
 			"incoming": []
 		}
 	]

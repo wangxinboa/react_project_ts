@@ -1,0 +1,10 @@
+.container {
+	width: 100%;
+	display: flex;
+}
+
+.text {
+	width: 0;
+	flex: 1;
+	max-width: 100%;
+}

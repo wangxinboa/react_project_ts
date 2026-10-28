@@ -1,11 +1,7 @@
 import { theme } from "antd";
 import type { ThemeConfig } from "antd";
 
-// ============================================================
-// 编辑器专用的 antd 主题：暗色算法 + 现有暖色色板
-// 色板来源：src/pages/card_story_game/editor/editor.module.scss
-// 只有编辑器路由会包这层 Provider，不影响首页和后续游戏页面。
-// ============================================================
+// 编辑器专用暗色暖金主题；只有编辑器路由会包这层 Provider
 export const editorTheme: ThemeConfig = {
 	algorithm: theme.darkAlgorithm,
 	token: {
@@ -18,7 +14,7 @@ export const editorTheme: ThemeConfig = {
 
 		colorBgBase: "#12100e",
 		colorBgLayout: "#12100e",
-		colorBgContainer: "#12100e",
+		colorBgContainer: "#15120f",
 		colorBgElevated: "#1a1714",
 		colorBgMask: "rgba(0, 0, 0, 0.6)",
 
@@ -37,14 +33,6 @@ export const editorTheme: ThemeConfig = {
 		fontSize: 13,
 	},
 	components: {
-		Form: {
-			labelColor: "#8a8276",
-			labelFontSize: 12,
-			// 必须 >= explain 行高（当前约 21px）：antd 用 marginBottom 预留错误行空间，
-			// 低于这个值时报错会把下方内容顶动。
-			itemMarginBottom: 24,
-			verticalLabelPadding: "0 0 6px",
-		},
 		Input: {
 			activeBorderColor: "#c9a227",
 			hoverBorderColor: "#3a352e",
@@ -52,12 +40,27 @@ export const editorTheme: ThemeConfig = {
 			paddingInline: 10,
 			paddingBlock: 6,
 		},
-		Modal: {
-			contentBg: "#1a1714",
-			headerBg: "#1a1714",
+		Button: {
+			defaultBg: "#1a1714",
+			defaultBorderColor: "#3a352e",
+			defaultColor: "#b8ae9e",
 		},
-		Message: {
-			contentBg: "#1a1714",
+		Menu: {
+			itemBorderRadius: 3,
+			itemHeight: 40,
+			itemMarginBlock: 4,
+			itemMarginInline: 8,
+			itemPaddingInline: 12,
+			iconSize: 14,
+			darkItemBg: "transparent",
+			darkSubMenuItemBg: "transparent",
+			darkItemColor: "#a89f90",
+			darkItemHoverBg: "#1c1917",
+			darkItemHoverColor: "#e6ddcc",
+			darkItemSelectedBg: "#2a2620",
+			darkItemSelectedColor: "#e6ddcc",
+			darkItemDisabledColor: "#4a443b",
+			darkPopupBg: "#1a1714",
 		},
 	},
 };

@@ -1,97 +1,64 @@
 .editor {
-	width: 100%;
-	height: 100%;
+	height: 100vh;
 	display: flex;
 	flex-direction: column;
 	background: #12100e;
 	color: #d9d2c7;
 	overflow: hidden;
+}
 
-	> .main {
-		flex: 1;
-		min-height: 0;
+.body {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+}
 
-		> .loading {
-			width: 100%;
-			height: 100%;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			background: #12100e;
-		}
+.sidebar {
+	flex-shrink: 0;
+	width: 2.1rem;
+	padding: 0.12rem 0.08rem;
+	background: #15120f;
+	border-right: 1px solid #2e2a25;
+	overflow-y: auto;
+}
 
-		> .splitter {
-			height: 100%;
-			background-color: transparent !important;
+.content {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	padding: 0.18rem;
+	background: #12100e;
+	overflow-y: hidden;
+}
 
-			// ============================================================
-			// 1. 贯穿线与分割条容器
-			// ============================================================
-			:global(.ant-splitter-bar) {
-				background-color: transparent !important;
-				border: none !important;
+.pageHeader {
+	flex-shrink: 0;
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.12rem;
+	padding-bottom: 0.12rem;
+	margin-bottom: 0.12rem;
+	border-bottom: 1px solid #2e2a25;
+}
 
-				&::before,
-				&::after {
-					background-color: #2e2a25 !important; // 贯穿线默认极暗
-					transition: background-color 0.2s;
-				}
-			}
+.breadcrumb {
+	color: #8a8276;
+	font-size: 0.14rem;
+	letter-spacing: 0.02rem;
+}
 
-			// 悬停时贯穿线变金
-			:global(.ant-splitter-bar:hover)::before,
-			:global(.ant-splitter-bar:hover)::after {
-				background-color: #c9a227 !important;
-			}
 
-			// ============================================================
-			// 2. 拖拽手柄（用于改变面板宽度的透明抓取区）
-			// ============================================================
-			:global(.ant-splitter-bar-dragger) {
-				// 清除默认的拖拽点样式
-				&::before,
-				&::after {
-					background-color: #4a443b !important;
-					transition: background-color 0.2s;
-				}
-			}
+.state {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.2rem;
+}
 
-			// 鼠标悬停或拖拽时，才显现深色底和金色箭头
-			:global(.ant-splitter-bar-dragger:hover),
-			:global(.ant-splitter-bar-dragger-active) {
-				&::before,
-				&::after {
-					background-color: #c9a227 !important;
-				}
-			}
-
-			:global(.ant-splitter-bar-collapse-bar) {
-				background: transparent !important;
-				border: none !important;
-
-				// 按钮内部的实际图标方块
-				:global(.ant-splitter-bar-collapse-icon) {
-					height: 100%;
-					background-color: #1c1917 !important; // 核心：替换掉白底
-					border: 1px solid #3a352e !important;
-					border-radius: 4px !important;
-					color: #8a8276 !important; // 默认图标颜色（暗灰）
-					box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
-					transition: all 0.2s !important;
-					z-index: 10 !important; // 确保盖在贯穿线上面
-				}
-				// 确保内部 SVG 箭头跟随文字颜色
-				:global(.anticon) {
-					color: inherit !important;
-					font-size: 12px !important;
-				}
-				// 鼠标悬停时变亮、变金
-				&:hover :global(.ant-splitter-bar-collapse-icon) {
-					background-color: #2a2620 !important;
-					border-color: #c9a227 !important;
-					color: #c9a227 !important;
-				}
-			}
-		}
-	}
+.loadError {
+	width: 100%;
+	max-width: 5.6rem;
 }

@@ -27,13 +27,7 @@ interface TemplateFormProps {
 	onUpdate: (id: number, patch: Partial<Omit<CardTemplate, "id">>) => void;
 }
 
-export default function TemplateForm({
-	template,
-	keyError,
-	tags,
-	actions,
-	onUpdate,
-}: TemplateFormProps) {
+export default function TemplateForm({ template, keyError, tags, actions, onUpdate }: TemplateFormProps) {
 	const [form] = Form.useForm<TemplateFormValues>();
 	const [attributeError, setAttributeError] = useState("");
 

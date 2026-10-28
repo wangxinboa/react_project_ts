@@ -1,0 +1,97 @@
+.editor {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	background: #12100e;
+	color: #d9d2c7;
+	overflow: hidden;
+
+	> .main {
+		flex: 1;
+		min-height: 0;
+
+		> .loading {
+			width: 100%;
+			height: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: #12100e;
+		}
+
+		> .splitter {
+			height: 100%;
+			background-color: transparent !important;
+
+			// ============================================================
+			// 1. 贯穿线与分割条容器
+			// ============================================================
+			:global(.ant-splitter-bar) {
+				background-color: transparent !important;
+				border: none !important;
+
+				&::before,
+				&::after {
+					background-color: #2e2a25 !important; // 贯穿线默认极暗
+					transition: background-color 0.2s;
+				}
+			}
+
+			// 悬停时贯穿线变金
+			:global(.ant-splitter-bar:hover)::before,
+			:global(.ant-splitter-bar:hover)::after {
+				background-color: #c9a227 !important;
+			}
+
+			// ============================================================
+			// 2. 拖拽手柄（用于改变面板宽度的透明抓取区）
+			// ============================================================
+			:global(.ant-splitter-bar-dragger) {
+				// 清除默认的拖拽点样式
+				&::before,
+				&::after {
+					background-color: #4a443b !important;
+					transition: background-color 0.2s;
+				}
+			}
+
+			// 鼠标悬停或拖拽时，才显现深色底和金色箭头
+			:global(.ant-splitter-bar-dragger:hover),
+			:global(.ant-splitter-bar-dragger-active) {
+				&::before,
+				&::after {
+					background-color: #c9a227 !important;
+				}
+			}
+
+			:global(.ant-splitter-bar-collapse-bar) {
+				background: transparent !important;
+				border: none !important;
+
+				// 按钮内部的实际图标方块
+				:global(.ant-splitter-bar-collapse-icon) {
+					height: 100%;
+					background-color: #1c1917 !important; // 核心：替换掉白底
+					border: 1px solid #3a352e !important;
+					border-radius: 4px !important;
+					color: #8a8276 !important; // 默认图标颜色（暗灰）
+					box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+					transition: all 0.2s !important;
+					z-index: 10 !important; // 确保盖在贯穿线上面
+				}
+				// 确保内部 SVG 箭头跟随文字颜色
+				:global(.anticon) {
+					color: inherit !important;
+					font-size: 12px !important;
+				}
+				// 鼠标悬停时变亮、变金
+				&:hover :global(.ant-splitter-bar-collapse-icon) {
+					background-color: #2a2620 !important;
+					border-color: #c9a227 !important;
+					color: #c9a227 !important;
+				}
+			}
+		}
+	}
+}

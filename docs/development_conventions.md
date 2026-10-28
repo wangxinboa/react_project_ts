@@ -7,40 +7,6 @@
 约定变更时先讨论，确认后在同一次改动里更新本文档，避免文档和代码各说各话。
 本文档只写工程规范；项目进度、决策记录和当前技术债见 [项目现状与进度](./project_status.md)。
 
-## 目录与依赖方向
-
-```
-src/
-├── pages/                                 路由页面；只有 index.tsx 会注册成路由
-│   ├── index.tsx
-│   └── card_story_game/                   专项业务：页面 + 专项业务模块
-│       ├── card_story_game_types.ts       专项业务类型
-│       ├── validate/                      结构校验 / 归一化 / 语义校验
-│       │   ├── index.ts                   公开 API
-│       │   ├── validate_types.ts          校验结果类型
-│       │   ├── common.ts                  共享解析工具
-│       │   ├── tags.ts                    标签结构 / 归一化 / 语义校验
-│       │   ├── actions.ts                 动作与参数解析
-│       │   ├── templates.ts               模板、引用、字段初始值
-│       │   └── config.ts                  根配置解析 / 归一化
-│       └── editor/
-│           ├── index.tsx                  路由入口
-│           ├── editor.module.scss         页面骨架样式
-│           ├── editor_theme.ts            编辑器 antd 主题
-│           ├── hooks/                     编辑器专用 hooks（use_tag_editor / use_action_editor / use_template_editor）
-│           └── components/                页面专用组件（editor_top_bar / editor_tree / edit_panel）
-├── services/                              只做 IO（fetch），不定义类型、不弹 UI
-├── components/                            跨页面通用 UI（目前只有 file_import）
-└── utils/                                 与业务无关的工具（文件下载、类型判断、基类）
-```
-
-依赖方向是单向的：
-
-- 专项业务模块（types / validate）不依赖 services、不依赖 React；
-- services 依赖专项业务模块，页面同时依赖两者；
-- `utils` 不得 import `pages` 或 `services`；
-- `components` 里的通用组件不得 import `card_story_game` 的专项业务逻辑。
-
 专项业务的实现细节优先留在代码和注释里；确实需要跨文件说明时，再放到业务目录下的文档，不要混进本文档。
 
 ## 命名
@@ -59,6 +25,21 @@ src/
 - 能从既有类型派生的不重复声明字段：可编辑字段用 `Pick`，排除内部字段用 `Omit`，可选覆盖用 `Partial`；表单值类型留在组件内，不放进业务 types。
 - 类型之间存在关联时，直接引用既有类型（如 `CardTemplate["attributes"]`、`TagItem["id"]`），不要重复写结构相同的类型。
 - 通用类型判断优先用 `src/utils/type_guard.ts` 里的 `isString` / `isPlainObject` / `isPositiveInteger`，不要在业务代码里复制同义判断。
+- 与业务无关的通用转换（如时间格式化）放在 `src/utils/`，页面和组件只调用，不在组件内重复实现。
+- 不使用 TypeScript `enum`（`erasableSyntaxOnly` 禁止运行时 enum）。需要枚举语义时统一用 `const` 对象 + 派生联合类型，并在所有使用处引用对象成员，不要重复字符串字面量：
+
+  ```ts
+  export const EditorPageKey = {
+  	TAGS: "tags",
+  	ACTIONS: "actions",
+  	TEMPLATES: "templates",
+  } as const;
+
+  export type EditorPageKey = (typeof EditorPageKey)[keyof typeof EditorPageKey];
+  ```
+
+  校验外部字符串时，用基于对象的类型守卫（如 `isEditorPageKey`），不要另写一份字面量列表。枚举对象和守卫放在独立的非组件模块，不要从组件文件导出常量或函数，避免 Fast Refresh 的 `only-export-components` 规则。
+- 通用表单的新建 / 编辑模式统一用 `src/utils/form_mode.ts` 的 `FormMode`，不要在组件里重复 `"create" | "edit"`。
 
 ## 数据与状态
 
@@ -93,6 +74,7 @@ src/
 ## IO 与反馈
 
 - `services` 只负责请求与响应解析，不定义类型、不做提示。
+- 所有接口请求统一放在 `services`，导出的请求函数用 `service` 前缀命名（如 `serviceGetCardStoryGameConfig`）；页面和组件不直接调用 `fetch`。
 - `file_import` 只负责“选择文件并读出文本”，不解析 JSON、不校验业务格式。
 - JSON 解析、结构校验、归一化属于专项业务模块，不放在 services 或通用组件里。
 - 阻断性错误用 `Modal`（导入失败、格式错误）；轻量反馈用 `message`（加载失败、导入成功）。

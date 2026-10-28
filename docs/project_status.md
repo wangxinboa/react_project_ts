@@ -5,65 +5,56 @@
 
 ## 当前阶段
 
-- 先做配置编辑器，游戏本体后做。
-- 编辑器目前覆盖“标签 + 动作库 + 卡牌模板”三层。
-- 卡牌模板表单已接入；attributes 是 `{ name, value }[]` 数字初始值，字段类型 / 类字段待做。
+- 编辑器代码已重置：旧实现归档到 `archive/card_story_game/`，不再参与路由和构建。
+- 新编辑器已完成 UI 骨架和标签页：顶栏、左侧菜单、配置加载、标签 Table / 搜索 / 分页 / 编辑 Drawer。
+- 标签删除、动作 / 模板页面、属性系统之后再逐步补。
 
 ## 代码组织现状
 
-- 专项业务模块（类型、校验、编辑器）与页面一起放在 `src/pages/card_story_game/` 下。
-- 后续游戏页面也放在该业务目录内（如 `game/`），不把类型和校验上提到 `src/` 顶层。
+- 新代码在 `src/pages/card_story_game/` 下，从编辑器 UI 开始重新搭建。
+- 路由入口是 `editor/index.tsx`，路径仍是 `/card_story_game/editor`。
+- 旧代码只在 `archive/card_story_game/` 中参考，不要从新代码 import 归档文件。
 
 ## 已完成
 
-- 路由：HashRouter + `pages/**/index.tsx` 自动注册，子组件不会变成野路由。
-- 编辑器骨架：顶栏、左右两栏 Splitter、暗色样式。
-- 标签：新增 / 删除 / 重命名 / 描述编辑，`id` 唯一标识，选中态跟随 `id`。
-- 动作库：左树分组、动作新增 / 删除 / 选中；表单编辑 `verb`、参数（`Form.List` 管理，参数名做空值 / 重名校验）、targets / conditions / effects（JSON 文本域）；删除被模板引用的动作会阻止并列出引用方；动作的 verb / 参数名问题会汇总到顶栏，并阻止导出。
-- 卡牌模板：左树分组、新增 / 删除 / 选中；表单编辑 key、tags、attributes、auto / outgoing / incoming 动作引用；模板 key 空 / 重名、字段名空 / 重名、标签 / 动作引用问题计入顶栏并阻止导出；删除被模板引用的标签 / 动作会阻止并列出模板。
-- 数据加载：从 `public/card_story_game_default_config.json` 读取完整 `GameConfig`，按 `BASE_URL` 拼路径；加载完成前显示 Spin 并禁用导入导出。
-- 导入导出：纯 JSON、全量覆盖；缺失 / 重复标签 `id` 自动补号；动作和模板随配置完整保留。
-- 校验：结构校验阻断加载与导入；标签 / 动作语义问题计入顶栏，存在任意错误时阻止导出；标签语义问题不阻断加载 / 导入。
-- 数据模型：`allRules` 是全局动作库（id / verb / params / targets / conditions / effects），`cardTemplates` 只保存动作 id 引用；动作 id、模板引用、标签引用和字段初始值都会做结构校验。
-- 编辑器主题：编辑器路由层包 ConfigProvider + `darkAlgorithm` + 暖色 token，Modal / message 通过 `App.useApp()` 继承主题；首页和后续游戏页不受影响。
+- 旧代码归档：页面、类型、校验、service 和重置前的项目状态记录。
+- 新编辑器路由与 Layout：顶栏、左侧竖向 Menu、中央占位区。
+- 编辑器主题：`ConfigProvider` + `darkAlgorithm` + 暖色 token，只作用于编辑器路由。
+- 顶栏 UI：配置名输入、导入/导出按钮、标签校验徽章。
+- 菜单 UI：标签 / 动作 / 模板三项，选中态写入 URL 的 `page` 参数，刷新 / 直达 / 前进后退都能恢复；非法值回退到标签。
+- 设计笔记已复制到新目录 `src/pages/card_story_game/card_story_game.md`。
+- 配置加载：Editor 从 `public/card_story_game_default_config.json` 读取完整 JSON，保留未知字段，当前只使用 `allTags`。
+- 标签页：Table 列表、key / 描述搜索、分页、新建 / 编辑 Drawer；Drawer 通过 `useImperativeHandle` 暴露 `create()` / `edit(tag)` / `close()`，内部 `mode` 区分新建和编辑，标签数据和表单草稿都在内部；确认后才写回 config，取消不写。
+- 标签校验：key 为空 / 重名会计入顶栏状态。
+- 标签时间：`createdAt` 使用毫秒时间戳，列表按最新优先排序，Table 展示 `YYYY-MM-DD HH:mm:ss`；新建后回第一页并清空搜索；旧数据缺失 `createdAt` 时加载补当前时间。
 
 ## 待做
 
-- 规则编辑器：targets / conditions / effects 目前是 JSON 文本域，待结构化编辑与 AST 校验。
-- 字段类型：`fieldTypes` + 类字段，把 attributes 从数字 key-value 升级为有类型 / 默认值 / 范围的字段。
-- 右侧预览与完整校验（引用存在性、字段完整性）。
+- 数据层：逐步补齐动作 / 模板 / 属性的类型、解析和校验。
+- 标签删除：等模板引用存在后实现引用保护。
+- 动作页面：动作列表、参数、targets / conditions / effects。
+- 模板页面：模板列表、字段 / 标签 / 动作引用。
+- 属性系统：全局属性定义、模板属性绑定、params、字段类型。
+- 顶栏导入导出、校验计数。
 - 游戏本体页面。
 
 ## 当前数据状态
 
-- `public/card_story_game_default_config.json` 目前是标签 + 动作 + 模板的测试数据，不是最终游戏内容。
-- 标签空 key / 重名会让顶栏显示错误，这是语义校验的预期行为，不阻断加载。
+- `public/card_story_game_default_config.json` 现在是新编辑器实际读取的数据源，标签已带 `createdAt`；其他字段原样保留，后续页面逐步接入。
+- 文件里仍有重置前的动作 / 模板字段，新编辑器会原样保留；后续页面再逐步接入和收窄类型。
 
-## 决策记录
+## 设计参考
 
-状态只分两种：「已定」是聊过并达成一致的；「待定」是还没结论、先按现状走的。
-待定项不要当成规范引用。
-
-| 事项 | 结论 | 状态 | 理由 | 重新评估的时机 |
-|---|---|---|---|---|
-| DEV 守卫（线上隐藏编辑器） | 不做 | 已定 | 编辑器将来也要给玩家做故事，不只是开发工具 | 需要区分“玩家版 / 创作版”时 |
-| 草稿保存 / localStorage | 不做 | 已定 | 目前只有导出，没有保存概念 | 编辑时间长到怕刷新丢失时 |
-| 标签 `category` | 暂不引入 | 已定 | 现在没有使用场景，加了也是空字段 | 需要标签分组或互斥语义时 |
-| antd Form | 采用：Form 持输入态，`tags` 是模型，校验仍在 validate | 已定 | 统一表单外观与交互；动作参数已用 `Form.List`，双状态用 `onValuesChange` + `key` 重挂载控制 | 模板表单落地时沿用同一模式 |
-| 右侧预览 / 完整校验 | 暂时移除占位，等规则和模板落地再做 | 已定 | 占位没有实际内容，先让编辑区占满宽度 | 卡牌模板编辑器落地后 |
-| 模块化拆分 / 冲突检测 / 版本迁移 | 不做 | 已定 | 单文件阶段没必要提前设计 | 配置文件大到单文件难维护时 |
-| 撤销 / 重做 | 尚未讨论 | 待定 | 实现成本高，当前编辑量小 | 误操作开始造成实际损失时 |
+- 重置前的表单、校验、树组件和属性讨论记录在 `archive/card_story_game/` 与 `project_status_before_reset.md`，可作为设计参考，但新代码不直接依赖。
+- 后续新决策重新记录，不继承旧实现里的“已完成”状态。
 
 ## 技术债 / 现状例外
 
-以下是**当前状态，不是规范**，改到相关代码时顺手收敛即可：
-
-- `file_import.tsx` 里还有 `as string` 断言，可改为 `typeof` 判断；
-- Splitter 的分割线 / 折叠按钮仍靠 `editor.module.scss` 的 `:global` 覆盖，等组件 token 能覆盖时再收敛；
-- 中栏底部的“标签 / 动作 JSON”是临时放置，右侧预览做出来后可能迁移；
-- attributes 已是 `{ name, value }[]`，但字段类型 / 类字段未实现；字段名空 / 重名由模型校验并阻止导出；`allRules` 可编辑，但 targets / conditions / effects 仍是 JSON 文本域，只校验“合法 JSON 数组”，不校验 AST 语义；
-- 动作表单不在字段下提示空 `verb`，但顶栏会计数；任何顶栏错误都会阻止导出；
-- 顶栏的 `warningCount` 还没有产生来源，语义问题目前都记为 error。
+- 顶栏的导入 / 导出按钮目前只有 UI，没有行为。
+- 标签删除暂未实现；等模板引用存在后补引用保护。
+- 标签表格默认每页 5 条，可在 5 / 10 / 20 / 50 之间切换。
+- `Action` / `Template` 菜单还没有内容，页面暂为空。
+- `main.tsx` 的 StrictMode 仍处于注释状态，如果不是临时调试建议恢复。
 
 ## 文档分工
 
@@ -75,5 +66,3 @@
 ## 更新方式
 
 - 功能完成或状态变化时更新本文档。
-- 业务实现细节变化时，以代码和注释为准；需要跨文件说明时再补业务文档。
-- 涉及工程约定的改动先讨论，确认后同时更新 `development_conventions.md` 和代码。
