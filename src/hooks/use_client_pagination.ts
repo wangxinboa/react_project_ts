@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 
+export const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
+
 export interface ClientPaginationResult<T> {
 	total: number;
 	pageSize: number;
@@ -10,7 +12,7 @@ export interface ClientPaginationResult<T> {
 }
 
 /** 前端已拿到全部数据时的分页状态与切片逻辑 */
-export function useClientPagination<T>(items: T[], initialPageSize = 5): ClientPaginationResult<T> {
+export function useClientPagination<T>(items: T[], initialPageSize = 50): ClientPaginationResult<T> {
 	const [page, setPage] = useState(1);
 	const [pageSize, setPageSize] = useState(initialPageSize);
 

@@ -1,0 +1,25 @@
+.placeholder {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.06rem;
+	color: #6b6459;
+	text-align: center;
+}
+
+.mark {
+	color: #3a352e;
+	font-size: 0.28rem;
+}
+
+.title {
+	color: #b8ae9e;
+	font-size: 0.14rem;
+}
+
+.hint {
+	color: #4a443b;
+	font-size: 0.11rem;
+}

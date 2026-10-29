@@ -8,13 +8,11 @@ import type { RuleAction } from "../../../card_story_game_types.ts";
 import EllipsisText from "../../../../../components/ellipsis_text/ellipsis_text.tsx";
 import { formatDateTime } from "../../../../../utils/date_time.ts";
 import { compareByCreatedAtDesc } from "../../utils/sort.ts";
-import { useClientPagination } from "../../../../../hooks/use_client_pagination.ts";
+import { PAGE_SIZE_OPTIONS, useClientPagination } from "../../../../../hooks/use_client_pagination.ts";
 
 import ActionDrawer, { type ActionDrawerHandle } from "./action_drawer/action_drawer.tsx";
 
 import style from "./action_page.module.scss";
-
-const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
 interface ActionPageProps {
 	actions: RuleAction[];
@@ -34,9 +32,14 @@ export default function ActionPage({ actions, onActionsChange }: ActionPageProps
 		if (normalized === "") {
 			return sortedActions;
 		}
-		return sortedActions.filter((action) => {
-			return action.verb.toLowerCase().includes(normalized) || action.desc.toLowerCase().includes(normalized);
-		});
+		const filtered: RuleAction[] = [];
+		for (let i = 0; i < sortedActions.length; i++) {
+			const action = sortedActions[i];
+			if (action.verb.toLowerCase().includes(normalized) || action.desc.toLowerCase().includes(normalized)) {
+				filtered.push(action);
+			}
+		}
+		return filtered;
 	}, [sortedActions, keyword]);
 
 	const {

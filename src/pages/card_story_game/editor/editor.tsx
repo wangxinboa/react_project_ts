@@ -10,6 +10,7 @@ import EditorTopBar from "./components/editor_top_bar/editor_top_bar.tsx";
 import { EditorPageKey, isEditorPageKey } from "./utils/page_key.ts";
 import ActionPage from "./sections/action_page/action_page.tsx";
 import TagPage from "./sections/tag_page/tag_page.tsx";
+import TemplatePage from "./sections/template_page/template_page.tsx";
 
 import style from "./editor.module.scss";
 
@@ -121,6 +122,8 @@ export default function Editor() {
 						<TagPage tags={config.allTags} onTagsChange={handleTagsChange} />
 					) : activePage === EditorPageKey.ACTIONS && config ? (
 						<ActionPage actions={config.allRules} onActionsChange={handleActionsChange} />
+					) : activePage === EditorPageKey.TEMPLATES && config ? (
+						<TemplatePage templates={config.cardTemplates} />
 					) : null}
 				</main>
 			</div>

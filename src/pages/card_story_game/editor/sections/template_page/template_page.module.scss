@@ -1,0 +1,70 @@
+.templatePage {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.12rem;
+}
+
+.toolbar {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.08rem;
+}
+
+.search {
+	width: 3.2rem;
+}
+
+.createButton {
+	margin-left: auto;
+}
+
+.tableCard {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	background: #15120f;
+	border: 1px solid #2e2a25;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.tableWrap {
+	flex: 1;
+	min-height: 0;
+	overflow: auto;
+}
+
+.templateId {
+	color: #6b6459;
+	font-size: 0.11rem;
+}
+
+.templateKey {
+	color: #d9d2c7;
+}
+
+.emptyDesc {
+	color: #4a443b;
+}
+
+.count {
+	color: #8a8276;
+	font-size: 0.11rem;
+}
+
+.createdAt {
+	color: #8a8276;
+	font-size: 0.11rem;
+}
+
+.paginationRow {
+	flex-shrink: 0;
+	display: flex;
+	justify-content: flex-end;
+	padding: 0.1rem 0.12rem;
+	border-top: 1px solid #2e2a25;
+}

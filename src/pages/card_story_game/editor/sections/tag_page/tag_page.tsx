@@ -8,13 +8,11 @@ import type { TagItem } from "../../../card_story_game_types.ts";
 import EllipsisText from "../../../../../components/ellipsis_text/ellipsis_text.tsx";
 import { formatDateTime } from "../../../../../utils/date_time.ts";
 import { compareByCreatedAtDesc } from "../../utils/sort.ts";
-import { useClientPagination } from "../../../../../hooks/use_client_pagination.ts";
+import { PAGE_SIZE_OPTIONS, useClientPagination } from "../../../../../hooks/use_client_pagination.ts";
 
 import TagDrawer, { type TagDrawerHandle } from "./tag_drawer/tag_drawer.tsx";
 
 import style from "./tag_page.module.scss";
-
-const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
 interface TagPageProps {
 	tags: TagItem[];
@@ -34,9 +32,14 @@ export default function TagPage({ tags, onTagsChange }: TagPageProps) {
 		if (normalized === "") {
 			return sortedTags;
 		}
-		return sortedTags.filter((tag) => {
-			return tag.key.toLowerCase().includes(normalized) || tag.desc.toLowerCase().includes(normalized);
-		});
+		const filtered: TagItem[] = [];
+		for (let i = 0; i < sortedTags.length; i++) {
+			const tag = sortedTags[i];
+			if (tag.key.toLowerCase().includes(normalized) || tag.desc.toLowerCase().includes(normalized)) {
+				filtered.push(tag);
+			}
+		}
+		return filtered;
 	}, [sortedTags, keyword]);
 
 	const {

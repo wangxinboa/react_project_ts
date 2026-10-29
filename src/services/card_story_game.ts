@@ -1,4 +1,4 @@
-import type { GameConfig, RuleAction, TagItem } from "../pages/card_story_game/card_story_game_types.ts";
+import type { CardTemplate, GameConfig, RuleAction, TagItem } from "../pages/card_story_game/card_story_game_types.ts";
 
 const CONFIG_FILE = "card_story_game_default_config.json";
 
@@ -41,5 +41,22 @@ export async function serviceGetCardStoryGameConfig(): Promise<GameConfig> {
 		}
 	}
 
-	return { ...raw, allTags, allRules };
+	const rawTemplates = (raw as { cardTemplates?: unknown }).cardTemplates;
+	const cardTemplates: CardTemplate[] = [];
+	if (Array.isArray(rawTemplates)) {
+		for (let i = 0; i < rawTemplates.length; i++) {
+			const template = rawTemplates[i] as CardTemplate & { createdAt?: unknown };
+			cardTemplates.push({
+				...template,
+				desc: typeof template.desc === "string" ? template.desc : "",
+				tags: Array.isArray(template.tags) ? template.tags : [],
+				auto: Array.isArray(template.auto) ? template.auto : [],
+				outgoing: Array.isArray(template.outgoing) ? template.outgoing : [],
+				incoming: Array.isArray(template.incoming) ? template.incoming : [],
+				createdAt: typeof template.createdAt === "number" ? template.createdAt : now,
+			});
+		}
+	}
+
+	return { ...raw, allTags, allRules, cardTemplates };
 }

@@ -30,8 +30,22 @@ export interface RuleAction {
 	createdAt: number;
 }
 
+export interface CardTemplate {
+	id: number;
+	key: string;
+	desc: string;
+	tags: number[];
+	/** 属性系统落地前先保留原始结构 */
+	attributes?: unknown;
+	auto: number[];
+	outgoing: number[];
+	incoming: number[];
+	createdAt: number;
+}
+
 export interface GameConfig {
 	allTags: TagItem[];
 	allRules: RuleAction[];
+	cardTemplates: CardTemplate[];
 	[key: string]: unknown;
 }

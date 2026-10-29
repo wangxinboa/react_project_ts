@@ -58,5 +58,5 @@ docs/
 
 ## 当前进度
 
-编辑器已重置并接回默认配置：标签页已有 Table / 搜索 / 分页 / 编辑 Drawer；旧代码归档在 `archive/card_story_game/`，标签删除、动作 / 模板页面和游戏本体待做。
+编辑器已重置并接回默认配置：标签 / 动作 / 模板页均已接入；旧代码归档在 `archive/card_story_game/`，模板表单、属性系统和游戏本体待做。
 详见 [项目现状与进度](docs/project_status.md)。
