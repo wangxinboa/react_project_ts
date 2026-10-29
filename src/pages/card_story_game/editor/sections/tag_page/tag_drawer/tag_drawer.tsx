@@ -107,7 +107,7 @@ const TagDrawer = forwardRef<TagDrawerHandle, TagDrawerProps>(function TagDrawer
 			title={mode === FormMode.CREATE ? "新建标签" : "编辑标签"}
 			open={open}
 			onClose={handleClose}
-			width={420}
+			size={420}
 			forceRender
 			footer={
 				<div className={style.footer}>

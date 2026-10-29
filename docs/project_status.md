@@ -6,8 +6,8 @@
 ## 当前阶段
 
 - 编辑器代码已重置：旧实现归档到 `archive/card_story_game/`，不再参与路由和构建。
-- 新编辑器已完成 UI 骨架和标签页：顶栏、左侧菜单、配置加载、标签 Table / 搜索 / 分页 / 编辑 Drawer。
-- 标签删除、动作 / 模板页面、属性系统之后再逐步补。
+- 新编辑器已完成 UI 骨架、标签页和动作页：顶栏、左侧菜单、配置加载、Table / 搜索 / 分页 / 编辑 Drawer。
+- 标签删除、模板页面和属性系统之后再逐步补。
 
 ## 代码组织现状
 
@@ -26,13 +26,15 @@
 - 配置加载：Editor 从 `public/card_story_game_default_config.json` 读取完整 JSON，保留未知字段，当前只使用 `allTags`。
 - 标签页：Table 列表、key / 描述搜索、分页、新建 / 编辑 Drawer；Drawer 通过 `useImperativeHandle` 暴露 `create()` / `edit(tag)` / `close()`，内部 `mode` 区分新建和编辑，标签数据和表单草稿都在内部；确认后才写回 config，取消不写。
 - 标签校验：key 为空 / 重名会计入顶栏状态。
+- 动作页：Table 列表、verb / 描述搜索、分页、创建时间列；Drawer 编辑 verb / 描述 / 参数 / targets / conditions / effects，确认后写回 `allRules`，取消不写；动作类型已加入 `allRules`，旧数据缺 desc / createdAt 时加载补默认值。
+- 前端分页：`useClientPagination` 统一页码 / pageSize / 总数 / 当前页 / 切片 / 重置；TagPage、ActionPage 共用，Pagination JSX 仍留在页面。
 - 标签时间：`createdAt` 使用毫秒时间戳，列表按最新优先排序，Table 展示 `YYYY-MM-DD HH:mm:ss`；新建后回第一页并清空搜索；旧数据缺失 `createdAt` 时加载补当前时间。
 
 ## 待做
 
 - 数据层：逐步补齐动作 / 模板 / 属性的类型、解析和校验。
 - 标签删除：等模板引用存在后实现引用保护。
-- 动作页面：动作列表、参数、targets / conditions / effects。
+- 动作校验：verb / 参数名 / JSON 数组问题接入顶栏与导出保护。
 - 模板页面：模板列表、字段 / 标签 / 动作引用。
 - 属性系统：全局属性定义、模板属性绑定、params、字段类型。
 - 顶栏导入导出、校验计数。
@@ -51,9 +53,10 @@
 ## 技术债 / 现状例外
 
 - 顶栏的导入 / 导出按钮目前只有 UI，没有行为。
-- 标签删除暂未实现；等模板引用存在后补引用保护。
+- 标签 / 动作删除暂未实现；等模板引用存在后补引用保护。
+- 动作表单的 card 参数仍显示默认值输入框，提交时会被忽略；后续可按类型隐藏。
 - 标签表格默认每页 5 条，可在 5 / 10 / 20 / 50 之间切换。
-- `Action` / `Template` 菜单还没有内容，页面暂为空。
+- `Template` 菜单还没有内容，页面暂为空。
 - `main.tsx` 的 StrictMode 仍处于注释状态，如果不是临时调试建议恢复。
 
 ## 文档分工

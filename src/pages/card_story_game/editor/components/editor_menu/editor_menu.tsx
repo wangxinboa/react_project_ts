@@ -3,7 +3,7 @@ import { AppstoreOutlined, TagsOutlined, ThunderboltOutlined } from "@ant-design
 import { Menu } from "antd";
 import type { MenuProps } from "antd";
 
-import { EditorPageKey, isEditorPageKey } from "../../editor_page_key.ts";
+import { EditorPageKey, isEditorPageKey } from "../../utils/page_key.ts";
 
 import style from "./editor_menu.module.scss";
 

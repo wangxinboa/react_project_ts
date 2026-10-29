@@ -7,12 +7,13 @@ import type { TableColumnsType } from "antd";
 import type { TagItem } from "../../../card_story_game_types.ts";
 import EllipsisText from "../../../../../components/ellipsis_text/ellipsis_text.tsx";
 import { formatDateTime } from "../../../../../utils/date_time.ts";
+import { compareByCreatedAtDesc } from "../../utils/sort.ts";
+import { useClientPagination } from "../../../../../hooks/use_client_pagination.ts";
 
 import TagDrawer, { type TagDrawerHandle } from "./tag_drawer/tag_drawer.tsx";
 
 import style from "./tag_page.module.scss";
 
-const DEFAULT_PAGE_SIZE = 5;
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
 interface TagPageProps {
@@ -22,12 +23,10 @@ interface TagPageProps {
 
 export default function TagPage({ tags, onTagsChange }: TagPageProps) {
 	const [keyword, setKeyword] = useState("");
-	const [page, setPage] = useState(1);
-	const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 	const drawerRef = useRef<TagDrawerHandle>(null);
 
 	const sortedTags = useMemo(() => {
-		return [...tags].sort((a, b) => b.createdAt - a.createdAt || b.id - a.id);
+		return [...tags].sort(compareByCreatedAtDesc);
 	}, [tags]);
 
 	const filteredTags = useMemo(() => {
@@ -40,18 +39,22 @@ export default function TagPage({ tags, onTagsChange }: TagPageProps) {
 		});
 	}, [sortedTags, keyword]);
 
-	const total = useMemo(() => filteredTags.length, [filteredTags]);
-	const maxPage = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize]);
-	const currentPage = useMemo(() => Math.min(page, maxPage), [page, maxPage]);
-	const pagedTags = useMemo(() => {
-		const start = (currentPage - 1) * pageSize;
-		return filteredTags.slice(start, start + pageSize);
-	}, [filteredTags, currentPage, pageSize]);
+	const {
+		total,
+		pageSize,
+		currentPage,
+		pagedItems: pagedTags,
+		handlePageChange,
+		resetPage,
+	} = useClientPagination(filteredTags);
 
-	const handleSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-		setKeyword(event.target.value);
-		setPage(1);
-	}, []);
+	const handleSearchChange = useCallback(
+		(event: ChangeEvent<HTMLInputElement>) => {
+			setKeyword(event.target.value);
+			resetPage();
+		},
+		[resetPage],
+	);
 
 	const handleAfterCreate = useCallback(
 		(values: Pick<TagItem, "key" | "desc">) => {
@@ -65,10 +68,10 @@ export default function TagPage({ tags, onTagsChange }: TagPageProps) {
 				}
 				return [...prev, { id: maxId + 1, ...values, createdAt }];
 			});
-			setPage(1);
+			resetPage();
 			setKeyword("");
 		},
-		[onTagsChange],
+		[onTagsChange, resetPage],
 	);
 
 	const handleAfterEdit = useCallback(
@@ -91,11 +94,6 @@ export default function TagPage({ tags, onTagsChange }: TagPageProps) {
 
 	const handleEdit = useCallback((tag: TagItem) => {
 		drawerRef.current?.edit(tag);
-	}, []);
-
-	const handlePageChange = useCallback((nextPage: number, nextPageSize: number) => {
-		setPage(nextPage);
-		setPageSize(nextPageSize);
 	}, []);
 
 	const showTotal = useCallback((totalCount: number) => `共 ${totalCount} 条`, []);

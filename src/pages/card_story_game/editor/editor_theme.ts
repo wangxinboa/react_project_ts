@@ -44,6 +44,9 @@ export const editorTheme: ThemeConfig = {
 			defaultBg: "#1a1714",
 			defaultBorderColor: "#3a352e",
 			defaultColor: "#b8ae9e",
+			defaultShadow: "none",
+			primaryShadow: "none",
+			dangerShadow: "none",
 		},
 		Menu: {
 			itemBorderRadius: 3,

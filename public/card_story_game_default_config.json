@@ -59,7 +59,9 @@
 			],
 			"targets": [],
 			"conditions": [],
-			"effects": []
+			"effects": [],
+			"desc": "默认动作",
+			"createdAt": 1767830400000
 		}
 	],
 	"cardTemplates": [

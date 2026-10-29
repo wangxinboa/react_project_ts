@@ -1,0 +1,57 @@
+.footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.08rem;
+}
+
+.params {
+	display: flex;
+	flex-direction: column;
+}
+
+.paramHeader {
+	display: flex;
+	align-items: center;
+	gap: 0.08rem;
+	margin-bottom: 0.02rem;
+	color: #6b6459;
+	font-size: 0.11rem;
+}
+
+.paramRow {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.08rem;
+}
+
+.paramNameField {
+	flex: 1;
+	min-width: 0;
+}
+
+.paramTypeField {
+	flex: 0 0 0.85rem;
+}
+
+.paramDefaultField {
+	flex: 0 0 0.85rem;
+}
+
+.paramDefaultInput {
+	width: 100%;
+}
+
+.paramRowAction {
+	flex: 0 0 0.28rem;
+	width: 0.28rem;
+}
+
+.addParam {
+	align-self: flex-start;
+	margin-top: 0.02rem;
+}
+
+.jsonInput {
+	font-family: "SFMono-Regular", Consolas, monospace;
+	font-size: 0.12rem;
+}

@@ -2,12 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Alert, Spin } from "antd";
 
-import type { GameConfig, TagItem } from "../card_story_game_types.ts";
+import type { GameConfig, RuleAction, TagItem } from "../card_story_game_types.ts";
 import { validateTags } from "../validate/tags.ts";
 import { serviceGetCardStoryGameConfig } from "../../../services/card_story_game.ts";
 import EditorMenu from "./components/editor_menu/editor_menu.tsx";
 import EditorTopBar from "./components/editor_top_bar/editor_top_bar.tsx";
-import { EditorPageKey, isEditorPageKey } from "./editor_page_key.ts";
+import { EditorPageKey, isEditorPageKey } from "./utils/page_key.ts";
+import ActionPage from "./sections/action_page/action_page.tsx";
 import TagPage from "./sections/tag_page/tag_page.tsx";
 
 import style from "./editor.module.scss";
@@ -31,6 +32,37 @@ export default function Editor() {
 	}, [requestedPage]);
 	const pageTitle = PAGE_TITLES[activePage];
 	const tagValidation = useMemo(() => validateTags(config?.allTags ?? []), [config]);
+
+	const handleTagsChange = useCallback((updater: (prev: TagItem[]) => TagItem[]) => {
+		setConfig((prev) => {
+			if (!prev) {
+				return prev;
+			}
+			return { ...prev, allTags: updater(prev.allTags) };
+		});
+	}, []);
+
+	const handleActionsChange = useCallback((updater: (prev: RuleAction[]) => RuleAction[]) => {
+		setConfig((prev) => {
+			if (!prev) {
+				return prev;
+			}
+			return { ...prev, allRules: updater(prev.allRules) };
+		});
+	}, []);
+
+	const handlePageChange = useCallback(
+		(key: EditorPageKey) => {
+			if (searchParams.get("page") === key) {
+				return;
+			}
+
+			const next = new URLSearchParams(searchParams);
+			next.set("page", key);
+			setSearchParams(next);
+		},
+		[searchParams, setSearchParams],
+	);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -59,28 +91,6 @@ export default function Editor() {
 		};
 	}, []);
 
-	const handleTagsChange = useCallback((updater: (prev: TagItem[]) => TagItem[]) => {
-		setConfig((prev) => {
-			if (!prev) {
-				return prev;
-			}
-			return { ...prev, allTags: updater(prev.allTags) };
-		});
-	}, []);
-
-	const handlePageChange = useCallback(
-		(key: EditorPageKey) => {
-			if (searchParams.get("page") === key) {
-				return;
-			}
-
-			const next = new URLSearchParams(searchParams);
-			next.set("page", key);
-			setSearchParams(next);
-		},
-		[searchParams, setSearchParams],
-	);
-
 	return (
 		<div className={style.editor}>
 			<EditorTopBar
@@ -105,16 +115,12 @@ export default function Editor() {
 						</div>
 					) : loadError ? (
 						<div className={style.state}>
-							<Alert
-								className={style.loadError}
-								type="error"
-								showIcon
-								message="配置加载失败"
-								description={loadError}
-							/>
+							<Alert className={style.loadError} type="error" showIcon message="配置加载失败" description={loadError} />
 						</div>
 					) : activePage === EditorPageKey.TAGS && config ? (
 						<TagPage tags={config.allTags} onTagsChange={handleTagsChange} />
+					) : activePage === EditorPageKey.ACTIONS && config ? (
+						<ActionPage actions={config.allRules} onActionsChange={handleActionsChange} />
 					) : null}
 				</main>
 			</div>

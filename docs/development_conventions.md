@@ -26,6 +26,7 @@
 - 类型之间存在关联时，直接引用既有类型（如 `CardTemplate["attributes"]`、`TagItem["id"]`），不要重复写结构相同的类型。
 - 通用类型判断优先用 `src/utils/type_guard.ts` 里的 `isString` / `isPlainObject` / `isPositiveInteger`，不要在业务代码里复制同义判断。
 - 与业务无关的通用转换（如时间格式化）放在 `src/utils/`，页面和组件只调用，不在组件内重复实现。
+- 只在一个业务内部共享的纯函数放在对应业务目录（如 `editor/utils/`），不放进 `src/utils`；跨页面重复的排序 / 比较逻辑放业务内部共享模块，避免页面之间互相 import。
 - 不使用 TypeScript `enum`（`erasableSyntaxOnly` 禁止运行时 enum）。需要枚举语义时统一用 `const` 对象 + 派生联合类型，并在所有使用处引用对象成员，不要重复字符串字面量：
 
   ```ts
