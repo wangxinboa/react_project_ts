@@ -1,0 +1,63 @@
+{
+	"workbench.colorTheme": "Dark Modern",
+	"git.decorations.enabled": false,
+	"git.confirmSync": false,
+	"explorer.confirmDelete": false,
+	"explorer.confirmDragAndDrop": false,
+	"js/ts.suggest.autoImports": true,
+	"[typescript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[javascriptreact]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[html]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[css]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[scss]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[markdown]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"diffEditor.ignoreTrimWhitespace": true,
+	"js/ts.preferences.quoteStyle": "double",
+	"js/ts.preferences.importModuleSpecifierEnding": "js",
+	"js/ts.updateImportsOnFileMove.enabled": "never",
+	"editor.formatOnSave": true,
+	"editor.fontWeight": "normal",
+	"editor.tabSize": 2,
+	"editor.insertSpaces": false,
+	"editor.detectIndentation": false,
+	"js/ts.format.semicolons": "insert",
+	"js/ts.suggest.paths": true,
+	"js/ts.preferences.importModuleSpecifier": "relative",
+	// eslint
+	"eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+	// prettier
+	"prettier.printWidth": 120,
+	"prettier.useTabs": true,
+	"prettier.singleQuote": false
+
+	// "chat.disableAIFeatures": true,
+	// "github.copilot.enable": { "*": true },
+	// "editor.inlineSuggest.enabled": false,
+	// "github.copilot.nextEditSuggestions.enabled": false,
+	// "chat.agent.enabled": false,
+	// "git.addAICoAuthor": "off"
+}
