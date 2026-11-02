@@ -1,7 +1,7 @@
 import { Drawer } from "antd";
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 
-import type { CardTemplate } from "../../../../card_story_game_types.ts";
+import type { CardTemplate } from "../../../../card_story_game_types/index.ts";
 import { FormMode } from "../../../../../../utils/form_mode.ts";
 
 import style from "./template_drawer.module.scss";

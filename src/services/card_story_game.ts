@@ -1,4 +1,4 @@
-import type { CardTemplate, GameConfig, RuleAction, TagItem } from "../pages/card_story_game/card_story_game_types.ts";
+import type { AttributeDefinition, CardTemplate, GameConfig, RuleAction, TagItem } from "../pages/card_story_game/card_story_game_types/index.ts";
 
 const CONFIG_FILE = "card_story_game_default_config.json";
 
@@ -58,5 +58,6 @@ export async function serviceGetCardStoryGameConfig(): Promise<GameConfig> {
 		}
 	}
 
-	return { ...raw, allTags, allRules, cardTemplates };
+	const allAttributes = (raw as { allAttributes?: AttributeDefinition[] }).allAttributes ?? [];
+	return { ...raw, allTags, allAttributes, allRules, cardTemplates };
 }

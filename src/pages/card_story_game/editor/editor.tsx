@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Alert, Spin } from "antd";
 
-import type { GameConfig, RuleAction, TagItem } from "../card_story_game_types.ts";
+import type { GameConfig, RuleAction, TagItem } from "../card_story_game_types/index.ts";
 import { validateTags } from "../validate/tags.ts";
 import { serviceGetCardStoryGameConfig } from "../../../services/card_story_game.ts";
 import EditorMenu from "./components/editor_menu/editor_menu.tsx";

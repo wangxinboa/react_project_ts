@@ -1,7 +1,7 @@
 import { DeleteOutlined } from "@ant-design/icons";
 import { Button, Form, Input, InputNumber, Select } from "antd";
 
-import { ActionParamType } from "../../../../card_story_game_types.ts";
+import { ActionParamType } from "../../../../card_story_game_types/index.ts";
 
 import style from "./action_drawer.module.scss";
 

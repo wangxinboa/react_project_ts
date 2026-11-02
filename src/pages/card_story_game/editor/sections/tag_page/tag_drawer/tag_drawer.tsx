@@ -1,7 +1,7 @@
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from "react";
 import { Button, Drawer, Form, Input } from "antd";
 
-import type { TagItem } from "../../../../card_story_game_types.ts";
+import type { TagItem } from "../../../../card_story_game_types/index.ts";
 import { FormMode } from "../../../../../../utils/form_mode.ts";
 
 import style from "./tag_drawer.module.scss";

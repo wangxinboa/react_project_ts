@@ -1,8 +1,8 @@
 import { Button, Drawer, Form, Input } from "antd";
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from "react";
 
-import type { ActionParam, RuleAction } from "../../../../card_story_game_types.ts";
-import { ActionParamType } from "../../../../card_story_game_types.ts";
+import type { ActionParam, Condition, EffectCall, RuleAction } from "../../../../card_story_game_types/index.ts";
+import { ActionParamType } from "../../../../card_story_game_types/index.ts";
 import { FormMode } from "../../../../../../utils/form_mode.ts";
 import { parseJsonArray } from "../../../../../../utils/json.ts";
 
@@ -31,8 +31,8 @@ interface ActionFormResult {
 	desc: string;
 	params: ActionParam[];
 	targets: unknown[];
-	conditions: unknown[];
-	effects: unknown[];
+	conditions: Condition[];
+	effects: EffectCall[];
 }
 
 export interface ActionDrawerHandle {
@@ -124,8 +124,8 @@ const ActionDrawer = forwardRef<ActionDrawerHandle, ActionDrawerProps>(function 
 			}
 
 			const targets = parseJsonArray(values.targets);
-			const conditions = parseJsonArray(values.conditions);
-			const effects = parseJsonArray(values.effects);
+			const conditions = parseJsonArray(values.conditions) as Condition[] | null;
+			const effects = parseJsonArray(values.effects) as EffectCall[] | null;
 			if (targets === null || conditions === null || effects === null) {
 				return;
 			}

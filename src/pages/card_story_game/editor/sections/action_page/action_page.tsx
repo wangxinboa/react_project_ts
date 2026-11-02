@@ -4,7 +4,7 @@ import type { TableColumnsType } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 
-import type { RuleAction } from "../../../card_story_game_types.ts";
+import type { RuleAction } from "../../../card_story_game_types/index.ts";
 import EllipsisText from "../../../../../components/ellipsis_text/ellipsis_text.tsx";
 import { formatDateTime } from "../../../../../utils/date_time.ts";
 import { compareByCreatedAtDesc } from "../../utils/sort.ts";

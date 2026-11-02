@@ -1,4 +1,4 @@
-import type { TagItem } from "../card_story_game_types.ts";
+import type { TagItem } from "../card_story_game_types/index.ts";
 import type { ValidationIssue } from "./validate_types.ts";
 
 export interface TagValidationResult {

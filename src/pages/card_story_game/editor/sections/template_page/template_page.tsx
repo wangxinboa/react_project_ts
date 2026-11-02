@@ -4,7 +4,7 @@ import type { TableColumnsType } from "antd";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 
-import type { CardTemplate } from "../../../card_story_game_types.ts";
+import type { CardTemplate } from "../../../card_story_game_types/index.ts";
 import EllipsisText from "../../../../../components/ellipsis_text/ellipsis_text.tsx";
 import { formatDateTime } from "../../../../../utils/date_time.ts";
 import { PAGE_SIZE_OPTIONS, useClientPagination } from "../../../../../hooks/use_client_pagination.ts";
@@ -112,7 +112,7 @@ export default function TemplatePage({ templates }: TemplatePageProps) {
 				title: "响应规则",
 				key: "incoming",
 				width: 90,
-				render: (_, template) => <span className={style.count}>{template.incoming.length}</span>,
+				render: (_, template) => <span className={style.count}>{(template.incoming ?? []).length}</span>,
 			},
 			{
 				title: "创建时间",

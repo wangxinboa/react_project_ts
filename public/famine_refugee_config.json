@@ -1,0 +1,1425 @@
+{
+	"schemaVersion": 19,
+	"allTags": [
+		{
+			"id": 1,
+			"key": "饥饿",
+			"desc": "饱食度过低",
+			"kind": "derived",
+			"conditions": [
+				{
+					"target": "host",
+					"attributes": [
+						{
+							"id": 1,
+							"lte": 20
+						}
+					],
+					"hasAnyTemplate": [
+						1,
+						2
+					]
+				}
+			]
+		},
+		{
+			"id": 2,
+			"key": "虚弱",
+			"desc": "体力过低",
+			"kind": "derived",
+			"conditions": [
+				{
+					"target": "host",
+					"attributes": [
+						{
+							"id": 2,
+							"lte": 20
+						}
+					],
+					"hasAnyTemplate": [
+						1,
+						2
+					]
+				}
+			]
+		},
+		{
+			"id": 3,
+			"key": "濒死",
+			"desc": "生命过低",
+			"kind": "derived",
+			"conditions": [
+				{
+					"target": "host",
+					"attributes": [
+						{
+							"id": 3,
+							"lte": 30
+						}
+					],
+					"hasAnyTemplate": [
+						1,
+						2
+					]
+				}
+			]
+		},
+		{
+			"id": 4,
+			"key": "重伤",
+			"desc": "损伤过高",
+			"kind": "derived",
+			"conditions": [
+				{
+					"target": "host",
+					"attributes": [
+						{
+							"id": 4,
+							"gte": 50
+						}
+					],
+					"hasAnyTemplate": [
+						1,
+						2
+					]
+				}
+			]
+		},
+		{
+			"id": 5,
+			"key": "通灵",
+			"desc": "灵性过高",
+			"kind": "derived",
+			"conditions": [
+				{
+					"target": "host",
+					"attributes": [
+						{
+							"id": 5,
+							"gte": 50
+						}
+					],
+					"hasAnyTemplate": [
+						1,
+						2
+					]
+				}
+			]
+		},
+		{
+			"id": 6,
+			"key": "污染",
+			"desc": "污染过高",
+			"kind": "derived",
+			"conditions": [
+				{
+					"target": "host",
+					"attributes": [
+						{
+							"id": 6,
+							"gte": 50
+						}
+					],
+					"hasAnyTemplate": [
+						1,
+						2
+					]
+				}
+			]
+		},
+		{
+			"id": 7,
+			"key": "异化",
+			"desc": "污染越过临界",
+			"kind": "derived",
+			"conditions": [
+				{
+					"target": "host",
+					"attributes": [
+						{
+							"id": 6,
+							"gte": 60
+						}
+					],
+					"hasAnyTemplate": [
+						1,
+						2
+					]
+				}
+			]
+		},
+		{
+			"id": 8,
+			"key": "食物",
+			"desc": "可以作为食物",
+			"kind": "state"
+		},
+		{
+			"id": 9,
+			"key": "重物",
+			"desc": "沉重、可搬运",
+			"kind": "state"
+		},
+		{
+			"id": 10,
+			"key": "濒危",
+			"desc": "身体状态极低",
+			"kind": "derived",
+			"conditions": [
+				{
+					"target": "host",
+					"attributes": [
+						{
+							"id": 7,
+							"lte": 0.35
+						}
+					],
+					"hasAnyTemplate": [
+						1,
+						2
+					]
+				}
+			]
+		},
+		{
+			"id": 11,
+			"key": "流血",
+			"desc": "伤口仍在流血",
+			"kind": "state",
+			"attributes": [
+				{
+					"id": 10,
+					"value": 1
+				}
+			],
+			"auto": [
+				{
+					"conditions": [
+						{
+							"target": "host",
+							"attributes": [
+								{
+									"id": 3,
+									"gt": 0
+								}
+							]
+						}
+					],
+					"effects": [
+						{
+							"target": "host",
+							"kind": "changeAttributes",
+							"conditions": [
+								{
+									"target": "source",
+									"attributes": [
+										{
+											"id": 10,
+											"gt": 0
+										}
+									]
+								}
+							],
+							"changes": [
+								{
+									"attributeId": 3,
+									"delta": -1
+								}
+							]
+						},
+						{
+							"target": "source",
+							"kind": "changeAttributes",
+							"changes": [
+								{
+									"attributeId": 10,
+									"delta": -1
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": 12,
+			"key": "燃料",
+			"desc": "可以作为燃料",
+			"kind": "state"
+		},
+		{
+			"id": 13,
+			"key": "熟食",
+			"desc": "经过烹饪的食物",
+			"kind": "state"
+		}
+	],
+	"allAttributes": [
+		{
+			"id": 1,
+			"key": "satiety",
+			"label": "饱食",
+			"desc": "当前饱食度",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 100
+			}
+		},
+		{
+			"id": 2,
+			"key": "stamina",
+			"label": "体力",
+			"desc": "当前体力",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 100
+			}
+		},
+		{
+			"id": 3,
+			"key": "life",
+			"label": "生命",
+			"desc": "当前生命",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 100
+			}
+		},
+		{
+			"id": 4,
+			"key": "injury",
+			"label": "损伤",
+			"desc": "身体损伤",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 100
+			}
+		},
+		{
+			"id": 5,
+			"key": "spirit",
+			"label": "灵性",
+			"desc": "灵性强度",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 100
+			}
+		},
+		{
+			"id": 6,
+			"key": "corruption",
+			"label": "污染",
+			"desc": "异化污染",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 100
+			}
+		},
+		{
+			"id": 7,
+			"key": "bodyState",
+			"label": "身体状态",
+			"desc": "综合身体状态",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "clamp",
+				"min": 0,
+				"max": 1,
+				"value": {
+					"op": "add",
+					"args": [
+						{
+							"op": "mul",
+							"args": [
+								{
+									"op": "number",
+									"value": 0.35
+								},
+								{
+									"op": "normalize",
+									"id": 3,
+									"min": 0,
+									"max": 100
+								}
+							]
+						},
+						{
+							"op": "mul",
+							"args": [
+								{
+									"op": "number",
+									"value": 0.2
+								},
+								{
+									"op": "sub",
+									"args": [
+										{
+											"op": "number",
+											"value": 1
+										},
+										{
+											"op": "normalize",
+											"id": 4,
+											"min": 0,
+											"max": 100
+										}
+									]
+								}
+							]
+						},
+						{
+							"op": "mul",
+							"args": [
+								{
+									"op": "number",
+									"value": 0.2
+								},
+								{
+									"op": "normalize",
+									"id": 2,
+									"min": 0,
+									"max": 100
+								}
+							]
+						},
+						{
+							"op": "mul",
+							"args": [
+								{
+									"op": "number",
+									"value": 0.1
+								},
+								{
+									"op": "normalize",
+									"id": 1,
+									"min": 0,
+									"max": 100
+								}
+							]
+						},
+						{
+							"op": "mul",
+							"args": [
+								{
+									"op": "normalize",
+									"id": 5,
+									"min": 0,
+									"max": 100
+								},
+								{
+									"op": "attr",
+									"id": 11
+								}
+							]
+						},
+						{
+							"op": "mul",
+							"args": [
+								{
+									"op": "normalize",
+									"id": 6,
+									"min": 0,
+									"max": 100
+								},
+								{
+									"op": "attr",
+									"id": 12
+								}
+							]
+						}
+					]
+				}
+			}
+		},
+		{
+			"id": 8,
+			"key": "nutrition",
+			"label": "营养",
+			"desc": "食物营养",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 100
+			}
+		},
+		{
+			"id": 9,
+			"key": "freshness",
+			"label": "新鲜度",
+			"desc": "食物新鲜度",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 100
+			}
+		},
+		{
+			"id": 10,
+			"key": "severity",
+			"label": "严重度",
+			"desc": "流血的严重程度",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 5
+			}
+		},
+		{
+			"id": 11,
+			"key": "spiritWeight",
+			"label": "灵性权重",
+			"desc": "内部公式参数：灵性对身体的权重",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": -5,
+				"max": 5
+			},
+			"visible": false
+		},
+		{
+			"id": 12,
+			"key": "corruptionWeight",
+			"label": "污染权重",
+			"desc": "内部公式参数：污染对身体的权重",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": -5,
+				"max": 5
+			},
+			"visible": false
+		}
+	],
+	"allRules": [
+		{
+			"id": 1,
+			"verb": "rest",
+			"desc": "休息",
+			"params": [],
+			"timeCost": {
+				"op": "number",
+				"value": 120
+			},
+			"conditions": [
+				{
+					"target": "source",
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"slots": [],
+			"effects": [
+				{
+					"kind": "changeAttributes",
+					"target": "source",
+					"changes": [
+						{
+							"attributeId": 2,
+							"delta": 18
+						},
+						{
+							"attributeId": 1,
+							"delta": -3
+						},
+						{
+							"attributeId": 4,
+							"delta": -4
+						},
+						{
+							"attributeId": 3,
+							"delta": 1
+						}
+					]
+				},
+				{
+					"effectId": 3
+				}
+			],
+			"createdAt": 1767974400001
+		},
+		{
+			"id": 2,
+			"verb": "work",
+			"desc": "劳作",
+			"params": [],
+			"timeCost": {
+				"op": "add",
+				"args": [
+					{
+						"op": "number",
+						"value": 240
+					},
+					{
+						"op": "mul",
+						"args": [
+							{
+								"op": "sub",
+								"args": [
+									{
+										"op": "number",
+										"value": 100
+									},
+									{
+										"op": "attr",
+										"id": 2
+									}
+								]
+							},
+							{
+								"op": "number",
+								"value": 1.5
+							}
+						]
+					}
+				]
+			},
+			"conditions": [
+				{
+					"target": "source",
+					"attributes": [
+						{
+							"id": 2,
+							"gte": 18
+						}
+					]
+				}
+			],
+			"slots": [],
+			"effects": [
+				{
+					"kind": "changeAttributes",
+					"target": "source",
+					"changes": [
+						{
+							"attributeId": 2,
+							"delta": -18
+						},
+						{
+							"attributeId": 1,
+							"delta": -10
+						},
+						{
+							"attributeId": 3,
+							"delta": -2
+						},
+						{
+							"attributeId": 4,
+							"delta": 2
+						}
+					]
+				},
+				{
+					"effectId": 4
+				}
+			],
+			"createdAt": 1767974400002
+		},
+		{
+			"id": 3,
+			"verb": "wound",
+			"desc": "受伤",
+			"params": [],
+			"timeCost": {
+				"op": "number",
+				"value": 60
+			},
+			"conditions": [
+				{
+					"target": "source",
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"slots": [],
+			"effects": [
+				{
+					"kind": "changeAttributes",
+					"target": "source",
+					"changes": [
+						{
+							"attributeId": 4,
+							"delta": 25
+						},
+						{
+							"attributeId": 3,
+							"delta": -12
+						}
+					]
+				},
+				{
+					"effectId": 2
+				}
+			],
+			"createdAt": 1767974400003
+		},
+		{
+			"id": 4,
+			"verb": "ritual",
+			"desc": "禁忌仪式",
+			"params": [],
+			"timeCost": {
+				"op": "number",
+				"value": 60
+			},
+			"conditions": [
+				{
+					"target": "source",
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"slots": [],
+			"effects": [
+				{
+					"kind": "changeAttributes",
+					"target": "source",
+					"changes": [
+						{
+							"attributeId": 5,
+							"delta": 20
+						},
+						{
+							"attributeId": 6,
+							"delta": 15
+						},
+						{
+							"attributeId": 3,
+							"delta": -8
+						},
+						{
+							"attributeId": 1,
+							"delta": -5
+						}
+					]
+				},
+				{
+					"effectId": 1
+				}
+			],
+			"createdAt": 1767974400004
+		},
+		{
+			"id": 5,
+			"verb": "eat",
+			"desc": "进食",
+			"params": [],
+			"timeCost": {
+				"op": "add",
+				"args": [
+					{
+						"op": "number",
+						"value": 60
+					},
+					{
+						"op": "number",
+						"value": -15,
+						"conditions": [
+							{
+								"target": "slot",
+								"slot": "food",
+								"hasTag": 13
+							}
+						]
+					}
+				]
+			},
+			"conditions": [
+				{
+					"target": "source",
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"slots": [
+				{
+					"id": "food",
+					"desc": "食物",
+					"count": 1,
+					"conditions": [
+						{
+							"target": "slot",
+							"hasTag": 8
+						},
+						{
+							"target": "slot",
+							"attributes": [
+								{
+									"id": 9,
+									"gt": 0
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"kind": "changeAttributes",
+					"target": "source",
+					"changes": [
+						{
+							"attributeId": 1,
+							"delta": 30
+						},
+						{
+							"attributeId": 2,
+							"delta": 5
+						}
+					]
+				},
+				{
+					"kind": "changeAttributes",
+					"target": "source",
+					"conditions": [
+						{
+							"target": "slot",
+							"slot": "food",
+							"hasTag": 13
+						}
+					],
+					"changes": [
+						{
+							"attributeId": 1,
+							"delta": 25
+						},
+						{
+							"attributeId": 2,
+							"delta": 10
+						},
+						{
+							"attributeId": 3,
+							"delta": 2
+						}
+					]
+				},
+				{
+					"kind": "removeCard",
+					"target": "slot",
+					"slot": "food"
+				}
+			],
+			"createdAt": 1767974400005
+		},
+		{
+			"id": 6,
+			"verb": "metabolize",
+			"desc": "代谢",
+			"params": [],
+			"timeCost": {
+				"op": "number",
+				"value": 0
+			},
+			"conditions": [
+				{
+					"target": "source",
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"slots": [],
+			"effects": [
+				{
+					"kind": "changeAttributes",
+					"target": "source",
+					"changes": [
+						{
+							"attributeId": 1,
+							"delta": -1
+						}
+					]
+				},
+				{
+					"kind": "changeAttributes",
+					"target": "source",
+					"changes": [
+						{
+							"attributeId": 2,
+							"delta": -1
+						},
+						{
+							"attributeId": 3,
+							"delta": -1
+						}
+					],
+					"conditions": [
+						{
+							"target": "source",
+							"attributes": [
+								{
+									"id": 1,
+									"lte": 0
+								}
+							]
+						}
+					]
+				},
+				{
+					"kind": "changeAttributes",
+					"target": "source",
+					"changes": [
+						{
+							"attributeId": 2,
+							"delta": -0.5
+						}
+					],
+					"conditions": [
+						{
+							"target": "source",
+							"attributes": [
+								{
+									"id": 1,
+									"gt": 0
+								}
+							]
+						},
+						{
+							"target": "source",
+							"attributes": [
+								{
+									"id": 1,
+									"lt": 20
+								}
+							]
+						}
+					]
+				},
+				{
+					"kind": "changeAttributes",
+					"target": "source",
+					"changes": [
+						{
+							"attributeId": 2,
+							"delta": 0.5
+						},
+						{
+							"attributeId": 4,
+							"delta": -0.5
+						},
+						{
+							"attributeId": 3,
+							"delta": 0.5
+						}
+					],
+					"conditions": [
+						{
+							"target": "source",
+							"attributes": [
+								{
+									"id": 1,
+									"gte": 50
+								}
+							]
+						}
+					]
+				}
+			],
+			"createdAt": 1767974400006
+		},
+		{
+			"id": 7,
+			"verb": "spoil",
+			"desc": "腐败",
+			"params": [],
+			"timeCost": {
+				"op": "number",
+				"value": 0
+			},
+			"conditions": [],
+			"slots": [],
+			"effects": [
+				{
+					"kind": "changeAttributes",
+					"target": "source",
+					"changes": [
+						{
+							"attributeId": 9,
+							"delta": -1
+						}
+					]
+				}
+			],
+			"createdAt": 1767974400007
+		},
+		{
+			"id": 10,
+			"verb": "gatherWood",
+			"desc": "拾柴",
+			"params": [],
+			"timeCost": {
+				"op": "number",
+				"value": 30
+			},
+			"conditions": [
+				{
+					"target": "source",
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"slots": [],
+			"effects": [
+				{
+					"kind": "addCard",
+					"templateId": 6
+				}
+			],
+			"createdAt": 1767974400010
+		},
+		{
+			"id": 11,
+			"verb": "cookBread",
+			"desc": "烤面包",
+			"params": [],
+			"timeCost": {
+				"op": "number",
+				"value": 30
+			},
+			"conditions": [
+				{
+					"target": "source",
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"slots": [
+				{
+					"id": "bread",
+					"desc": "面包",
+					"count": 1,
+					"conditions": [
+						{
+							"target": "slot",
+							"hasTag": 8
+						},
+						{
+							"target": "slot",
+							"attributes": [
+								{
+									"id": 9,
+									"gt": 0
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "fuel",
+					"desc": "燃料",
+					"count": 1,
+					"conditions": [
+						{
+							"target": "slot",
+							"hasTag": 12
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"kind": "removeCard",
+					"target": "slot",
+					"slot": "bread"
+				},
+				{
+					"kind": "removeCard",
+					"target": "slot",
+					"slot": "fuel"
+				},
+				{
+					"kind": "addCard",
+					"templateId": 7
+				}
+			],
+			"createdAt": 1767974400011
+		}
+	],
+	"cardTemplates": [
+		{
+			"id": 1,
+			"key": "饥荒流民",
+			"desc": "在饥荒中挣扎的流民",
+			"tags": [],
+			"attributes": [
+				{
+					"id": 1,
+					"value": 45
+				},
+				{
+					"id": 2,
+					"value": 60
+				},
+				{
+					"id": 3,
+					"value": 100
+				},
+				{
+					"id": 4,
+					"value": 0
+				},
+				{
+					"id": 5,
+					"value": 10
+				},
+				{
+					"id": 6,
+					"value": 0
+				},
+				{
+					"id": 11,
+					"value": 0.15
+				},
+				{
+					"id": 12,
+					"value": -0.2
+				}
+			],
+			"auto": [
+				6
+			],
+			"outgoing": [
+				1,
+				2,
+				3,
+				4,
+				5,
+				10,
+				11
+			],
+			"createdAt": 1767974400010
+		},
+		{
+			"id": 2,
+			"key": "异化流民",
+			"desc": "被污染改写的流民",
+			"tags": [],
+			"attributes": [
+				{
+					"id": 1,
+					"value": 45
+				},
+				{
+					"id": 2,
+					"value": 60
+				},
+				{
+					"id": 3,
+					"value": 100
+				},
+				{
+					"id": 4,
+					"value": 0
+				},
+				{
+					"id": 5,
+					"value": 10
+				},
+				{
+					"id": 6,
+					"value": 0
+				},
+				{
+					"id": 11,
+					"value": 0.25
+				},
+				{
+					"id": 12,
+					"value": -0.1
+				}
+			],
+			"auto": [
+				6
+			],
+			"outgoing": [
+				1,
+				2,
+				3,
+				4,
+				5
+			],
+			"createdAt": 1767974400011
+		},
+		{
+			"id": 3,
+			"key": "干硬面包",
+			"desc": "勉强能入口的食物",
+			"tags": [
+				8
+			],
+			"attributes": [
+				{
+					"id": 8,
+					"value": 20
+				},
+				{
+					"id": 9,
+					"value": 100
+				}
+			],
+			"auto": [
+				7
+			],
+			"outgoing": [],
+			"createdAt": 1767974400012
+		},
+		{
+			"id": 4,
+			"key": "石头",
+			"desc": "沉重、没有生命的石头",
+			"tags": [
+				9
+			],
+			"attributes": [],
+			"auto": [],
+			"outgoing": [],
+			"createdAt": 1767974400013
+		},
+		{
+			"id": 5,
+			"key": "另一个流民",
+			"desc": "同样在饥饿中挣扎的人",
+			"tags": [],
+			"attributes": [
+				{
+					"id": 1,
+					"value": 30
+				},
+				{
+					"id": 2,
+					"value": 45
+				},
+				{
+					"id": 3,
+					"value": 100
+				},
+				{
+					"id": 4,
+					"value": 0
+				},
+				{
+					"id": 5,
+					"value": 5
+				},
+				{
+					"id": 6,
+					"value": 0
+				}
+			],
+			"auto": [
+				6
+			],
+			"outgoing": [],
+			"createdAt": 1767974400014
+		},
+		{
+			"id": 6,
+			"key": "木柴",
+			"desc": "可以燃烧的柴火",
+			"tags": [
+				12
+			],
+			"attributes": [],
+			"auto": [],
+			"outgoing": [],
+			"createdAt": 1767974400006
+		},
+		{
+			"id": 7,
+			"key": "烤面包",
+			"desc": "烤过的面包，更顶饱",
+			"tags": [
+				8,
+				13
+			],
+			"attributes": [
+				{
+					"id": 8,
+					"value": 45
+				},
+				{
+					"id": 9,
+					"value": 100
+				}
+			],
+			"auto": [],
+			"outgoing": [],
+			"createdAt": 1767974400007
+		}
+	],
+	"saveData": {
+		"playerCardId": "player",
+		"cards": [
+			{
+				"id": "player",
+				"templateId": 1
+			},
+			{
+				"id": "bread",
+				"templateId": 3
+			},
+			{
+				"id": "stone",
+				"templateId": 4
+			},
+			{
+				"id": "stranger",
+				"templateId": 5
+			}
+		],
+		"time": 480
+	},
+	"initialLog": "你是一个在饥荒中挣扎的流民。",
+	"primaryDerivedAttributeId": 7,
+	"gameOver": [
+		{
+			"target": "source",
+			"attributes": [
+				{
+					"id": 3,
+					"lte": 0
+				}
+			]
+		}
+	],
+	"tick": {
+		"logRules": [
+			{
+				"when": [
+					{
+						"target": "source",
+						"attributes": [
+							{
+								"id": 3,
+								"lte": 0
+							}
+						]
+					}
+				],
+				"message": "你倒下了。"
+			},
+			{
+				"when": [
+					{
+						"target": "source",
+						"attributes": [
+							{
+								"id": 1,
+								"lte": 0
+							}
+						]
+					}
+				],
+				"message": "饥饿在侵蚀你的身体，体力和生命下降。"
+			},
+			{
+				"when": [
+					{
+						"target": "source",
+						"attributes": [
+							{
+								"id": 1,
+								"lt": 20
+							}
+						]
+					}
+				],
+				"message": "你饿得发慌，体力继续流失。"
+			},
+			{
+				"when": [
+					{
+						"target": "source",
+						"attributes": [
+							{
+								"id": 1,
+								"gte": 50
+							}
+						]
+					}
+				],
+				"message": "你勉强吃饱，身体恢复了一点。"
+			}
+		],
+		"defaultLog": "时间推进。"
+	},
+	"allEffects": [
+		{
+			"id": 1,
+			"kind": "changeTemplate",
+			"target": "source",
+			"templateId": 2,
+			"conditions": [
+				{
+					"target": "source",
+					"attributes": [
+						{
+							"id": 6,
+							"gte": 60
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": 2,
+			"kind": "addTag",
+			"target": "source",
+			"tagId": 11
+		},
+		{
+			"id": 3,
+			"kind": "removeTag",
+			"target": "source",
+			"tagId": 11
+		},
+		{
+			"id": 4,
+			"kind": "addCard",
+			"templateId": 3
+		}
+	]
+}

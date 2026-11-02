@@ -74,19 +74,19 @@
 			],
 			"attributes": [
 				{
-					"name": "age",
+					"id": 1,
 					"value": 0
 				},
 				{
-					"name": "life",
+					"id": 2,
 					"value": 10
 				},
 				{
-					"name": "lifeMax",
+					"id": 3,
 					"value": 10
 				},
 				{
-					"name": "spirit",
+					"id": 4,
 					"value": 0
 				}
 			],
@@ -97,6 +97,57 @@
 			"incoming": [],
 			"desc": "碳基生物模板",
 			"createdAt": 1767916800000
+		}
+	],
+	"schemaVersion": 1,
+	"allAttributes": [
+		{
+			"id": 1,
+			"key": "age",
+			"label": "年龄",
+			"desc": "角色年龄",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 200
+			}
+		},
+		{
+			"id": 2,
+			"key": "life",
+			"label": "生命",
+			"desc": "当前生命值",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 100
+			}
+		},
+		{
+			"id": 3,
+			"key": "lifeMax",
+			"label": "生命上限",
+			"desc": "生命上限",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 100
+			}
+		},
+		{
+			"id": 4,
+			"key": "spirit",
+			"label": "灵性",
+			"desc": "精神与灵性",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 100
+			}
 		}
 	]
 }
