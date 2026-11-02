@@ -47,16 +47,6 @@
 		{
 			"id": 1,
 			"verb": "new_action",
-			"params": [
-				{
-					"name": "arg1",
-					"type": "card"
-				},
-				{
-					"name": "arg2",
-					"type": "number"
-				}
-			],
 			"targets": [],
 			"conditions": [],
 			"effects": [],

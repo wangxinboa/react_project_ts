@@ -5,6 +5,8 @@ export interface ChangeAttributeChange {
 	attributeId: number;
 	delta?: number;
 	set?: number;
+	/** 单条属性修改的条件；不满足时跳过这条修改 */
+	conditions?: Condition[];
 }
 
 /** 批量修改属性。 */
@@ -52,8 +54,12 @@ export type EffectKind =
 
 export type EffectTarget = "source" | "host" | "slot";
 
-/** 直接写在动作或标签 auto 中的效果。 */
+/**
+ * 直接写在动作 / 标签 auto 中的单次效果。
+ * id 仅用于保留稳定身份；以后需要被多处引用时，移动到 allEffects，id 不变。
+ */
 export type InlineEffect = EffectKind & {
+	id: number;
 	/** 作用对象；缺省为 source */
 	target?: EffectTarget;
 	/** target 为 slot 时指定卡槽 id */
@@ -63,9 +69,7 @@ export type InlineEffect = EffectKind & {
 };
 
 /** 全局 allEffects 中的可复用效果。 */
-export type EffectDefinition = InlineEffect & {
-	id: number;
-};
+export type EffectDefinition = InlineEffect;
 
-/** 动作 effects 中可以是内联效果，也可以引用 allEffects 的 id。 */
+/** 单次效果直接内联；多次复用时引用 allEffects 的 id。 */
 export type EffectCall = { effectId: number } | InlineEffect;

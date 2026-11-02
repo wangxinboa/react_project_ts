@@ -1,4 +1,4 @@
-import type { Formula } from "../formula/formula_types.ts";
+import type { Formula } from "./formula_types.ts";
 
 /** 模板/标签上的属性初始绑定。初始值由绑定提供，属性定义不保存 defaultValue。 */
 export interface AttributeBinding {

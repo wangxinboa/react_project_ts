@@ -33,7 +33,6 @@ export async function serviceGetCardStoryGameConfig(): Promise<GameConfig> {
 				...action,
 				desc: typeof action.desc === "string" ? action.desc : "",
 				createdAt: typeof action.createdAt === "number" ? action.createdAt : now,
-				params: Array.isArray(action.params) ? action.params : [],
 				targets: Array.isArray(action.targets) ? action.targets : [],
 				conditions: Array.isArray(action.conditions) ? action.conditions : [],
 				effects: Array.isArray(action.effects) ? action.effects : [],

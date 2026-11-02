@@ -1,26 +1,17 @@
 import { Button, Drawer, Form, Input } from "antd";
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 
-import type { ActionParam, Condition, EffectCall, RuleAction } from "../../../../card_story_game_types/index.ts";
-import { ActionParamType } from "../../../../card_story_game_types/index.ts";
+import type { Condition, EffectCall, RuleAction } from "../../../../card_story_game_types/index.ts";
 import { FormMode } from "../../../../../../utils/form_mode.ts";
 import { parseJsonArray } from "../../../../../../utils/json.ts";
 
-import ActionParamRow from "./action_param_row.tsx";
 import JsonArrayField from "./json_array_field.tsx";
 
 import style from "./action_drawer.module.scss";
 
-interface ActionParamFormValue {
-	name: string;
-	type: ActionParamType;
-	default?: number | null;
-}
-
 interface ActionFormValues {
 	verb: string;
 	desc: string;
-	params: ActionParamFormValue[];
 	targets: string;
 	conditions: string;
 	effects: string;
@@ -29,7 +20,6 @@ interface ActionFormValues {
 interface ActionFormResult {
 	verb: string;
 	desc: string;
-	params: ActionParam[];
 	targets: unknown[];
 	conditions: Condition[];
 	effects: EffectCall[];
@@ -46,51 +36,10 @@ interface ActionDrawerProps {
 	afterEdit: (values: ActionFormResult, action: RuleAction) => void;
 }
 
-function getDuplicateParamName(params: { name: string }[]): string | null {
-	const seen = new Set<string>();
-	for (let i = 0; i < params.length; i++) {
-		const name = params[i].name.trim();
-		if (name === "") {
-			continue;
-		}
-		if (seen.has(name)) {
-			return name;
-		}
-		seen.add(name);
-	}
-	return null;
-}
-
-function normalizeParams(params: ActionParamFormValue[]): ActionParam[] {
-	const result: ActionParam[] = [];
-	for (let i = 0; i < params.length; i++) {
-		const param = params[i];
-		const name = param.name.trim();
-		if (param.type === ActionParamType.NUMBER) {
-			result.push({
-				name,
-				type: param.type,
-				...(typeof param.default === "number" ? { default: param.default } : {}),
-			});
-		} else {
-			result.push({ name, type: param.type });
-		}
-	}
-	return result;
-}
-
 function toFormValues(action: RuleAction | null): ActionFormValues {
-	const params: ActionParamFormValue[] = [];
-	if (action) {
-		for (let i = 0; i < action.params.length; i++) {
-			params.push({ ...action.params[i] });
-		}
-	}
-
 	return {
 		verb: action?.verb ?? "",
 		desc: action?.desc ?? "",
-		params,
 		targets: JSON.stringify(action?.targets ?? [], null, 2),
 		conditions: JSON.stringify(action?.conditions ?? [], null, 2),
 		effects: JSON.stringify(action?.effects ?? [], null, 2),
@@ -105,12 +54,6 @@ const ActionDrawer = forwardRef<ActionDrawerHandle, ActionDrawerProps>(function 
 	const [open, setOpen] = useState(false);
 	const [mode, setMode] = useState<FormMode>(FormMode.CREATE);
 	const [action, setAction] = useState<RuleAction | null>(null);
-	const watchedParams = Form.useWatch("params", form);
-	const paramNameError = useMemo(() => {
-		const duplicate = getDuplicateParamName(watchedParams ?? []);
-		return duplicate === null ? "" : `参数名「${duplicate}」重复`;
-	}, [watchedParams]);
-
 	const handleClose = useCallback(() => {
 		setOpen(false);
 	}, []);
@@ -118,11 +61,6 @@ const ActionDrawer = forwardRef<ActionDrawerHandle, ActionDrawerProps>(function 
 	const handleConfirm = useCallback(async () => {
 		try {
 			const values = await form.validateFields();
-			const params = normalizeParams(values.params);
-			if (getDuplicateParamName(params) !== null) {
-				return;
-			}
-
 			const targets = parseJsonArray(values.targets);
 			const conditions = parseJsonArray(values.conditions) as Condition[] | null;
 			const effects = parseJsonArray(values.effects) as EffectCall[] | null;
@@ -133,7 +71,6 @@ const ActionDrawer = forwardRef<ActionDrawerHandle, ActionDrawerProps>(function 
 			const result: ActionFormResult = {
 				verb: values.verb.trim(),
 				desc: values.desc.trim(),
-				params,
 				targets,
 				conditions,
 				effects,
@@ -203,37 +140,6 @@ const ActionDrawer = forwardRef<ActionDrawerHandle, ActionDrawerProps>(function 
 
 				<Form.Item label="描述" name="desc" tooltip="给编辑者看的说明">
 					<Input.TextArea rows={2} placeholder="这个动作做什么？" aria-label="动作描述" />
-				</Form.Item>
-
-				<Form.Item
-					label="参数"
-					help={paramNameError || undefined}
-					validateStatus={paramNameError ? "error" : undefined}
-				>
-					<Form.List name="params">
-						{(fields, { add, remove }) => (
-							<div className={style.params}>
-								{fields.length > 0 && (
-									<div className={style.paramHeader}>
-										<span className={style.paramNameField}>参数名</span>
-										<span className={style.paramTypeField}>类型</span>
-										<span className={style.paramDefaultField}>默认值</span>
-										<span className={style.paramRowAction} />
-									</div>
-								)}
-								{fields.map(({ key, name }) => (
-									<ActionParamRow key={key} name={name} onRemove={() => remove(name)} />
-								))}
-								<Button
-									className={style.addParam}
-									size="small"
-									onClick={() => add({ name: "", type: ActionParamType.NUMBER })}
-								>
-									+ 添加参数
-								</Button>
-							</div>
-						)}
-					</Form.List>
 				</Form.Item>
 
 				<JsonArrayField label="targets" name="targets" tooltip="动作作用的目标，先直接编辑 JSON 数组" />

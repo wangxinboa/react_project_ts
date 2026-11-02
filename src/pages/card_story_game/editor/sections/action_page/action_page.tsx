@@ -124,12 +124,6 @@ export default function ActionPage({ actions, onActionsChange }: ActionPageProps
 					desc ? <EllipsisText text={desc} /> : <span className={style.emptyDesc}>—</span>,
 			},
 			{
-				title: "参数数",
-				dataIndex: "params",
-				width: 90,
-				render: (params: RuleAction["params"]) => <span className={style.paramCount}>{params.length}</span>,
-			},
-			{
 				title: "创建时间",
 				dataIndex: "createdAt",
 				width: 180,

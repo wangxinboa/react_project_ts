@@ -1,4 +1,4 @@
-import type { Formula } from "../formula/formula_types.ts";
+import type { Formula } from "./formula_types.ts";
 import type { Condition } from "./condition_types.ts";
 import type { EffectCall } from "./effect_types.ts";
 
@@ -14,26 +14,11 @@ export interface ActionSlot {
 	conditions: Condition[];
 }
 
-export const ActionParamType = {
-	CARD: "card",
-	NUMBER: "number",
-} as const;
-
-export type ActionParamType = (typeof ActionParamType)[keyof typeof ActionParamType];
-
-/** 动作参数声明；与公式 param 无关。 */
-export interface ActionParam {
-	name: string;
-	type: ActionParamType;
-	default?: number;
-}
-
 /** 动作定义；所有动作都始于某张 source 卡牌。 */
 export interface RuleAction {
 	id: number;
 	verb: string;
 	desc: string;
-	params: ActionParam[];
 	createdAt: number;
 	/** 时间计算公式；节点 conditions 不满足时该节点为 0 */
 	timeCost?: Formula;

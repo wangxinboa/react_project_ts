@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 19,
+	"schemaVersion": 22,
 	"allTags": [
 		{
 			"id": 1,
@@ -207,6 +207,7 @@
 					],
 					"effects": [
 						{
+							"id": 21,
 							"target": "host",
 							"kind": "changeAttributes",
 							"conditions": [
@@ -228,6 +229,7 @@
 							]
 						},
 						{
+							"id": 22,
 							"target": "source",
 							"kind": "changeAttributes",
 							"changes": [
@@ -512,7 +514,6 @@
 			"id": 1,
 			"verb": "rest",
 			"desc": "休息",
-			"params": [],
 			"timeCost": {
 				"op": "number",
 				"value": 120
@@ -531,6 +532,7 @@
 			"slots": [],
 			"effects": [
 				{
+					"id": 5,
 					"kind": "changeAttributes",
 					"target": "source",
 					"changes": [
@@ -553,7 +555,10 @@
 					]
 				},
 				{
-					"effectId": 3
+					"id": 3,
+					"kind": "removeTag",
+					"target": "source",
+					"tagId": 11
 				}
 			],
 			"createdAt": 1767974400001
@@ -562,7 +567,6 @@
 			"id": 2,
 			"verb": "work",
 			"desc": "劳作",
-			"params": [],
 			"timeCost": {
 				"op": "add",
 				"args": [
@@ -608,6 +612,7 @@
 			"slots": [],
 			"effects": [
 				{
+					"id": 6,
 					"kind": "changeAttributes",
 					"target": "source",
 					"changes": [
@@ -630,7 +635,9 @@
 					]
 				},
 				{
-					"effectId": 4
+					"id": 4,
+					"kind": "addCard",
+					"templateId": 3
 				}
 			],
 			"createdAt": 1767974400002
@@ -639,7 +646,6 @@
 			"id": 3,
 			"verb": "wound",
 			"desc": "受伤",
-			"params": [],
 			"timeCost": {
 				"op": "number",
 				"value": 60
@@ -658,6 +664,7 @@
 			"slots": [],
 			"effects": [
 				{
+					"id": 7,
 					"kind": "changeAttributes",
 					"target": "source",
 					"changes": [
@@ -672,7 +679,10 @@
 					]
 				},
 				{
-					"effectId": 2
+					"id": 2,
+					"kind": "addTag",
+					"target": "source",
+					"tagId": 11
 				}
 			],
 			"createdAt": 1767974400003
@@ -681,7 +691,6 @@
 			"id": 4,
 			"verb": "ritual",
 			"desc": "禁忌仪式",
-			"params": [],
 			"timeCost": {
 				"op": "number",
 				"value": 60
@@ -700,6 +709,7 @@
 			"slots": [],
 			"effects": [
 				{
+					"id": 8,
 					"kind": "changeAttributes",
 					"target": "source",
 					"changes": [
@@ -722,7 +732,21 @@
 					]
 				},
 				{
-					"effectId": 1
+					"id": 1,
+					"kind": "changeTemplate",
+					"target": "source",
+					"templateId": 2,
+					"conditions": [
+						{
+							"target": "source",
+							"attributes": [
+								{
+									"id": 6,
+									"gte": 60
+								}
+							]
+						}
+					]
 				}
 			],
 			"createdAt": 1767974400004
@@ -731,7 +755,6 @@
 			"id": 5,
 			"verb": "eat",
 			"desc": "进食",
-			"params": [],
 			"timeCost": {
 				"op": "add",
 				"args": [
@@ -787,6 +810,7 @@
 			],
 			"effects": [
 				{
+					"id": 9,
 					"kind": "changeAttributes",
 					"target": "source",
 					"changes": [
@@ -797,35 +821,44 @@
 						{
 							"attributeId": 2,
 							"delta": 5
-						}
-					]
-				},
-				{
-					"kind": "changeAttributes",
-					"target": "source",
-					"conditions": [
-						{
-							"target": "slot",
-							"slot": "food",
-							"hasTag": 13
-						}
-					],
-					"changes": [
+						},
 						{
 							"attributeId": 1,
-							"delta": 25
+							"delta": 25,
+							"conditions": [
+								{
+									"target": "slot",
+									"slot": "food",
+									"hasTag": 13
+								}
+							]
 						},
 						{
 							"attributeId": 2,
-							"delta": 10
+							"delta": 10,
+							"conditions": [
+								{
+									"target": "slot",
+									"slot": "food",
+									"hasTag": 13
+								}
+							]
 						},
 						{
 							"attributeId": 3,
-							"delta": 2
+							"delta": 2,
+							"conditions": [
+								{
+									"target": "slot",
+									"slot": "food",
+									"hasTag": 13
+								}
+							]
 						}
 					]
 				},
 				{
+					"id": 11,
 					"kind": "removeCard",
 					"target": "slot",
 					"slot": "food"
@@ -837,7 +870,6 @@
 			"id": 6,
 			"verb": "metabolize",
 			"desc": "代谢",
-			"params": [],
 			"timeCost": {
 				"op": "number",
 				"value": 0
@@ -856,6 +888,7 @@
 			"slots": [],
 			"effects": [
 				{
+					"id": 12,
 					"kind": "changeAttributes",
 					"target": "source",
 					"changes": [
@@ -866,6 +899,7 @@
 					]
 				},
 				{
+					"id": 13,
 					"kind": "changeAttributes",
 					"target": "source",
 					"changes": [
@@ -891,6 +925,7 @@
 					]
 				},
 				{
+					"id": 14,
 					"kind": "changeAttributes",
 					"target": "source",
 					"changes": [
@@ -921,6 +956,7 @@
 					]
 				},
 				{
+					"id": 15,
 					"kind": "changeAttributes",
 					"target": "source",
 					"changes": [
@@ -956,7 +992,6 @@
 			"id": 7,
 			"verb": "spoil",
 			"desc": "腐败",
-			"params": [],
 			"timeCost": {
 				"op": "number",
 				"value": 0
@@ -965,6 +1000,7 @@
 			"slots": [],
 			"effects": [
 				{
+					"id": 16,
 					"kind": "changeAttributes",
 					"target": "source",
 					"changes": [
@@ -981,7 +1017,6 @@
 			"id": 10,
 			"verb": "gatherWood",
 			"desc": "拾柴",
-			"params": [],
 			"timeCost": {
 				"op": "number",
 				"value": 30
@@ -1000,6 +1035,7 @@
 			"slots": [],
 			"effects": [
 				{
+					"id": 17,
 					"kind": "addCard",
 					"templateId": 6
 				}
@@ -1010,7 +1046,6 @@
 			"id": 11,
 			"verb": "cookBread",
 			"desc": "烤面包",
-			"params": [],
 			"timeCost": {
 				"op": "number",
 				"value": 30
@@ -1061,16 +1096,19 @@
 			],
 			"effects": [
 				{
+					"id": 18,
 					"kind": "removeCard",
 					"target": "slot",
 					"slot": "bread"
 				},
 				{
+					"id": 19,
 					"kind": "removeCard",
 					"target": "slot",
 					"slot": "fuel"
 				},
 				{
+					"id": 20,
 					"kind": "addCard",
 					"templateId": 7
 				}
@@ -1386,40 +1424,5 @@
 		],
 		"defaultLog": "时间推进。"
 	},
-	"allEffects": [
-		{
-			"id": 1,
-			"kind": "changeTemplate",
-			"target": "source",
-			"templateId": 2,
-			"conditions": [
-				{
-					"target": "source",
-					"attributes": [
-						{
-							"id": 6,
-							"gte": 60
-						}
-					]
-				}
-			]
-		},
-		{
-			"id": 2,
-			"kind": "addTag",
-			"target": "source",
-			"tagId": 11
-		},
-		{
-			"id": 3,
-			"kind": "removeTag",
-			"target": "source",
-			"tagId": 11
-		},
-		{
-			"id": 4,
-			"kind": "addCard",
-			"templateId": 3
-		}
-	]
+	"allEffects": []
 }

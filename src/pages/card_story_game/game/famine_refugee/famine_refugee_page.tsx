@@ -1,0 +1,557 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { DragEvent } from "react";
+
+import { serviceGetFamineRefugeeConfig } from "../../../../services/famine_refugee.ts";
+import {
+	applyAction,
+	createInitialState,
+	deriveCard,
+	getActionTimeCost,
+	getEligibleCards,
+	getPlayerCard,
+	getSlotRange,
+	getVisibleActions,
+} from "./famine_refugee_engine.ts";
+import type {
+	ActionSlot,
+	CardDerived,
+	CardState,
+	FamineAction,
+	FamineRefugeeConfig,
+	FamineState,
+	FamineTag,
+} from "./famine_refugee_types.ts";
+
+import style from "./famine_refugee_page.module.scss";
+
+function getTagLabel(tags: FamineTag[], id: number): string {
+	for (let i = 0; i < tags.length; i++) if (tags[i].id === id) return tags[i].key;
+	return `#${id}`;
+}
+
+function getAttributeLabel(config: FamineRefugeeConfig, id: number): string {
+	for (let i = 0; i < config.allAttributes.length; i++) if (config.allAttributes[i].id === id) return config.allAttributes[i].label;
+	return `#${id}`;
+}
+
+function isAttributeVisible(config: FamineRefugeeConfig, id: number): boolean {
+	for (let i = 0; i < config.allAttributes.length; i++) {
+		if (config.allAttributes[i].id === id) return config.allAttributes[i].visible !== false;
+	}
+	return true;
+}
+
+function getAction(config: FamineRefugeeConfig, id: number | null): FamineAction | null {
+	if (id === null) return null;
+	for (let i = 0; i < config.allRules.length; i++) if (config.allRules[i].id === id) return config.allRules[i];
+	return null;
+}
+
+function formatClock(time: number): string {
+	const day = Math.floor(time / 1440) + 1;
+	const minutesOfDay = time % 1440;
+	const hour = Math.floor(minutesOfDay / 60);
+	const minute = minutesOfDay % 60;
+	return `第 ${day} 天 ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function formatDuration(minutes: number): string {
+	const hours = Math.floor(minutes / 60);
+	const rest = minutes % 60;
+	if (hours === 0) return `${rest} 分钟`;
+	if (rest === 0) return `${hours} 小时`;
+	return `${hours} 小时 ${rest} 分`;
+}
+
+interface CardView {
+	card: CardState;
+	derived: CardDerived;
+}
+
+export default function FamineRefugeePage() {
+	const [config, setConfig] = useState<FamineRefugeeConfig | null>(null);
+	const [game, setGame] = useState<FamineState | null>(null);
+	const [selectedCardId, setSelectedCardId] = useState("");
+	const [placementActionId, setPlacementActionId] = useState<number | null>(null);
+	const [slotAssignments, setSlotAssignments] = useState<Record<string, string[]>>({});
+	const [activeSlotId, setActiveSlotId] = useState("");
+	const [loadError, setLoadError] = useState("");
+
+	useEffect(() => {
+		let cancelled = false;
+		async function loadConfig() {
+			try {
+				const loaded = await serviceGetFamineRefugeeConfig();
+				if (!cancelled) {
+					setConfig(loaded);
+					setGame(createInitialState(loaded));
+					setSelectedCardId(loaded.saveData.playerCardId);
+				}
+			} catch (error) {
+				if (!cancelled) setLoadError(error instanceof Error ? error.message : "原型配置加载失败");
+			}
+		}
+		void loadConfig();
+		return () => {
+			cancelled = true;
+		};
+	}, []);
+
+	const cardViews = useMemo<CardView[]>(() => {
+		if (!config || !game) return [];
+		const views: CardView[] = [];
+		for (let i = 0; i < game.cards.length; i++) views.push({ card: game.cards[i], derived: deriveCard(config, game.cards[i]) });
+		return views;
+	}, [config, game]);
+
+	const sceneViews = useMemo(() => {
+		if (!config) return [];
+		const views: CardView[] = [];
+		for (let i = 0; i < cardViews.length; i++) {
+			if (cardViews[i].card.id !== config.saveData.playerCardId) views.push(cardViews[i]);
+		}
+		return views;
+	}, [cardViews, config]);
+
+	const playerView = useMemo(() => {
+		if (!config || !game) return null;
+		const player = getPlayerCard(config, game);
+		return player ? cardViews.find((view) => view.card.id === player.id) ?? null : null;
+	}, [config, game, cardViews]);
+
+	const selectedView = useMemo(() => {
+		return cardViews.find((view) => view.card.id === selectedCardId) ?? playerView;
+	}, [cardViews, selectedCardId, playerView]);
+
+	const visibleActions = useMemo(() => {
+		return config && game ? getVisibleActions(config, game) : [];
+	}, [config, game]);
+
+	const placementAction = useMemo(() => {
+		return config ? getAction(config, placementActionId) : null;
+	}, [config, placementActionId]);
+
+	const slotEligible = useMemo(() => {
+		const result: Record<string, CardState[]> = {};
+		if (!config || !game || !placementAction) return result;
+		for (let i = 0; i < placementAction.slots.length; i++) {
+			const slot = placementAction.slots[i];
+			result[slot.id] = getEligibleCards(config, game, placementAction, slot.id);
+		}
+		return result;
+	}, [config, game, placementAction]);
+
+	const assignedCardIds = useMemo(() => {
+		const ids = new Set<string>();
+		const keys = Object.keys(slotAssignments);
+		for (let i = 0; i < keys.length; i++) {
+			for (let j = 0; j < slotAssignments[keys[i]].length; j++) ids.add(slotAssignments[keys[i]][j]);
+		}
+		return ids;
+	}, [slotAssignments]);
+
+	const gridViews = useMemo(() => {
+		if (placementActionId === null) return sceneViews;
+		const views: CardView[] = [];
+		for (let i = 0; i < sceneViews.length; i++) {
+			if (!assignedCardIds.has(sceneViews[i].card.id)) views.push(sceneViews[i]);
+		}
+		return views;
+	}, [sceneViews, placementActionId, assignedCardIds]);
+
+	const activeSlot = useMemo(() => {
+		if (!placementAction) return null;
+		for (let i = 0; i < placementAction.slots.length; i++) {
+			if (placementAction.slots[i].id === activeSlotId) return placementAction.slots[i];
+		}
+		return placementAction.slots[0] ?? null;
+	}, [placementAction, activeSlotId]);
+
+	const canExecute = useMemo(() => {
+		if (!placementAction) return false;
+		for (let i = 0; i < placementAction.slots.length; i++) {
+			const slot = placementAction.slots[i];
+			const range = getSlotRange(slot);
+			const count = (slotAssignments[slot.id] ?? []).length;
+			if (count < range.min || count > range.max) return false;
+		}
+		return true;
+	}, [placementAction, slotAssignments]);
+
+	const handleActionClick = useCallback(
+		(action: FamineAction) => {
+			if (action.slots.length > 0) {
+				setPlacementActionId(action.id);
+				setSlotAssignments({});
+				setActiveSlotId(action.slots[0]?.id ?? "");
+				return;
+			}
+			if (!config) return;
+			setGame((prev) => (prev ? applyAction(config, prev, action.id) : prev));
+		},
+		[config],
+	);
+
+	const addToSlot = useCallback(
+		(slotId: string, cardId: string) => {
+			if (!placementAction) return;
+			const slot = placementAction.slots.find((item) => item.id === slotId);
+			if (!slot) return;
+			const range = getSlotRange(slot);
+			setSlotAssignments((prev) => {
+				const current = prev[slotId] ?? [];
+				if (current.includes(cardId) || current.length >= range.max) return prev;
+				const next: Record<string, string[]> = {};
+				const keys = Object.keys(prev);
+				for (let i = 0; i < keys.length; i++) {
+					next[keys[i]] = prev[keys[i]].filter((id) => id !== cardId);
+				}
+				next[slotId] = [...current, cardId];
+				return next;
+			});
+			setActiveSlotId(slotId);
+		},
+		[placementAction],
+	);
+
+	const handleCardClick = useCallback(
+		(cardId: string) => {
+			if (placementAction) {
+				if (!config || !game) return;
+				const preferred = activeSlot;
+				if (preferred) {
+					const eligible = slotEligible[preferred.id] ?? [];
+					const range = getSlotRange(preferred);
+					const assigned = slotAssignments[preferred.id] ?? [];
+					for (let i = 0; i < eligible.length; i++) {
+						if (eligible[i].id === cardId && assigned.length < range.max) {
+							addToSlot(preferred.id, cardId);
+							return;
+						}
+					}
+				}
+				for (let i = 0; i < placementAction.slots.length; i++) {
+					const slot = placementAction.slots[i];
+					const eligible = slotEligible[slot.id] ?? [];
+					const range = getSlotRange(slot);
+					const assigned = slotAssignments[slot.id] ?? [];
+					for (let j = 0; j < eligible.length; j++) {
+						if (eligible[j].id === cardId && assigned.length < range.max) {
+							addToSlot(slot.id, cardId);
+							return;
+						}
+					}
+				}
+				return;
+			}
+			setSelectedCardId(cardId);
+		},
+		[activeSlot, addToSlot, config, game, placementAction, slotAssignments, slotEligible],
+	);
+
+	const handleDrop = useCallback(
+		(event: DragEvent<HTMLDivElement>, slotId: string) => {
+			event.preventDefault();
+			const cardId = event.dataTransfer.getData("text/plain");
+			if (!cardId) return;
+			const eligible = slotEligible[slotId] ?? [];
+			for (let i = 0; i < eligible.length; i++) {
+				if (eligible[i].id === cardId) {
+					addToSlot(slotId, cardId);
+					break;
+				}
+			}
+		},
+		[addToSlot, slotEligible],
+	);
+
+	const handleDragStart = useCallback(
+		(event: DragEvent<HTMLButtonElement>, cardId: string) => {
+			if (!placementAction) {
+				event.preventDefault();
+				return;
+			}
+			let canDrag = false;
+			for (let i = 0; i < placementAction.slots.length; i++) {
+				const eligible = slotEligible[placementAction.slots[i].id] ?? [];
+				for (let j = 0; j < eligible.length; j++) {
+					if (eligible[j].id === cardId) {
+						canDrag = true;
+						break;
+					}
+				}
+				if (canDrag) break;
+			}
+			if (!canDrag) {
+				event.preventDefault();
+				return;
+			}
+			event.dataTransfer.setData("text/plain", cardId);
+			event.dataTransfer.effectAllowed = "move";
+		},
+		[placementAction, slotEligible],
+	);
+
+	const handleDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
+		event.preventDefault();
+		event.dataTransfer.dropEffect = "move";
+	}, []);
+
+	const handleRemoveFromSlot = useCallback((slotId: string, cardId: string) => {
+		setSlotAssignments((prev) => ({ ...prev, [slotId]: (prev[slotId] ?? []).filter((id) => id !== cardId) }));
+	}, []);
+
+	const handleExecute = useCallback(() => {
+		if (!config || placementActionId === null || !canExecute) return;
+		setGame((prev) => (prev ? applyAction(config, prev, placementActionId, slotAssignments) : prev));
+		setPlacementActionId(null);
+		setSlotAssignments({});
+		setActiveSlotId("");
+	}, [canExecute, config, placementActionId, slotAssignments]);
+
+	const handleCancelPlacement = useCallback(() => {
+		setPlacementActionId(null);
+		setSlotAssignments({});
+		setActiveSlotId("");
+	}, []);
+
+	const handleSelectCard = useCallback((cardId: string) => {
+		setSelectedCardId(cardId);
+		setPlacementActionId(null);
+		setSlotAssignments({});
+		setActiveSlotId("");
+	}, []);
+
+	const handleReset = useCallback(() => {
+		if (!config) return;
+		setGame(createInitialState(config));
+		setSelectedCardId(config.saveData.playerCardId);
+		setPlacementActionId(null);
+		setSlotAssignments({});
+		setActiveSlotId("");
+	}, [config]);
+
+	if (loadError) return <div className={style.loading}>{loadError}</div>;
+	if (!config || !game || !playerView || !selectedView) return <div className={style.loading}>正在加载原型配置…</div>;
+
+	const isPlayerSelected = selectedView.card.id === config.saveData.playerCardId;
+	const isDead = playerView.derived.gameOver;
+	const bodyState = Math.round((playerView.derived.values[config.primaryDerivedAttributeId] ?? 0) * 100);
+
+	const isEligible = (cardId: string): boolean => {
+		if (!placementAction) return false;
+		for (let i = 0; i < placementAction.slots.length; i++) {
+			const eligible = slotEligible[placementAction.slots[i].id] ?? [];
+			for (let j = 0; j < eligible.length; j++) if (eligible[j].id === cardId) return true;
+		}
+		return false;
+	};
+
+	const getSlotCards = (slot: ActionSlot): CardView[] => {
+		const ids = slotAssignments[slot.id] ?? [];
+		const views: CardView[] = [];
+		for (let i = 0; i < ids.length; i++) {
+			for (let j = 0; j < cardViews.length; j++) {
+				if (cardViews[j].card.id === ids[i]) {
+					views.push(cardViews[j]);
+					break;
+				}
+			}
+		}
+		return views;
+	};
+
+	return (
+		<div className={style.gamePage}>
+			<header className={style.tableHeader}>
+				<button
+					type="button"
+					className={`${style.playerAvatar} ${isPlayerSelected ? style.playerAvatarActive : ""}`}
+					onClick={() => handleSelectCard(config.saveData.playerCardId)}
+				>
+					<span className={style.avatarPortrait}>{playerView.derived.template.key.slice(0, 1)}</span>
+					<span className={style.avatarInfo}>
+						<span className={style.avatarLabel}>玩家</span>
+						<span className={style.avatarName}>{playerView.derived.template.key}</span>
+						<span className={style.avatarMeta}>{bodyState}% 身体状态</span>
+					</span>
+				</button>
+				<div className={style.boardTitle}>
+					<div className={style.eyebrow}>属性联动原型 / 多卡桌面</div>
+					<h1 className={style.title}>{playerView.derived.template.key}</h1>
+				</div>
+				<div className={style.headerActions}>
+					<span className={style.clock}>{formatClock(game.time)}</span>
+					<button type="button" className={style.resetButton} onClick={handleReset}>重置</button>
+				</div>
+			</header>
+
+			<div className={style.tableLayout}>
+				<section className={style.cardGrid} aria-label="场景卡牌">
+					{gridViews.map((view) => {
+						const eligible = placementAction !== null && isEligible(view.card.id);
+						const dimmed = placementAction !== null && !eligible;
+						return (
+							<button
+								key={view.card.id}
+								type="button"
+								className={`${style.cardTile} ${selectedCardId === view.card.id ? style.cardTileSelected : ""} ${eligible ? style.cardTileEligible : ""} ${dimmed ? style.cardTileDimmed : ""}`}
+								onClick={() => handleCardClick(view.card.id)}
+								draggable={eligible}
+								onDragStart={(event) => handleDragStart(event, view.card.id)}
+							>
+								<div className={style.cardTileTop}>
+									<span className={style.cardTileName}>{view.derived.template.key}</span>
+								</div>
+								<div className={style.cardTileDesc}>{view.derived.template.desc}</div>
+								<div className={style.cardTileTags}>
+									{view.derived.tagIds.length === 0 ? (
+										<span className={style.cardTileEmpty}>无标签</span>
+									) : (
+										view.derived.tagIds.map((tagId) => (
+											<span key={tagId} className={style.cardTileTag}>{getTagLabel(config.allTags, tagId)}</span>
+										))
+									)}
+								</div>
+								{eligible ? <span className={style.cardTileHint}>放入 {activeSlot?.desc ?? "卡槽"}</span> : null}
+							</button>
+						);
+					})}
+				</section>
+
+				<aside className={style.inspector}>
+					<div className={style.inspectorHeader}>
+						<div>
+							<div className={style.inspectorName}>{selectedView.derived.template.key}</div>
+							<div className={style.inspectorDesc}>{selectedView.derived.template.desc}</div>
+						</div>
+						{isPlayerSelected ? <div className={style.inspectorBodyState}>{bodyState}%</div> : null}
+					</div>
+
+					<div className={style.tags}>
+						{selectedView.derived.tagIds.length === 0 ? (
+							<span className={style.emptyTag}>暂无异常</span>
+						) : (
+							selectedView.derived.tagIds.map((tagId) => (
+								<span key={tagId} className={style.tag}>{getTagLabel(config.allTags, tagId)}</span>
+							))
+						)}
+					</div>
+
+					<div className={style.attributeList}>
+						{selectedView.derived.template.attributes.filter((binding) => isAttributeVisible(config, binding.id)).length === 0 ? (
+							<div className={style.emptyAttributes}>这张卡没有数值属性。</div>
+						) : (
+							selectedView.derived.template.attributes.filter((binding) => isAttributeVisible(config, binding.id)).map((binding) => {
+								const value = selectedView.derived.values[binding.id] ?? 0;
+								return (
+									<div key={binding.id} className={style.attributeRow}>
+										<div className={style.attributeHeader}>
+											<span>{getAttributeLabel(config, binding.id)}</span>
+											<span>{Math.round(value)}</span>
+										</div>
+										<div className={style.bar}>
+											<div className={style.barFill} style={{ width: `${value}%` }} />
+										</div>
+									</div>
+								);
+							})
+						)}
+					</div>
+
+					{placementAction ? (
+						<div className={style.targetPanel}>
+							<div className={style.inspectorSectionTitle}>卡槽 · {placementAction.desc}</div>
+							<div className={style.slotList}>
+								{placementAction.slots.map((slot) => {
+									const range = getSlotRange(slot);
+									const assigned = getSlotCards(slot);
+									const active = activeSlot?.id === slot.id;
+									return (
+										<div
+											key={slot.id}
+											className={`${style.slotCard} ${active ? style.slotCardActive : ""}`}
+											onClick={() => setActiveSlotId(slot.id)}
+										>
+											<div className={style.slotHeader}>
+												<span className={style.slotTitle}>{slot.desc}</span>
+												<span className={style.slotCount}>{assigned.length}/{range.max === Number.POSITIVE_INFINITY ? "∞" : range.max}</span>
+											</div>
+											<div className={style.slotDropZone} onDragOver={handleDragOver} onDrop={(event) => handleDrop(event, slot.id)}>
+												{assigned.length === 0 ? (
+													<span className={style.slotEmpty}>拖入卡牌</span>
+												) : (
+													assigned.map((view) => (
+														<button
+															key={view.card.id}
+															type="button"
+															className={style.targetSlot}
+															onClick={(event) => {
+																event.stopPropagation();
+																handleRemoveFromSlot(slot.id, view.card.id);
+															}}
+														>
+															{view.derived.template.key} ×
+														</button>
+													))
+												)}
+											</div>
+										</div>
+									);
+								})}
+							</div>
+							<div className={style.targetHint}>
+								{canExecute
+									? `卡槽已满足 · ${formatDuration(getActionTimeCost(config, placementAction, playerView.card, slotAssignments, game.cards))}`
+									: "把符合条件的卡放入对应卡槽"}
+							</div>
+							<div className={style.targetActions}>
+								<button type="button" className={style.cancelPlacement} onClick={handleCancelPlacement}>取消</button>
+								{canExecute ? (
+									<button type="button" className={style.executePlacement} onClick={handleExecute}>
+										执行 {placementAction.desc}
+									</button>
+								) : null}
+							</div>
+						</div>
+					) : isPlayerSelected ? (
+						<>
+							<div className={style.inspectorSectionTitle}>玩家行动</div>
+							<div className={style.actions}>
+								{visibleActions.map((action) => (
+									<button
+										key={action.id}
+										type="button"
+										className={style.actionButton}
+										onClick={() => handleActionClick(action)}
+										disabled={isDead}
+									>
+										<span>{action.desc}</span>
+										<small>{action.verb} · {formatDuration(getActionTimeCost(config, action, playerView.card, {}, game.cards))}</small>
+									</button>
+								))}
+								{visibleActions.length === 0 && !isDead ? <div className={style.emptyActions}>当前没有满足条件的动作。</div> : null}
+							</div>
+							{isDead ? <div className={style.deadHint}>你已经倒下了。重置后再试一次。</div> : null}
+						</>
+					) : (
+						<div className={style.emptyActions}>当前 UI 中只有玩家可以发起动作。</div>
+					)}
+				</aside>
+			</div>
+
+			<section className={style.logPanel}>
+				<div className={style.inspectorSectionTitle}>经历</div>
+				<div className={style.logList}>
+					{game.logs.slice().reverse().map((log, index) => (
+						<div key={`${log}-${index}`} className={style.logItem}>{log}</div>
+					))}
+				</div>
+			</section>
+
+			<footer className={style.footer}>
+				每个动作按命名卡槽放置目标；卡槽之间不能复用同一张卡。修改 `public/famine_refugee_config.json` 后刷新页面调整配置。
+			</footer>
+		</div>
+	);
+}
