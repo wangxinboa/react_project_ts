@@ -17,7 +17,7 @@ export function evaluateFormula(
 		case "number":
 			return formula.value;
 		case "attr":
-			return values[formula.id] ?? 0;
+			return values[formula.attributeId] ?? 0;
 		case "add": {
 			let total = 0;
 			for (let i = 0; i < formula.args.length; i++) {
@@ -54,7 +54,7 @@ export function evaluateFormula(
 		case "normalize": {
 			const range = formula.max - formula.min;
 			if (range === 0) return 0;
-			const raw = values[formula.id] ?? 0;
+			const raw = values[formula.attributeId] ?? 0;
 			return (raw - formula.min) / range;
 		}
 	}

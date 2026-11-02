@@ -34,8 +34,8 @@ function validateNode(raw: unknown, path: string, issues: FormulaValidationIssue
 			}
 			return;
 		case "attr":
-			if (!isAttributeId(raw.id)) {
-				issues.push({ path: `${path}.id`, message: "必须是正整数属性 id" });
+			if (!isAttributeId(raw.attributeId)) {
+				issues.push({ path: `${path}.attributeId`, message: "必须是正整数属性 id" });
 			}
 			return;
 		case "add":
@@ -61,8 +61,8 @@ function validateNode(raw: unknown, path: string, issues: FormulaValidationIssue
 			return;
 		}
 		case "normalize":
-			if (!isAttributeId(raw.id)) {
-				issues.push({ path: `${path}.id`, message: "必须是正整数属性 id" });
+			if (!isAttributeId(raw.attributeId)) {
+				issues.push({ path: `${path}.attributeId`, message: "必须是正整数属性 id" });
 			}
 			if (!isFiniteNumber(raw.min) || !isFiniteNumber(raw.max)) {
 				issues.push({ path: `${path}.min/max`, message: "必须是有限数字" });

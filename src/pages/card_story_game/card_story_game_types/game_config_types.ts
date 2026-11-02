@@ -14,7 +14,7 @@ export interface GameConfig {
 	/** 全局属性定义 */
 	allAttributes: AttributeDefinition[];
 	/** 动作定义 */
-	allRules: RuleAction[];
+	allActions: RuleAction[];
 	/** 可复用效果库 */
 	allEffects?: EffectDefinition[];
 	/** 卡牌模板 */

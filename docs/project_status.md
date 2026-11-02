@@ -38,7 +38,9 @@
 - 卡牌增删：`allEffects` 支持 `addCard` / `removeCard`；work 生成面包，面包 incoming 的 consume 会移除目标卡。场景卡使用 2:3 宽高比。
 - 标签分类：`state` 标签存在卡牌实例上，由 `addTag` / `removeTag` 改变；`derived` 标签每次由 tag 内规则计算。
 - 标签实例：state 标签通过 `{ id, value }` 绑定 `allAttributes`，可带 `auto`；卡牌 `tags` 存 `{ tagId, values }`，tag auto 在卡牌 auto 之后按整点执行，支持 `tag` / `host` 作用域。
-- 条件规范：Condition 改为数组，每项用 `target: source / host / slot` 指定判断对象；attributes 为 `{ id, ... }` 数组；支持 hasTag(s)、hasAnyTag、onlyHasTag(s)、hasAnyTemplate。条件数组为 AND。
+- 条件规范：Condition 用 `target: sourceCard / sourceTag / host / slot` 指定判断对象；attributes 为 `{ id, ... }` 数组；支持 hasTag(s)、hasAnyTag、onlyHasTag(s)、hasAnyTemplate；条件可带 desc。条件数组为 AND。
+- 公式规范：attr / normalize 使用 `attributeId`；Formula 节点支持 conditions。
+- 动作规范：`allRules` 更名为 `allActions`；动作有 `title`（UI）和 `desc`（详细说明）；空数组字段可省略。
 - 标签规则：derived 标签直接使用 `conditions` 数组，属性与 `hasAnyTemplate` 在同一条件对象内 AND；不再有 rules/templateIds。
 - 效果规范：单次使用的 effect 直接内联并保留唯一 id；多次复用时移动到 `allEffects` 并改为 `{ effectId }` 引用。effect 用 `target: source / host / slot` 指定作用对象；`changeAttributes.changes` 的每条修改可带 conditions。
 - 动作发起：当前 UI 只有玩家作为 source；规则不再使用 incoming，面包只能由玩家 outgoing 选中并放入卡槽。

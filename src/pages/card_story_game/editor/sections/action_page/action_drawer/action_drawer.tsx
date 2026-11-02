@@ -11,6 +11,7 @@ import style from "./action_drawer.module.scss";
 
 interface ActionFormValues {
 	verb: string;
+	title: string;
 	desc: string;
 	targets: string;
 	conditions: string;
@@ -19,6 +20,7 @@ interface ActionFormValues {
 
 interface ActionFormResult {
 	verb: string;
+	title: string;
 	desc: string;
 	targets: unknown[];
 	conditions: Condition[];
@@ -39,6 +41,7 @@ interface ActionDrawerProps {
 function toFormValues(action: RuleAction | null): ActionFormValues {
 	return {
 		verb: action?.verb ?? "",
+		title: action?.title ?? "",
 		desc: action?.desc ?? "",
 		targets: JSON.stringify(action?.targets ?? [], null, 2),
 		conditions: JSON.stringify(action?.conditions ?? [], null, 2),
@@ -70,6 +73,7 @@ const ActionDrawer = forwardRef<ActionDrawerHandle, ActionDrawerProps>(function 
 
 			const result: ActionFormResult = {
 				verb: values.verb.trim(),
+				title: values.title.trim(),
 				desc: values.desc.trim(),
 				targets,
 				conditions,

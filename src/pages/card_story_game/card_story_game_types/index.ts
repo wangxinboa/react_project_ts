@@ -1,3 +1,4 @@
+export { ConditionTarget } from "./condition_types.ts";
 export type { AttributeCheck, Condition } from "./condition_types.ts";
 export type { Formula, FormulaNode, FormulaValidationIssue } from "./formula_types.ts";
 export type { AttributeBinding, AttributeDefinition, NumberAttributeTypeParams } from "./attribute_types.ts";

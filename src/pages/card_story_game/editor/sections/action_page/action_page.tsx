@@ -116,6 +116,12 @@ export default function ActionPage({ actions, onActionsChange }: ActionPageProps
 				render: (verb: string) => <span className={style.verb}>{verb.trim() || "未命名"}</span>,
 			},
 			{
+				title: "标题",
+				dataIndex: "title",
+				width: 160,
+				render: (title: string) => <span className={style.verb}>{title || "未命名"}</span>,
+			},
+			{
 				title: "描述",
 				dataIndex: "desc",
 				width: 220,

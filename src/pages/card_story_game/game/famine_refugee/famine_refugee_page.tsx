@@ -43,7 +43,7 @@ function isAttributeVisible(config: FamineRefugeeConfig, id: number): boolean {
 
 function getAction(config: FamineRefugeeConfig, id: number | null): FamineAction | null {
 	if (id === null) return null;
-	for (let i = 0; i < config.allRules.length; i++) if (config.allRules[i].id === id) return config.allRules[i];
+	for (let i = 0; i < config.allActions.length; i++) if (config.allActions[i].id === id) return config.allActions[i];
 	return null;
 }
 
@@ -134,8 +134,8 @@ export default function FamineRefugeePage() {
 	const slotEligible = useMemo(() => {
 		const result: Record<string, CardState[]> = {};
 		if (!config || !game || !placementAction) return result;
-		for (let i = 0; i < placementAction.slots.length; i++) {
-			const slot = placementAction.slots[i];
+		for (let i = 0; i < (placementAction.slots ?? []).length; i++) {
+			const slot = (placementAction.slots ?? [])[i];
 			result[slot.id] = getEligibleCards(config, game, placementAction, slot.id);
 		}
 		return result;
@@ -161,16 +161,16 @@ export default function FamineRefugeePage() {
 
 	const activeSlot = useMemo(() => {
 		if (!placementAction) return null;
-		for (let i = 0; i < placementAction.slots.length; i++) {
-			if (placementAction.slots[i].id === activeSlotId) return placementAction.slots[i];
+		for (let i = 0; i < (placementAction.slots ?? []).length; i++) {
+			if ((placementAction.slots ?? [])[i].id === activeSlotId) return (placementAction.slots ?? [])[i];
 		}
-		return placementAction.slots[0] ?? null;
+		return (placementAction.slots ?? [])[0] ?? null;
 	}, [placementAction, activeSlotId]);
 
 	const canExecute = useMemo(() => {
 		if (!placementAction) return false;
-		for (let i = 0; i < placementAction.slots.length; i++) {
-			const slot = placementAction.slots[i];
+		for (let i = 0; i < (placementAction.slots ?? []).length; i++) {
+			const slot = (placementAction.slots ?? [])[i];
 			const range = getSlotRange(slot);
 			const count = (slotAssignments[slot.id] ?? []).length;
 			if (count < range.min || count > range.max) return false;
@@ -180,10 +180,10 @@ export default function FamineRefugeePage() {
 
 	const handleActionClick = useCallback(
 		(action: FamineAction) => {
-			if (action.slots.length > 0) {
+			if ((action.slots ?? []).length > 0) {
 				setPlacementActionId(action.id);
 				setSlotAssignments({});
-				setActiveSlotId(action.slots[0]?.id ?? "");
+				setActiveSlotId((action.slots ?? [])[0]?.id ?? "");
 				return;
 			}
 			if (!config) return;
@@ -195,7 +195,7 @@ export default function FamineRefugeePage() {
 	const addToSlot = useCallback(
 		(slotId: string, cardId: string) => {
 			if (!placementAction) return;
-			const slot = placementAction.slots.find((item) => item.id === slotId);
+			const slot = (placementAction.slots ?? []).find((item) => item.id === slotId);
 			if (!slot) return;
 			const range = getSlotRange(slot);
 			setSlotAssignments((prev) => {
@@ -230,8 +230,8 @@ export default function FamineRefugeePage() {
 						}
 					}
 				}
-				for (let i = 0; i < placementAction.slots.length; i++) {
-					const slot = placementAction.slots[i];
+				for (let i = 0; i < (placementAction.slots ?? []).length; i++) {
+					const slot = (placementAction.slots ?? [])[i];
 					const eligible = slotEligible[slot.id] ?? [];
 					const range = getSlotRange(slot);
 					const assigned = slotAssignments[slot.id] ?? [];
@@ -272,8 +272,8 @@ export default function FamineRefugeePage() {
 				return;
 			}
 			let canDrag = false;
-			for (let i = 0; i < placementAction.slots.length; i++) {
-				const eligible = slotEligible[placementAction.slots[i].id] ?? [];
+			for (let i = 0; i < (placementAction.slots ?? []).length; i++) {
+				const eligible = slotEligible[(placementAction.slots ?? [])[i].id] ?? [];
 				for (let j = 0; j < eligible.length; j++) {
 					if (eligible[j].id === cardId) {
 						canDrag = true;
@@ -340,8 +340,8 @@ export default function FamineRefugeePage() {
 
 	const isEligible = (cardId: string): boolean => {
 		if (!placementAction) return false;
-		for (let i = 0; i < placementAction.slots.length; i++) {
-			const eligible = slotEligible[placementAction.slots[i].id] ?? [];
+		for (let i = 0; i < (placementAction.slots ?? []).length; i++) {
+			const eligible = slotEligible[(placementAction.slots ?? [])[i].id] ?? [];
 			for (let j = 0; j < eligible.length; j++) if (eligible[j].id === cardId) return true;
 		}
 		return false;
@@ -439,10 +439,10 @@ export default function FamineRefugeePage() {
 					</div>
 
 					<div className={style.attributeList}>
-						{selectedView.derived.template.attributes.filter((binding) => isAttributeVisible(config, binding.id)).length === 0 ? (
+						{(selectedView.derived.template.attributes ?? []).filter((binding) => isAttributeVisible(config, binding.id)).length === 0 ? (
 							<div className={style.emptyAttributes}>这张卡没有数值属性。</div>
 						) : (
-							selectedView.derived.template.attributes.filter((binding) => isAttributeVisible(config, binding.id)).map((binding) => {
+							(selectedView.derived.template.attributes ?? []).filter((binding) => isAttributeVisible(config, binding.id)).map((binding) => {
 								const value = selectedView.derived.values[binding.id] ?? 0;
 								return (
 									<div key={binding.id} className={style.attributeRow}>
@@ -461,9 +461,9 @@ export default function FamineRefugeePage() {
 
 					{placementAction ? (
 						<div className={style.targetPanel}>
-							<div className={style.inspectorSectionTitle}>卡槽 · {placementAction.desc}</div>
+							<div className={style.inspectorSectionTitle}>卡槽 · {placementAction.title}</div>
 							<div className={style.slotList}>
-								{placementAction.slots.map((slot) => {
+								{(placementAction.slots ?? []).map((slot) => {
 									const range = getSlotRange(slot);
 									const assigned = getSlotCards(slot);
 									const active = activeSlot?.id === slot.id;
@@ -509,7 +509,7 @@ export default function FamineRefugeePage() {
 								<button type="button" className={style.cancelPlacement} onClick={handleCancelPlacement}>取消</button>
 								{canExecute ? (
 									<button type="button" className={style.executePlacement} onClick={handleExecute}>
-										执行 {placementAction.desc}
+										执行 {placementAction.title}
 									</button>
 								) : null}
 							</div>
@@ -526,7 +526,7 @@ export default function FamineRefugeePage() {
 										onClick={() => handleActionClick(action)}
 										disabled={isDead}
 									>
-										<span>{action.desc}</span>
+										<span>{action.title}</span>
 										<small>{action.verb} · {formatDuration(getActionTimeCost(config, action, playerView.card, {}, game.cards))}</small>
 									</button>
 								))}

@@ -48,7 +48,7 @@ export default function Editor() {
 			if (!prev) {
 				return prev;
 			}
-			return { ...prev, allRules: updater(prev.allRules) };
+			return { ...prev, allActions: updater(prev.allActions) };
 		});
 	}, []);
 
@@ -121,7 +121,7 @@ export default function Editor() {
 					) : activePage === EditorPageKey.TAGS && config ? (
 						<TagPage tags={config.allTags} onTagsChange={handleTagsChange} />
 					) : activePage === EditorPageKey.ACTIONS && config ? (
-						<ActionPage actions={config.allRules} onActionsChange={handleActionsChange} />
+						<ActionPage actions={config.allActions} onActionsChange={handleActionsChange} />
 					) : activePage === EditorPageKey.TEMPLATES && config ? (
 						<TemplatePage templates={config.cardTemplates} />
 					) : null}

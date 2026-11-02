@@ -28,8 +28,8 @@ export async function serviceGetFamineRefugeeConfig(): Promise<FamineRefugeeConf
 			throw new Error(`原型配置公式错误：${issues[0].path} ${issues[0].message}`);
 		}
 	}
-	for (let i = 0; i < config.allRules.length; i++) {
-		const issues = validateFormula(config.allRules[i].timeCost, `allRules[${i}].timeCost`);
+	for (let i = 0; i < config.allActions.length; i++) {
+		const issues = validateFormula(config.allActions[i].timeCost, `allRules[${i}].timeCost`);
 		if (issues.length > 0) {
 			throw new Error(`原型配置时间公式错误：${issues[0].path} ${issues[0].message}`);
 		}

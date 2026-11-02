@@ -43,17 +43,6 @@
 			"createdAt": 1767744000000
 		}
 	],
-	"allRules": [
-		{
-			"id": 1,
-			"verb": "new_action",
-			"targets": [],
-			"conditions": [],
-			"effects": [],
-			"desc": "默认动作",
-			"createdAt": 1767830400000
-		}
-	],
 	"cardTemplates": [
 		{
 			"id": 1,
@@ -138,6 +127,18 @@
 				"min": 0,
 				"max": 100
 			}
+		}
+	],
+	"allActions": [
+		{
+			"id": 1,
+			"verb": "new_action",
+			"targets": [],
+			"conditions": [],
+			"effects": [],
+			"desc": "默认动作",
+			"createdAt": 1767830400000,
+			"title": "默认动作"
 		}
 	]
 }

@@ -73,8 +73,8 @@ export interface FamineRefugeeConfig {
 	schemaVersion: number;
 	allTags: FamineTag[];
 	allAttributes: FamineAttributeDefinition[];
-	allEffects: EffectDefinition[];
-	allRules: FamineAction[];
+	allEffects?: EffectDefinition[];
+	allActions: FamineAction[];
 	cardTemplates: FamineTemplate[];
 	saveData: SaveData;
 	initialLog: string;

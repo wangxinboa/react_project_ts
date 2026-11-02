@@ -24,12 +24,12 @@ export async function serviceGetCardStoryGameConfig(): Promise<GameConfig> {
 		});
 	}
 
-	const rawRules = (raw as { allRules?: unknown }).allRules;
-	const allRules: RuleAction[] = [];
+	const rawRules = (raw as { allActions?: unknown }).allActions;
+	const allActions: RuleAction[] = [];
 	if (Array.isArray(rawRules)) {
 		for (let i = 0; i < rawRules.length; i++) {
 			const action = rawRules[i] as RuleAction & { createdAt?: unknown };
-			allRules.push({
+			allActions.push({
 				...action,
 				desc: typeof action.desc === "string" ? action.desc : "",
 				createdAt: typeof action.createdAt === "number" ? action.createdAt : now,
@@ -58,5 +58,5 @@ export async function serviceGetCardStoryGameConfig(): Promise<GameConfig> {
 	}
 
 	const allAttributes = (raw as { allAttributes?: AttributeDefinition[] }).allAttributes ?? [];
-	return { ...raw, allTags, allAttributes, allRules, cardTemplates };
+	return { ...raw, allTags, allAttributes, allActions, cardTemplates };
 }

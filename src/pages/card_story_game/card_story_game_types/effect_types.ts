@@ -1,4 +1,4 @@
-import type { Condition } from "./condition_types.ts";
+import type { Condition, ConditionTarget } from "./condition_types.ts";
 
 /** 单个属性的增量或覆盖。 */
 export interface ChangeAttributeChange {
@@ -52,7 +52,7 @@ export type EffectKind =
 	| AddCardEffect
 	| RemoveCardEffect;
 
-export type EffectTarget = "source" | "host" | "slot";
+export type EffectTarget = ConditionTarget;
 
 /**
  * 直接写在动作 / 标签 auto 中的单次效果。
@@ -60,7 +60,9 @@ export type EffectTarget = "source" | "host" | "slot";
  */
 export type InlineEffect = EffectKind & {
 	id: number;
-	/** 作用对象；缺省为 source */
+	/** 给编辑者看的效果说明，不参与运行时执行 */
+	desc?: string;
+	/** 作用对象；缺省由所在上下文决定 */
 	target?: EffectTarget;
 	/** target 为 slot 时指定卡槽 id */
 	slot?: string;

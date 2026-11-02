@@ -21,8 +21,19 @@ export type AttributeCheck = {
  *
  * 同一对象内的字段同时满足（AND）。
  */
+export const ConditionTarget = {
+	SOURCE_CARD: "sourceCard",
+	SOURCE_TAG: "sourceTag",
+	HOST: "host",
+	SLOT: "slot",
+} as const;
+
+export type ConditionTarget = (typeof ConditionTarget)[keyof typeof ConditionTarget];
+
 export interface Condition {
-	target: "source" | "host" | "slot";
+	target: ConditionTarget;
+	/** 给编辑者看的条件说明，不参与运行时判断 */
+	desc?: string;
 	/** 属性条件列表 */
 	attributes?: AttributeCheck[];
 	/** 必须拥有该标签 */

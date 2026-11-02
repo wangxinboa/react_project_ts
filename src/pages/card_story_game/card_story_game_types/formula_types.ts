@@ -6,10 +6,10 @@ import type { Condition } from "./condition_types.ts";
  */
 export type FormulaNode =
 	| { op: "number"; value: number }
-	| { op: "attr"; id: number }
+	| { op: "attr"; attributeId: number }
 	| { op: "add" | "sub" | "mul" | "div"; args: Formula[] }
 	| { op: "clamp"; value: Formula; min: number; max: number }
-	| { op: "normalize"; id: number; min: number; max: number };
+	| { op: "normalize"; attributeId: number; min: number; max: number };
 
 /** 公式 = AST 节点 + 可选条件。 */
 export type Formula = FormulaNode & {

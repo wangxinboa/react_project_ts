@@ -11,23 +11,26 @@ export interface ActionSlot {
 	min?: number;
 	max?: number;
 	/** 槽内卡牌必须满足的条件；target 通常为 slot */
-	conditions: Condition[];
+	conditions?: Condition[];
 }
 
 /** 动作定义；所有动作都始于某张 source 卡牌。 */
 export interface RuleAction {
 	id: number;
 	verb: string;
+	/** UI 标题 */
+	title: string;
+	/** 详细描述 */
 	desc: string;
 	createdAt: number;
 	/** 时间计算公式；节点 conditions 不满足时该节点为 0 */
 	timeCost?: Formula;
 	/** source 可用条件，数组内 AND */
-	conditions: Condition[];
+	conditions?: Condition[];
 	/** 命名目标槽 */
 	slots?: ActionSlot[];
 	/** 执行效果，按顺序应用 */
-	effects: EffectCall[];
+	effects?: EffectCall[];
 	/** 过渡字段：Editor 表单迁移到 slots 后删除 */
 	targets?: unknown[];
 }

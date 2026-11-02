@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 22,
+	"schemaVersion": 23,
 	"allTags": [
 		{
 			"id": 1,
@@ -212,7 +212,7 @@
 							"kind": "changeAttributes",
 							"conditions": [
 								{
-									"target": "source",
+									"target": "sourceTag",
 									"attributes": [
 										{
 											"id": 10,
@@ -226,18 +226,20 @@
 									"attributeId": 3,
 									"delta": -1
 								}
-							]
+							],
+							"desc": "修改属性：属性3 -1"
 						},
 						{
 							"id": 22,
-							"target": "source",
+							"target": "sourceTag",
 							"kind": "changeAttributes",
 							"changes": [
 								{
 									"attributeId": 10,
 									"delta": -1
 								}
-							]
+							],
+							"desc": "修改属性：属性10 -1"
 						}
 					]
 				}
@@ -352,9 +354,9 @@
 								},
 								{
 									"op": "normalize",
-									"id": 3,
 									"min": 0,
-									"max": 100
+									"max": 100,
+									"attributeId": 3
 								}
 							]
 						},
@@ -374,9 +376,9 @@
 										},
 										{
 											"op": "normalize",
-											"id": 4,
 											"min": 0,
-											"max": 100
+											"max": 100,
+											"attributeId": 4
 										}
 									]
 								}
@@ -391,9 +393,9 @@
 								},
 								{
 									"op": "normalize",
-									"id": 2,
 									"min": 0,
-									"max": 100
+									"max": 100,
+									"attributeId": 2
 								}
 							]
 						},
@@ -406,9 +408,9 @@
 								},
 								{
 									"op": "normalize",
-									"id": 1,
 									"min": 0,
-									"max": 100
+									"max": 100,
+									"attributeId": 1
 								}
 							]
 						},
@@ -417,13 +419,13 @@
 							"args": [
 								{
 									"op": "normalize",
-									"id": 5,
 									"min": 0,
-									"max": 100
+									"max": 100,
+									"attributeId": 5
 								},
 								{
 									"op": "attr",
-									"id": 11
+									"attributeId": 11
 								}
 							]
 						},
@@ -432,13 +434,13 @@
 							"args": [
 								{
 									"op": "normalize",
-									"id": 6,
 									"min": 0,
-									"max": 100
+									"max": 100,
+									"attributeId": 6
 								},
 								{
 									"op": "attr",
-									"id": 12
+									"attributeId": 12
 								}
 							]
 						}
@@ -509,619 +511,11 @@
 			"visible": false
 		}
 	],
-	"allRules": [
-		{
-			"id": 1,
-			"verb": "rest",
-			"desc": "休息",
-			"timeCost": {
-				"op": "number",
-				"value": 120
-			},
-			"conditions": [
-				{
-					"target": "source",
-					"attributes": [
-						{
-							"id": 3,
-							"gt": 0
-						}
-					]
-				}
-			],
-			"slots": [],
-			"effects": [
-				{
-					"id": 5,
-					"kind": "changeAttributes",
-					"target": "source",
-					"changes": [
-						{
-							"attributeId": 2,
-							"delta": 18
-						},
-						{
-							"attributeId": 1,
-							"delta": -3
-						},
-						{
-							"attributeId": 4,
-							"delta": -4
-						},
-						{
-							"attributeId": 3,
-							"delta": 1
-						}
-					]
-				},
-				{
-					"id": 3,
-					"kind": "removeTag",
-					"target": "source",
-					"tagId": 11
-				}
-			],
-			"createdAt": 1767974400001
-		},
-		{
-			"id": 2,
-			"verb": "work",
-			"desc": "劳作",
-			"timeCost": {
-				"op": "add",
-				"args": [
-					{
-						"op": "number",
-						"value": 240
-					},
-					{
-						"op": "mul",
-						"args": [
-							{
-								"op": "sub",
-								"args": [
-									{
-										"op": "number",
-										"value": 100
-									},
-									{
-										"op": "attr",
-										"id": 2
-									}
-								]
-							},
-							{
-								"op": "number",
-								"value": 1.5
-							}
-						]
-					}
-				]
-			},
-			"conditions": [
-				{
-					"target": "source",
-					"attributes": [
-						{
-							"id": 2,
-							"gte": 18
-						}
-					]
-				}
-			],
-			"slots": [],
-			"effects": [
-				{
-					"id": 6,
-					"kind": "changeAttributes",
-					"target": "source",
-					"changes": [
-						{
-							"attributeId": 2,
-							"delta": -18
-						},
-						{
-							"attributeId": 1,
-							"delta": -10
-						},
-						{
-							"attributeId": 3,
-							"delta": -2
-						},
-						{
-							"attributeId": 4,
-							"delta": 2
-						}
-					]
-				},
-				{
-					"id": 4,
-					"kind": "addCard",
-					"templateId": 3
-				}
-			],
-			"createdAt": 1767974400002
-		},
-		{
-			"id": 3,
-			"verb": "wound",
-			"desc": "受伤",
-			"timeCost": {
-				"op": "number",
-				"value": 60
-			},
-			"conditions": [
-				{
-					"target": "source",
-					"attributes": [
-						{
-							"id": 3,
-							"gt": 0
-						}
-					]
-				}
-			],
-			"slots": [],
-			"effects": [
-				{
-					"id": 7,
-					"kind": "changeAttributes",
-					"target": "source",
-					"changes": [
-						{
-							"attributeId": 4,
-							"delta": 25
-						},
-						{
-							"attributeId": 3,
-							"delta": -12
-						}
-					]
-				},
-				{
-					"id": 2,
-					"kind": "addTag",
-					"target": "source",
-					"tagId": 11
-				}
-			],
-			"createdAt": 1767974400003
-		},
-		{
-			"id": 4,
-			"verb": "ritual",
-			"desc": "禁忌仪式",
-			"timeCost": {
-				"op": "number",
-				"value": 60
-			},
-			"conditions": [
-				{
-					"target": "source",
-					"attributes": [
-						{
-							"id": 3,
-							"gt": 0
-						}
-					]
-				}
-			],
-			"slots": [],
-			"effects": [
-				{
-					"id": 8,
-					"kind": "changeAttributes",
-					"target": "source",
-					"changes": [
-						{
-							"attributeId": 5,
-							"delta": 20
-						},
-						{
-							"attributeId": 6,
-							"delta": 15
-						},
-						{
-							"attributeId": 3,
-							"delta": -8
-						},
-						{
-							"attributeId": 1,
-							"delta": -5
-						}
-					]
-				},
-				{
-					"id": 1,
-					"kind": "changeTemplate",
-					"target": "source",
-					"templateId": 2,
-					"conditions": [
-						{
-							"target": "source",
-							"attributes": [
-								{
-									"id": 6,
-									"gte": 60
-								}
-							]
-						}
-					]
-				}
-			],
-			"createdAt": 1767974400004
-		},
-		{
-			"id": 5,
-			"verb": "eat",
-			"desc": "进食",
-			"timeCost": {
-				"op": "add",
-				"args": [
-					{
-						"op": "number",
-						"value": 60
-					},
-					{
-						"op": "number",
-						"value": -15,
-						"conditions": [
-							{
-								"target": "slot",
-								"slot": "food",
-								"hasTag": 13
-							}
-						]
-					}
-				]
-			},
-			"conditions": [
-				{
-					"target": "source",
-					"attributes": [
-						{
-							"id": 3,
-							"gt": 0
-						}
-					]
-				}
-			],
-			"slots": [
-				{
-					"id": "food",
-					"desc": "食物",
-					"count": 1,
-					"conditions": [
-						{
-							"target": "slot",
-							"hasTag": 8
-						},
-						{
-							"target": "slot",
-							"attributes": [
-								{
-									"id": 9,
-									"gt": 0
-								}
-							]
-						}
-					]
-				}
-			],
-			"effects": [
-				{
-					"id": 9,
-					"kind": "changeAttributes",
-					"target": "source",
-					"changes": [
-						{
-							"attributeId": 1,
-							"delta": 30
-						},
-						{
-							"attributeId": 2,
-							"delta": 5
-						},
-						{
-							"attributeId": 1,
-							"delta": 25,
-							"conditions": [
-								{
-									"target": "slot",
-									"slot": "food",
-									"hasTag": 13
-								}
-							]
-						},
-						{
-							"attributeId": 2,
-							"delta": 10,
-							"conditions": [
-								{
-									"target": "slot",
-									"slot": "food",
-									"hasTag": 13
-								}
-							]
-						},
-						{
-							"attributeId": 3,
-							"delta": 2,
-							"conditions": [
-								{
-									"target": "slot",
-									"slot": "food",
-									"hasTag": 13
-								}
-							]
-						}
-					]
-				},
-				{
-					"id": 11,
-					"kind": "removeCard",
-					"target": "slot",
-					"slot": "food"
-				}
-			],
-			"createdAt": 1767974400005
-		},
-		{
-			"id": 6,
-			"verb": "metabolize",
-			"desc": "代谢",
-			"timeCost": {
-				"op": "number",
-				"value": 0
-			},
-			"conditions": [
-				{
-					"target": "source",
-					"attributes": [
-						{
-							"id": 3,
-							"gt": 0
-						}
-					]
-				}
-			],
-			"slots": [],
-			"effects": [
-				{
-					"id": 12,
-					"kind": "changeAttributes",
-					"target": "source",
-					"changes": [
-						{
-							"attributeId": 1,
-							"delta": -1
-						}
-					]
-				},
-				{
-					"id": 13,
-					"kind": "changeAttributes",
-					"target": "source",
-					"changes": [
-						{
-							"attributeId": 2,
-							"delta": -1
-						},
-						{
-							"attributeId": 3,
-							"delta": -1
-						}
-					],
-					"conditions": [
-						{
-							"target": "source",
-							"attributes": [
-								{
-									"id": 1,
-									"lte": 0
-								}
-							]
-						}
-					]
-				},
-				{
-					"id": 14,
-					"kind": "changeAttributes",
-					"target": "source",
-					"changes": [
-						{
-							"attributeId": 2,
-							"delta": -0.5
-						}
-					],
-					"conditions": [
-						{
-							"target": "source",
-							"attributes": [
-								{
-									"id": 1,
-									"gt": 0
-								}
-							]
-						},
-						{
-							"target": "source",
-							"attributes": [
-								{
-									"id": 1,
-									"lt": 20
-								}
-							]
-						}
-					]
-				},
-				{
-					"id": 15,
-					"kind": "changeAttributes",
-					"target": "source",
-					"changes": [
-						{
-							"attributeId": 2,
-							"delta": 0.5
-						},
-						{
-							"attributeId": 4,
-							"delta": -0.5
-						},
-						{
-							"attributeId": 3,
-							"delta": 0.5
-						}
-					],
-					"conditions": [
-						{
-							"target": "source",
-							"attributes": [
-								{
-									"id": 1,
-									"gte": 50
-								}
-							]
-						}
-					]
-				}
-			],
-			"createdAt": 1767974400006
-		},
-		{
-			"id": 7,
-			"verb": "spoil",
-			"desc": "腐败",
-			"timeCost": {
-				"op": "number",
-				"value": 0
-			},
-			"conditions": [],
-			"slots": [],
-			"effects": [
-				{
-					"id": 16,
-					"kind": "changeAttributes",
-					"target": "source",
-					"changes": [
-						{
-							"attributeId": 9,
-							"delta": -1
-						}
-					]
-				}
-			],
-			"createdAt": 1767974400007
-		},
-		{
-			"id": 10,
-			"verb": "gatherWood",
-			"desc": "拾柴",
-			"timeCost": {
-				"op": "number",
-				"value": 30
-			},
-			"conditions": [
-				{
-					"target": "source",
-					"attributes": [
-						{
-							"id": 3,
-							"gt": 0
-						}
-					]
-				}
-			],
-			"slots": [],
-			"effects": [
-				{
-					"id": 17,
-					"kind": "addCard",
-					"templateId": 6
-				}
-			],
-			"createdAt": 1767974400010
-		},
-		{
-			"id": 11,
-			"verb": "cookBread",
-			"desc": "烤面包",
-			"timeCost": {
-				"op": "number",
-				"value": 30
-			},
-			"conditions": [
-				{
-					"target": "source",
-					"attributes": [
-						{
-							"id": 3,
-							"gt": 0
-						}
-					]
-				}
-			],
-			"slots": [
-				{
-					"id": "bread",
-					"desc": "面包",
-					"count": 1,
-					"conditions": [
-						{
-							"target": "slot",
-							"hasTag": 8
-						},
-						{
-							"target": "slot",
-							"attributes": [
-								{
-									"id": 9,
-									"gt": 0
-								}
-							]
-						}
-					]
-				},
-				{
-					"id": "fuel",
-					"desc": "燃料",
-					"count": 1,
-					"conditions": [
-						{
-							"target": "slot",
-							"hasTag": 12
-						}
-					]
-				}
-			],
-			"effects": [
-				{
-					"id": 18,
-					"kind": "removeCard",
-					"target": "slot",
-					"slot": "bread"
-				},
-				{
-					"id": 19,
-					"kind": "removeCard",
-					"target": "slot",
-					"slot": "fuel"
-				},
-				{
-					"id": 20,
-					"kind": "addCard",
-					"templateId": 7
-				}
-			],
-			"createdAt": 1767974400011
-		}
-	],
 	"cardTemplates": [
 		{
 			"id": 1,
 			"key": "饥荒流民",
 			"desc": "在饥荒中挣扎的流民",
-			"tags": [],
 			"attributes": [
 				{
 					"id": 1,
@@ -1174,7 +568,6 @@
 			"id": 2,
 			"key": "异化流民",
 			"desc": "被污染改写的流民",
-			"tags": [],
 			"attributes": [
 				{
 					"id": 1,
@@ -1241,7 +634,6 @@
 			"auto": [
 				7
 			],
-			"outgoing": [],
 			"createdAt": 1767974400012
 		},
 		{
@@ -1251,16 +643,12 @@
 			"tags": [
 				9
 			],
-			"attributes": [],
-			"auto": [],
-			"outgoing": [],
 			"createdAt": 1767974400013
 		},
 		{
 			"id": 5,
 			"key": "另一个流民",
 			"desc": "同样在饥饿中挣扎的人",
-			"tags": [],
 			"attributes": [
 				{
 					"id": 1,
@@ -1290,7 +678,6 @@
 			"auto": [
 				6
 			],
-			"outgoing": [],
 			"createdAt": 1767974400014
 		},
 		{
@@ -1300,9 +687,6 @@
 			"tags": [
 				12
 			],
-			"attributes": [],
-			"auto": [],
-			"outgoing": [],
 			"createdAt": 1767974400006
 		},
 		{
@@ -1323,8 +707,6 @@
 					"value": 100
 				}
 			],
-			"auto": [],
-			"outgoing": [],
 			"createdAt": 1767974400007
 		}
 	],
@@ -1354,7 +736,7 @@
 	"primaryDerivedAttributeId": 7,
 	"gameOver": [
 		{
-			"target": "source",
+			"target": "sourceCard",
 			"attributes": [
 				{
 					"id": 3,
@@ -1368,7 +750,7 @@
 			{
 				"when": [
 					{
-						"target": "source",
+						"target": "sourceCard",
 						"attributes": [
 							{
 								"id": 3,
@@ -1382,7 +764,7 @@
 			{
 				"when": [
 					{
-						"target": "source",
+						"target": "sourceCard",
 						"attributes": [
 							{
 								"id": 1,
@@ -1396,7 +778,7 @@
 			{
 				"when": [
 					{
-						"target": "source",
+						"target": "sourceCard",
 						"attributes": [
 							{
 								"id": 1,
@@ -1410,7 +792,7 @@
 			{
 				"when": [
 					{
-						"target": "source",
+						"target": "sourceCard",
 						"attributes": [
 							{
 								"id": 1,
@@ -1424,5 +806,631 @@
 		],
 		"defaultLog": "时间推进。"
 	},
-	"allEffects": []
+	"allActions": [
+		{
+			"id": 1,
+			"verb": "rest",
+			"desc": "恢复体力，同时降低饱食和损伤。",
+			"timeCost": {
+				"op": "number",
+				"value": 120
+			},
+			"conditions": [
+				{
+					"target": "sourceCard",
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"id": 5,
+					"kind": "changeAttributes",
+					"target": "sourceCard",
+					"changes": [
+						{
+							"attributeId": 2,
+							"delta": 18
+						},
+						{
+							"attributeId": 1,
+							"delta": -3
+						},
+						{
+							"attributeId": 4,
+							"delta": -4
+						},
+						{
+							"attributeId": 3,
+							"delta": 1
+						}
+					],
+					"desc": "修改属性：属性2 +18，属性1 -3，属性4 -4，属性3 +1"
+				},
+				{
+					"id": 3,
+					"kind": "removeTag",
+					"target": "sourceCard",
+					"tagId": 11,
+					"desc": "移除标签 #11"
+				}
+			],
+			"createdAt": 1767974400001,
+			"title": "休息"
+		},
+		{
+			"id": 2,
+			"verb": "work",
+			"desc": "消耗体力与饱食，换取一份面包。",
+			"timeCost": {
+				"op": "add",
+				"args": [
+					{
+						"op": "number",
+						"value": 240
+					},
+					{
+						"op": "mul",
+						"args": [
+							{
+								"op": "sub",
+								"args": [
+									{
+										"op": "number",
+										"value": 100
+									},
+									{
+										"op": "attr",
+										"attributeId": 2
+									}
+								]
+							},
+							{
+								"op": "number",
+								"value": 1.5
+							}
+						]
+					}
+				]
+			},
+			"conditions": [
+				{
+					"target": "sourceCard",
+					"attributes": [
+						{
+							"id": 2,
+							"gte": 18
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"id": 6,
+					"kind": "changeAttributes",
+					"target": "sourceCard",
+					"changes": [
+						{
+							"attributeId": 2,
+							"delta": -18
+						},
+						{
+							"attributeId": 1,
+							"delta": -10
+						},
+						{
+							"attributeId": 3,
+							"delta": -2
+						},
+						{
+							"attributeId": 4,
+							"delta": 2
+						}
+					],
+					"desc": "修改属性：属性2 -18，属性1 -10，属性3 -2，属性4 +2"
+				},
+				{
+					"id": 4,
+					"kind": "addCard",
+					"templateId": 3,
+					"desc": "生成模板 #3 的卡牌"
+				}
+			],
+			"createdAt": 1767974400002,
+			"title": "劳作"
+		},
+		{
+			"id": 3,
+			"verb": "wound",
+			"desc": "受到伤害，损伤上升并附加流血。",
+			"timeCost": {
+				"op": "number",
+				"value": 60
+			},
+			"conditions": [
+				{
+					"target": "sourceCard",
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"id": 7,
+					"kind": "changeAttributes",
+					"target": "sourceCard",
+					"changes": [
+						{
+							"attributeId": 4,
+							"delta": 25
+						},
+						{
+							"attributeId": 3,
+							"delta": -12
+						}
+					],
+					"desc": "修改属性：属性4 +25，属性3 -12"
+				},
+				{
+					"id": 2,
+					"kind": "addTag",
+					"target": "sourceCard",
+					"tagId": 11,
+					"desc": "添加标签 #11"
+				}
+			],
+			"createdAt": 1767974400003,
+			"title": "受伤"
+		},
+		{
+			"id": 4,
+			"verb": "ritual",
+			"desc": "提升灵性与污染，可能引发异化。",
+			"timeCost": {
+				"op": "number",
+				"value": 60
+			},
+			"conditions": [
+				{
+					"target": "sourceCard",
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"id": 8,
+					"kind": "changeAttributes",
+					"target": "sourceCard",
+					"changes": [
+						{
+							"attributeId": 5,
+							"delta": 20
+						},
+						{
+							"attributeId": 6,
+							"delta": 15
+						},
+						{
+							"attributeId": 3,
+							"delta": -8
+						},
+						{
+							"attributeId": 1,
+							"delta": -5
+						}
+					],
+					"desc": "修改属性：属性5 +20，属性6 +15，属性3 -8，属性1 -5"
+				},
+				{
+					"id": 1,
+					"kind": "changeTemplate",
+					"target": "sourceCard",
+					"templateId": 2,
+					"conditions": [
+						{
+							"target": "sourceCard",
+							"attributes": [
+								{
+									"id": 6,
+									"gte": 60
+								}
+							]
+						}
+					],
+					"desc": "切换模板到 #2"
+				}
+			],
+			"createdAt": 1767974400004,
+			"title": "禁忌仪式"
+		},
+		{
+			"id": 5,
+			"verb": "eat",
+			"desc": "消耗食物恢复状态；熟食恢复更多。",
+			"timeCost": {
+				"op": "add",
+				"args": [
+					{
+						"op": "number",
+						"value": 60
+					},
+					{
+						"op": "number",
+						"value": -15,
+						"conditions": [
+							{
+								"target": "slot",
+								"slot": "food",
+								"hasTag": 13
+							}
+						]
+					}
+				]
+			},
+			"conditions": [
+				{
+					"target": "sourceCard",
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"slots": [
+				{
+					"id": "food",
+					"desc": "食物",
+					"count": 1,
+					"conditions": [
+						{
+							"target": "slot",
+							"hasTag": 8
+						},
+						{
+							"target": "slot",
+							"attributes": [
+								{
+									"id": 9,
+									"gt": 0
+								}
+							]
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"id": 9,
+					"kind": "changeAttributes",
+					"target": "sourceCard",
+					"changes": [
+						{
+							"attributeId": 1,
+							"delta": 30
+						},
+						{
+							"attributeId": 2,
+							"delta": 5
+						},
+						{
+							"attributeId": 1,
+							"delta": 25,
+							"conditions": [
+								{
+									"target": "slot",
+									"slot": "food",
+									"hasTag": 13
+								}
+							]
+						},
+						{
+							"attributeId": 2,
+							"delta": 10,
+							"conditions": [
+								{
+									"target": "slot",
+									"slot": "food",
+									"hasTag": 13
+								}
+							]
+						},
+						{
+							"attributeId": 3,
+							"delta": 2,
+							"conditions": [
+								{
+									"target": "slot",
+									"slot": "food",
+									"hasTag": 13
+								}
+							]
+						}
+					],
+					"desc": "修改属性：属性1 +30，属性2 +5，属性1 +25，属性2 +10，属性3 +2"
+				},
+				{
+					"id": 11,
+					"kind": "removeCard",
+					"target": "slot",
+					"slot": "food",
+					"desc": "移除目标卡牌"
+				}
+			],
+			"createdAt": 1767974400005,
+			"title": "进食"
+		},
+		{
+			"id": 6,
+			"verb": "metabolize",
+			"desc": "每小时结算饱食、体力与生命。",
+			"timeCost": {
+				"op": "number",
+				"value": 0
+			},
+			"conditions": [
+				{
+					"target": "sourceCard",
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"id": 12,
+					"kind": "changeAttributes",
+					"target": "sourceCard",
+					"changes": [
+						{
+							"attributeId": 1,
+							"delta": -1
+						}
+					],
+					"desc": "修改属性：属性1 -1"
+				},
+				{
+					"id": 13,
+					"kind": "changeAttributes",
+					"target": "sourceCard",
+					"changes": [
+						{
+							"attributeId": 2,
+							"delta": -1
+						},
+						{
+							"attributeId": 3,
+							"delta": -1
+						}
+					],
+					"conditions": [
+						{
+							"target": "sourceCard",
+							"attributes": [
+								{
+									"id": 1,
+									"lte": 0
+								}
+							]
+						}
+					],
+					"desc": "修改属性：属性2 -1，属性3 -1"
+				},
+				{
+					"id": 14,
+					"kind": "changeAttributes",
+					"target": "sourceCard",
+					"changes": [
+						{
+							"attributeId": 2,
+							"delta": -0.5
+						}
+					],
+					"conditions": [
+						{
+							"target": "sourceCard",
+							"attributes": [
+								{
+									"id": 1,
+									"gt": 0
+								}
+							]
+						},
+						{
+							"target": "sourceCard",
+							"attributes": [
+								{
+									"id": 1,
+									"lt": 20
+								}
+							]
+						}
+					],
+					"desc": "修改属性：属性2 -0.5"
+				},
+				{
+					"id": 15,
+					"kind": "changeAttributes",
+					"target": "sourceCard",
+					"changes": [
+						{
+							"attributeId": 2,
+							"delta": 0.5
+						},
+						{
+							"attributeId": 4,
+							"delta": -0.5
+						},
+						{
+							"attributeId": 3,
+							"delta": 0.5
+						}
+					],
+					"conditions": [
+						{
+							"target": "sourceCard",
+							"attributes": [
+								{
+									"id": 1,
+									"gte": 50
+								}
+							]
+						}
+					],
+					"desc": "修改属性：属性2 +0.5，属性4 -0.5，属性3 +0.5"
+				}
+			],
+			"createdAt": 1767974400006,
+			"title": "代谢"
+		},
+		{
+			"id": 7,
+			"verb": "spoil",
+			"desc": "食物新鲜度每小时下降。",
+			"timeCost": {
+				"op": "number",
+				"value": 0
+			},
+			"effects": [
+				{
+					"id": 16,
+					"kind": "changeAttributes",
+					"target": "sourceCard",
+					"changes": [
+						{
+							"attributeId": 9,
+							"delta": -1
+						}
+					],
+					"desc": "修改属性：属性9 -1"
+				}
+			],
+			"createdAt": 1767974400007,
+			"title": "腐败"
+		},
+		{
+			"id": 10,
+			"verb": "gatherWood",
+			"desc": "收集一份木柴。",
+			"timeCost": {
+				"op": "number",
+				"value": 30
+			},
+			"conditions": [
+				{
+					"target": "sourceCard",
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"id": 17,
+					"kind": "addCard",
+					"templateId": 6,
+					"desc": "生成模板 #6 的卡牌"
+				}
+			],
+			"createdAt": 1767974400010,
+			"title": "拾柴"
+		},
+		{
+			"id": 11,
+			"verb": "cookBread",
+			"desc": "消耗面包与木柴，制作烤面包。",
+			"timeCost": {
+				"op": "number",
+				"value": 30
+			},
+			"conditions": [
+				{
+					"target": "sourceCard",
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"slots": [
+				{
+					"id": "bread",
+					"desc": "面包",
+					"count": 1,
+					"conditions": [
+						{
+							"target": "slot",
+							"hasTag": 8
+						},
+						{
+							"target": "slot",
+							"attributes": [
+								{
+									"id": 9,
+									"gt": 0
+								}
+							]
+						}
+					]
+				},
+				{
+					"id": "fuel",
+					"desc": "燃料",
+					"count": 1,
+					"conditions": [
+						{
+							"target": "slot",
+							"hasTag": 12
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"id": 18,
+					"kind": "removeCard",
+					"target": "slot",
+					"slot": "bread",
+					"desc": "移除目标卡牌"
+				},
+				{
+					"id": 19,
+					"kind": "removeCard",
+					"target": "slot",
+					"slot": "fuel",
+					"desc": "移除目标卡牌"
+				},
+				{
+					"id": 20,
+					"kind": "addCard",
+					"templateId": 7,
+					"desc": "生成模板 #7 的卡牌"
+				}
+			],
+			"createdAt": 1767974400011,
+			"title": "烤面包"
+		}
+	]
 }

@@ -100,13 +100,13 @@ export default function TemplatePage({ templates }: TemplatePageProps) {
 				title: "自动规则",
 				key: "auto",
 				width: 90,
-				render: (_, template) => <span className={style.count}>{template.auto.length}</span>,
+				render: (_, template) => <span className={style.count}>{(template.auto ?? []).length}</span>,
 			},
 			{
 				title: "主动规则",
 				key: "outgoing",
 				width: 90,
-				render: (_, template) => <span className={style.count}>{template.outgoing.length}</span>,
+				render: (_, template) => <span className={style.count}>{(template.outgoing ?? []).length}</span>,
 			},
 			{
 				title: "响应规则",
