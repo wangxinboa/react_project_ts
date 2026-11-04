@@ -1,3 +1,4 @@
+import type { AttributeValue } from "../../card_story_game_types/attribute_types.ts";
 import type { Formula } from "../../card_story_game_types/formula_types.ts";
 import type {
 	ActionSlot,
@@ -55,7 +56,7 @@ export type FamineTemplate = CardTemplate;
 export interface SaveCard {
 	id: string;
 	templateId: number;
-	values?: Record<string, number>;
+	values?: Record<string, AttributeValue>;
 }
 
 export interface SaveData {
@@ -86,7 +87,7 @@ export interface FamineRefugeeConfig {
 export interface CardState {
 	id: string;
 	templateId: number;
-	values: Record<number, number>;
+	values: Record<number, AttributeValue>;
 	tags: TagInstanceState[];
 }
 

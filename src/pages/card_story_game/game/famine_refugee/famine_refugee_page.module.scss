@@ -589,3 +589,75 @@
 	color: #5a544b;
 	font-size: 9px;
 }
+
+.topAttributes {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 4px 8px;
+	min-width: 0;
+}
+
+.topAttribute {
+	display: flex;
+	align-items: baseline;
+	gap: 4px;
+	padding: 3px 6px;
+	border: 1px solid #2e2a25;
+	border-radius: 4px;
+	background: #171411;
+	color: #8a8276;
+	font-size: 10px;
+}
+
+.topAttribute strong {
+	color: #e6ddcc;
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+}
+
+.locationName {
+	color: #c9a227;
+	font-size: 12px;
+	letter-spacing: 0.04rem;
+}
+
+.gamePage {
+	height: 100vh;
+	overflow: hidden;
+}
+
+.tableLayout {
+	overflow: hidden;
+}
+
+.cardGrid,
+.inspector {
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.logPanel {
+	flex-shrink: 0;
+}
+
+
+.backpackList {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-bottom: 6px;
+}
+
+.backpackItem {
+	padding: 4px 7px;
+	border: 1px solid #3a352e;
+	border-radius: 3px;
+	background: #1a1714;
+	color: #d9d2c7;
+	font-size: 10px;
+	cursor: pointer;
+}
+
+.backpackItem:hover {
+	border-color: #c9a227;
+}

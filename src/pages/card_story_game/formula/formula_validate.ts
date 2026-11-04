@@ -60,6 +60,19 @@ function validateNode(raw: unknown, path: string, issues: FormulaValidationIssue
 			validateNode(raw.value, `${path}.value`, issues);
 			return;
 		}
+		case "refListsAttributeSum":
+			if (!isAttributeId(raw.refAttributeId)) {
+				issues.push({ path: `${path}.refAttributeId`, message: "必须是正整数属性 id" });
+			}
+			if (!isAttributeId(raw.valueAttributeId)) {
+				issues.push({ path: `${path}.valueAttributeId`, message: "必须是正整数属性 id" });
+			}
+			return;
+		case "refListsAttributeCount":
+			if (!isAttributeId(raw.refAttributeId)) {
+				issues.push({ path: `${path}.refAttributeId`, message: "必须是正整数属性 id" });
+			}
+			return;
 		case "normalize":
 			if (!isAttributeId(raw.attributeId)) {
 				issues.push({ path: `${path}.attributeId`, message: "必须是正整数属性 id" });

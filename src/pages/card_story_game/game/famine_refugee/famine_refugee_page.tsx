@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DragEvent } from "react";
 
 import { serviceGetFamineRefugeeConfig } from "../../../../services/famine_refugee.ts";
+import { getNumberAttribute, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import {
 	applyAction,
 	createInitialState,
@@ -10,7 +11,10 @@ import {
 	getEligibleCards,
 	getPlayerCard,
 	getSlotRange,
+	getIncomingActions,
 	getVisibleActions,
+	getVisibleCards,
+	applyIncomingAction,
 } from "./famine_refugee_engine.ts";
 import type {
 	ActionSlot,
@@ -39,6 +43,13 @@ function isAttributeVisible(config: FamineRefugeeConfig, id: number): boolean {
 		if (config.allAttributes[i].id === id) return config.allAttributes[i].visible !== false;
 	}
 	return true;
+}
+
+function getAttributeMax(config: FamineRefugeeConfig, id: number): number | null {
+	for (let i = 0; i < config.allAttributes.length; i++) {
+		if (config.allAttributes[i].id === id) return config.allAttributes[i].typeParams?.max ?? null;
+	}
+	return null;
 }
 
 function getAction(config: FamineRefugeeConfig, id: number | null): FamineAction | null {
@@ -100,18 +111,21 @@ export default function FamineRefugeePage() {
 	const cardViews = useMemo<CardView[]>(() => {
 		if (!config || !game) return [];
 		const views: CardView[] = [];
-		for (let i = 0; i < game.cards.length; i++) views.push({ card: game.cards[i], derived: deriveCard(config, game.cards[i]) });
+		for (let i = 0; i < game.cards.length; i++) views.push({ card: game.cards[i], derived: deriveCard(config, game.cards[i], game.cards) });
 		return views;
 	}, [config, game]);
 
 	const sceneViews = useMemo(() => {
-		if (!config) return [];
+		if (!config || !game) return [];
+		const visible = getVisibleCards(config, game);
+		const ids = new Set<string>();
+		for (let i = 0; i < visible.length; i++) ids.add(visible[i].id);
 		const views: CardView[] = [];
 		for (let i = 0; i < cardViews.length; i++) {
-			if (cardViews[i].card.id !== config.saveData.playerCardId) views.push(cardViews[i]);
+			if (ids.has(cardViews[i].card.id)) views.push(cardViews[i]);
 		}
 		return views;
-	}, [cardViews, config]);
+	}, [cardViews, config, game]);
 
 	const playerView = useMemo(() => {
 		if (!config || !game) return null;
@@ -123,9 +137,24 @@ export default function FamineRefugeePage() {
 		return cardViews.find((view) => view.card.id === selectedCardId) ?? playerView;
 	}, [cardViews, selectedCardId, playerView]);
 
+	const currentLocationName = useMemo(() => {
+		if (!config || !playerView) return "未知地点";
+		const locationAttribute = config.allAttributes.find((attribute) => attribute.key === "location");
+		if (!locationAttribute) return "未知地点";
+		const locationId = getStringAttribute(playerView.card.values, locationAttribute.id);
+		if (!locationId) return "未知地点";
+		const place = cardViews.find((view) => view.card.id === locationId);
+		return place?.derived.template.key ?? "未知地点";
+	}, [cardViews, config, playerView]);
+
 	const visibleActions = useMemo(() => {
 		return config && game ? getVisibleActions(config, game) : [];
 	}, [config, game]);
+
+	const incomingActions = useMemo(() => {
+		if (!config || !game || selectedCardId === config.saveData.playerCardId) return [];
+		return getIncomingActions(config, game, selectedCardId);
+	}, [config, game, selectedCardId]);
 
 	const placementAction = useMemo(() => {
 		return config ? getAction(config, placementActionId) : null;
@@ -190,6 +219,17 @@ export default function FamineRefugeePage() {
 			setGame((prev) => (prev ? applyAction(config, prev, action.id) : prev));
 		},
 		[config],
+	);
+
+	const handleIncomingAction = useCallback(
+		(actionId: number) => {
+			if (!config) return;
+			setGame((prev) => (prev ? applyIncomingAction(config, prev, selectedCardId, actionId) : prev));
+			setSelectedCardId(config.saveData.playerCardId);
+			setPlacementActionId(null);
+			setSlotAssignments({});
+		},
+		[config, selectedCardId],
 	);
 
 	const addToSlot = useCallback(
@@ -337,6 +377,12 @@ export default function FamineRefugeePage() {
 	const isPlayerSelected = selectedView.card.id === config.saveData.playerCardId;
 	const isDead = playerView.derived.gameOver;
 	const bodyState = Math.round((playerView.derived.values[config.primaryDerivedAttributeId] ?? 0) * 100);
+	const backpackIds = getStringListAttribute(playerView.card.values, 22);
+	let backpackWeight = 0;
+	for (let i = 0; i < backpackIds.length; i++) {
+		const item = cardViews.find((view) => view.card.id === backpackIds[i]);
+		if (item) backpackWeight += getNumberAttribute(item.card.values, 13);
+	}
 
 	const isEligible = (cardId: string): boolean => {
 		if (!placementAction) return false;
@@ -370,17 +416,34 @@ export default function FamineRefugeePage() {
 					onClick={() => handleSelectCard(config.saveData.playerCardId)}
 				>
 					<span className={style.avatarPortrait}>{playerView.derived.template.key.slice(0, 1)}</span>
-					<span className={style.avatarInfo}>
-						<span className={style.avatarLabel}>玩家</span>
-						<span className={style.avatarName}>{playerView.derived.template.key}</span>
-						<span className={style.avatarMeta}>{bodyState}% 身体状态</span>
-					</span>
 				</button>
-				<div className={style.boardTitle}>
-					<div className={style.eyebrow}>属性联动原型 / 多卡桌面</div>
-					<h1 className={style.title}>{playerView.derived.template.key}</h1>
+				<div className={style.topAttributes}>
+					{(playerView.derived.template.attributes ?? [])
+						.filter((binding) => isAttributeVisible(config, binding.id))
+						.map((binding) => (
+							<div key={binding.id} className={style.topAttribute}>
+								<span>{getAttributeLabel(config, binding.id)}</span>
+								<strong>
+									{Math.round(playerView.derived.values[binding.id] ?? 0)}
+									{getAttributeMax(config, binding.id) !== null ? ` / ${getAttributeMax(config, binding.id)}` : ""}
+								</strong>
+							</div>
+						))}
+					<div className={style.topAttribute}>
+						<span>负重</span>
+						<strong>{backpackWeight} / {Math.round(playerView.derived.values[14] ?? 0)}</strong>
+					</div>
+					<div className={style.topAttribute}>
+						<span>背包</span>
+						<strong>{backpackIds.length} / {Math.round(playerView.derived.values[34] ?? 0)}</strong>
+					</div>
+					<div className={style.topAttribute}>
+						<span>状态</span>
+						<strong>{bodyState}%</strong>
+					</div>
 				</div>
 				<div className={style.headerActions}>
+					<span className={style.locationName}>{currentLocationName}</span>
 					<span className={style.clock}>{formatClock(game.time)}</span>
 					<button type="button" className={style.resetButton} onClick={handleReset}>重置</button>
 				</div>
@@ -438,7 +501,7 @@ export default function FamineRefugeePage() {
 						)}
 					</div>
 
-					<div className={style.attributeList}>
+					{!isPlayerSelected ? <div className={style.attributeList}>
 						{(selectedView.derived.template.attributes ?? []).filter((binding) => isAttributeVisible(config, binding.id)).length === 0 ? (
 							<div className={style.emptyAttributes}>这张卡没有数值属性。</div>
 						) : (
@@ -457,7 +520,7 @@ export default function FamineRefugeePage() {
 								);
 							})
 						)}
-					</div>
+					</div> : null}
 
 					{placementAction ? (
 						<div className={style.targetPanel}>
@@ -516,6 +579,22 @@ export default function FamineRefugeePage() {
 						</div>
 					) : isPlayerSelected ? (
 						<>
+							<div className={style.inspectorSectionTitle}>背包</div>
+							<div className={style.backpackList}>
+								{backpackIds.length === 0 ? (
+									<span className={style.emptyTag}>背包为空</span>
+								) : (
+									backpackIds.map((itemId) => {
+										const item = cardViews.find((view) => view.card.id === itemId);
+										if (!item) return null;
+										return (
+											<button key={itemId} type="button" className={style.backpackItem} onClick={() => setSelectedCardId(itemId)}>
+												{item.derived.template.key} · {getNumberAttribute(item.card.values, 13)}
+											</button>
+										);
+									})
+								)}
+							</div>
 							<div className={style.inspectorSectionTitle}>玩家行动</div>
 							<div className={style.actions}>
 								{visibleActions.map((action) => (
@@ -535,7 +614,27 @@ export default function FamineRefugeePage() {
 							{isDead ? <div className={style.deadHint}>你已经倒下了。重置后再试一次。</div> : null}
 						</>
 					) : (
-						<div className={style.emptyActions}>当前 UI 中只有玩家可以发起动作。</div>
+						<>
+							<div className={style.inspectorSectionTitle}>「{selectedView.derived.template.key}」的 incoming</div>
+							{incomingActions.length === 0 ? (
+								<div className={style.emptyActions}>当前没有可用的 incoming 动作。</div>
+							) : (
+								<div className={style.actions}>
+									{incomingActions.map((action) => (
+										<button
+											key={action.id}
+											type="button"
+											className={style.actionButton}
+											onClick={() => handleIncomingAction(action.id)}
+											disabled={isDead}
+										>
+											<span>{action.title}</span>
+											<small>玩家 → {selectedView.derived.template.key} · {formatDuration(getActionTimeCost(config, action, playerView.card, {}, game.cards))}</small>
+										</button>
+									))}
+								</div>
+							)}
+						</>
 					)}
 				</aside>
 			</div>

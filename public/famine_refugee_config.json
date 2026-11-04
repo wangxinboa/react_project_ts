@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 23,
+	"schemaVersion": 37,
 	"allTags": [
 		{
 			"id": 1,
@@ -8,17 +8,16 @@
 			"kind": "derived",
 			"conditions": [
 				{
-					"target": "host",
 					"attributes": [
 						{
 							"id": 1,
 							"lte": 20
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					]
+					"hasAnyTemplate": [1, 2],
+					"target": {
+						"card": "host"
+					}
 				}
 			]
 		},
@@ -29,17 +28,16 @@
 			"kind": "derived",
 			"conditions": [
 				{
-					"target": "host",
 					"attributes": [
 						{
 							"id": 2,
 							"lte": 20
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					]
+					"hasAnyTemplate": [1, 2],
+					"target": {
+						"card": "host"
+					}
 				}
 			]
 		},
@@ -50,17 +48,16 @@
 			"kind": "derived",
 			"conditions": [
 				{
-					"target": "host",
 					"attributes": [
 						{
 							"id": 3,
 							"lte": 30
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					]
+					"hasAnyTemplate": [1, 2],
+					"target": {
+						"card": "host"
+					}
 				}
 			]
 		},
@@ -71,17 +68,16 @@
 			"kind": "derived",
 			"conditions": [
 				{
-					"target": "host",
 					"attributes": [
 						{
 							"id": 4,
 							"gte": 50
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					]
+					"hasAnyTemplate": [1, 2],
+					"target": {
+						"card": "host"
+					}
 				}
 			]
 		},
@@ -92,17 +88,16 @@
 			"kind": "derived",
 			"conditions": [
 				{
-					"target": "host",
 					"attributes": [
 						{
 							"id": 5,
 							"gte": 50
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					]
+					"hasAnyTemplate": [1, 2],
+					"target": {
+						"card": "host"
+					}
 				}
 			]
 		},
@@ -113,17 +108,16 @@
 			"kind": "derived",
 			"conditions": [
 				{
-					"target": "host",
 					"attributes": [
 						{
 							"id": 6,
 							"gte": 50
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					]
+					"hasAnyTemplate": [1, 2],
+					"target": {
+						"card": "host"
+					}
 				}
 			]
 		},
@@ -134,17 +128,16 @@
 			"kind": "derived",
 			"conditions": [
 				{
-					"target": "host",
 					"attributes": [
 						{
 							"id": 6,
 							"gte": 60
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					]
+					"hasAnyTemplate": [1, 2],
+					"target": {
+						"card": "host"
+					}
 				}
 			]
 		},
@@ -167,17 +160,16 @@
 			"kind": "derived",
 			"conditions": [
 				{
-					"target": "host",
 					"attributes": [
 						{
 							"id": 7,
 							"lte": 0.35
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					]
+					"hasAnyTemplate": [1, 2],
+					"target": {
+						"card": "host"
+					}
 				}
 			]
 		},
@@ -196,29 +188,32 @@
 				{
 					"conditions": [
 						{
-							"target": "host",
 							"attributes": [
 								{
 									"id": 3,
 									"gt": 0
 								}
-							]
+							],
+							"target": {
+								"card": "host"
+							}
 						}
 					],
 					"effects": [
 						{
 							"id": 21,
-							"target": "host",
 							"kind": "changeAttributes",
 							"conditions": [
 								{
-									"target": "sourceTag",
 									"attributes": [
 										{
 											"id": 10,
 											"gt": 0
 										}
-									]
+									],
+									"target": {
+										"card": "sourceTag"
+									}
 								}
 							],
 							"changes": [
@@ -227,11 +222,13 @@
 									"delta": -1
 								}
 							],
-							"desc": "修改属性：属性3 -1"
+							"desc": "修改属性：生命 -1",
+							"target": {
+								"card": "host"
+							}
 						},
 						{
 							"id": 22,
-							"target": "sourceTag",
 							"kind": "changeAttributes",
 							"changes": [
 								{
@@ -239,7 +236,10 @@
 									"delta": -1
 								}
 							],
-							"desc": "修改属性：属性10 -1"
+							"desc": "修改属性：严重度 -1",
+							"target": {
+								"card": "sourceTag"
+							}
 						}
 					]
 				}
@@ -509,6 +509,157 @@
 				"max": 5
 			},
 			"visible": false
+		},
+		{
+			"id": 20,
+			"key": "location",
+			"label": "所在地点",
+			"desc": "所在地点",
+			"kind": "base",
+			"valueType": "cardRef",
+			"visible": false
+		},
+		{
+			"id": 21,
+			"key": "carrier",
+			"label": "携带者",
+			"desc": "携带者",
+			"kind": "base",
+			"valueType": "cardRef",
+			"visible": false
+		},
+		{
+			"id": 22,
+			"key": "backpack",
+			"label": "背包",
+			"desc": "背包",
+			"kind": "base",
+			"valueType": "cardRefList",
+			"visible": false
+		},
+		{
+			"id": 30,
+			"key": "baseCarryCapacity",
+			"label": "基础负重",
+			"desc": "基础负重上限",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 500
+			},
+			"visible": false
+		},
+		{
+			"id": 32,
+			"key": "capacityBonus",
+			"label": "容量加成",
+			"desc": "物品提供的负重加成",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 500
+			},
+			"visible": false
+		},
+		{
+			"id": 35,
+			"key": "backpackCount",
+			"label": "背包数量",
+			"desc": "背包中的物品数量",
+			"kind": "derived",
+			"valueType": "number",
+			"visible": true,
+			"formula": {
+				"op": "refListsAttributeCount",
+				"refAttributeId": 22
+			}
+		},
+		{
+			"id": 14,
+			"key": "carryCapacity",
+			"label": "负重上限",
+			"desc": "基础负重加背包物品加成",
+			"kind": "derived",
+			"valueType": "number",
+			"visible": false,
+			"formula": {
+				"op": "add",
+				"args": [
+					{
+						"op": "attr",
+						"attributeId": 30
+					},
+					{
+						"op": "refListsAttributeSum",
+						"refAttributeId": 22,
+						"valueAttributeId": 32
+					}
+				]
+			}
+		},
+		{
+			"id": 13,
+			"key": "weight",
+			"label": "重量",
+			"desc": "物品重量",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 100
+			},
+			"visible": false
+		},
+		{
+			"id": 31,
+			"key": "baseCarrySlots",
+			"label": "基础格数",
+			"desc": "基础背包格数",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 50
+			},
+			"visible": false
+		},
+		{
+			"id": 33,
+			"key": "slotBonus",
+			"label": "格数加成",
+			"desc": "物品提供的格数加成",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"min": 0,
+				"max": 50
+			},
+			"visible": false
+		},
+		{
+			"id": 34,
+			"key": "carrySlots",
+			"label": "背包格数",
+			"desc": "基础格数加物品加成",
+			"kind": "derived",
+			"valueType": "number",
+			"visible": false,
+			"formula": {
+				"op": "add",
+				"args": [
+					{
+						"op": "attr",
+						"attributeId": 31
+					},
+					{
+						"op": "refListsAttributeSum",
+						"refAttributeId": 22,
+						"valueAttributeId": 33
+					}
+				]
+			}
 		}
 	],
 	"cardTemplates": [
@@ -548,21 +699,20 @@
 				{
 					"id": 12,
 					"value": -0.2
+				},
+				{
+					"id": 30,
+					"value": 20
+				},
+				{
+					"id": 31,
+					"value": 5
 				}
 			],
-			"auto": [
-				6
-			],
-			"outgoing": [
-				1,
-				2,
-				3,
-				4,
-				5,
-				10,
-				11
-			],
-			"createdAt": 1767974400010
+			"auto": [6],
+			"outgoing": [1, 3, 4, 5, 10, 11],
+			"createdAt": 1767974400010,
+			"cardType": "person"
 		},
 		{
 			"id": 2,
@@ -600,27 +750,26 @@
 				{
 					"id": 12,
 					"value": -0.1
+				},
+				{
+					"id": 30,
+					"value": 20
+				},
+				{
+					"id": 31,
+					"value": 5
 				}
 			],
-			"auto": [
-				6
-			],
-			"outgoing": [
-				1,
-				2,
-				3,
-				4,
-				5
-			],
-			"createdAt": 1767974400011
+			"auto": [6],
+			"outgoing": [1, 2, 3, 4, 5],
+			"createdAt": 1767974400011,
+			"cardType": "person"
 		},
 		{
 			"id": 3,
 			"key": "干硬面包",
 			"desc": "勉强能入口的食物",
-			"tags": [
-				8
-			],
+			"tags": [8],
 			"attributes": [
 				{
 					"id": 8,
@@ -629,21 +778,47 @@
 				{
 					"id": 9,
 					"value": 100
+				},
+				{
+					"id": 32,
+					"value": 0
+				},
+				{
+					"id": 13,
+					"value": 3
+				},
+				{
+					"id": 33,
+					"value": 0
 				}
 			],
-			"auto": [
-				7
-			],
-			"createdAt": 1767974400012
+			"auto": [7],
+			"createdAt": 1767974400012,
+			"cardType": "item",
+			"incoming": [40, 50, 51]
 		},
 		{
 			"id": 4,
 			"key": "石头",
 			"desc": "沉重、没有生命的石头",
-			"tags": [
-				9
+			"tags": [9],
+			"createdAt": 1767974400013,
+			"cardType": "item",
+			"attributes": [
+				{
+					"id": 32,
+					"value": 0
+				},
+				{
+					"id": 13,
+					"value": 5
+				},
+				{
+					"id": 33,
+					"value": 0
+				}
 			],
-			"createdAt": 1767974400013
+			"incoming": [50, 51]
 		},
 		{
 			"id": 5,
@@ -675,28 +850,38 @@
 					"value": 0
 				}
 			],
-			"auto": [
-				6
-			],
-			"createdAt": 1767974400014
+			"auto": [6],
+			"createdAt": 1767974400014,
+			"cardType": "person"
 		},
 		{
 			"id": 6,
 			"key": "木柴",
 			"desc": "可以燃烧的柴火",
-			"tags": [
-				12
+			"tags": [12],
+			"createdAt": 1767974400006,
+			"cardType": "item",
+			"attributes": [
+				{
+					"id": 32,
+					"value": 0
+				},
+				{
+					"id": 13,
+					"value": 2
+				},
+				{
+					"id": 33,
+					"value": 0
+				}
 			],
-			"createdAt": 1767974400006
+			"incoming": [50, 51]
 		},
 		{
 			"id": 7,
 			"key": "烤面包",
 			"desc": "烤过的面包，更顶饱",
-			"tags": [
-				8,
-				13
-			],
+			"tags": [8, 13],
 			"attributes": [
 				{
 					"id": 8,
@@ -705,9 +890,58 @@
 				{
 					"id": 9,
 					"value": 100
+				},
+				{
+					"id": 32,
+					"value": 0
+				},
+				{
+					"id": 13,
+					"value": 3
+				},
+				{
+					"id": 33,
+					"value": 0
 				}
 			],
-			"createdAt": 1767974400007
+			"createdAt": 1767974400007,
+			"cardType": "item",
+			"incoming": [50, 51]
+		},
+		{
+			"id": 20,
+			"key": "村庄",
+			"cardType": "place",
+			"desc": "破败的流民聚落",
+			"incoming": [2],
+			"createdAt": 1767974400020,
+			"attributes": []
+		},
+		{
+			"id": 21,
+			"key": "森林",
+			"cardType": "place",
+			"desc": "树木与狼群",
+			"createdAt": 1767974400021,
+			"attributes": []
+		},
+		{
+			"id": 22,
+			"key": "通往森林",
+			"cardType": "passage",
+			"desc": "一条通往森林的小路",
+			"incoming": [30],
+			"createdAt": 1767974400022,
+			"attributes": []
+		},
+		{
+			"id": 23,
+			"key": "通往村庄",
+			"cardType": "passage",
+			"desc": "返回村庄的小路",
+			"incoming": [31],
+			"createdAt": 1767974400023,
+			"attributes": []
 		}
 	],
 	"saveData": {
@@ -715,19 +949,54 @@
 		"cards": [
 			{
 				"id": "player",
-				"templateId": 1
+				"templateId": 1,
+				"values": {
+					"20": "village",
+					"22": []
+				}
 			},
 			{
 				"id": "bread",
-				"templateId": 3
+				"templateId": 3,
+				"values": {
+					"20": "village"
+				}
 			},
 			{
 				"id": "stone",
-				"templateId": 4
+				"templateId": 4,
+				"values": {
+					"20": "village"
+				}
 			},
 			{
 				"id": "stranger",
-				"templateId": 5
+				"templateId": 5,
+				"values": {
+					"20": "village"
+				}
+			},
+			{
+				"id": "village",
+				"templateId": 20
+			},
+			{
+				"id": "forest",
+				"templateId": 21
+			},
+			{
+				"id": "entry_forest",
+				"templateId": 22,
+				"values": {
+					"20": "village"
+				}
+			},
+			{
+				"id": "entry_village",
+				"templateId": 23,
+				"values": {
+					"20": "forest"
+				}
 			}
 		],
 		"time": 480
@@ -736,13 +1005,15 @@
 	"primaryDerivedAttributeId": 7,
 	"gameOver": [
 		{
-			"target": "sourceCard",
 			"attributes": [
 				{
 					"id": 3,
 					"lte": 0
 				}
-			]
+			],
+			"target": {
+				"card": "sourceCard"
+			}
 		}
 	],
 	"tick": {
@@ -750,13 +1021,15 @@
 			{
 				"when": [
 					{
-						"target": "sourceCard",
 						"attributes": [
 							{
 								"id": 3,
 								"lte": 0
 							}
-						]
+						],
+						"target": {
+							"card": "sourceCard"
+						}
 					}
 				],
 				"message": "你倒下了。"
@@ -764,13 +1037,15 @@
 			{
 				"when": [
 					{
-						"target": "sourceCard",
 						"attributes": [
 							{
 								"id": 1,
 								"lte": 0
 							}
-						]
+						],
+						"target": {
+							"card": "sourceCard"
+						}
 					}
 				],
 				"message": "饥饿在侵蚀你的身体，体力和生命下降。"
@@ -778,13 +1053,15 @@
 			{
 				"when": [
 					{
-						"target": "sourceCard",
 						"attributes": [
 							{
 								"id": 1,
 								"lt": 20
 							}
-						]
+						],
+						"target": {
+							"card": "sourceCard"
+						}
 					}
 				],
 				"message": "你饿得发慌，体力继续流失。"
@@ -792,13 +1069,15 @@
 			{
 				"when": [
 					{
-						"target": "sourceCard",
 						"attributes": [
 							{
 								"id": 1,
 								"gte": 50
 							}
-						]
+						],
+						"target": {
+							"card": "sourceCard"
+						}
 					}
 				],
 				"message": "你勉强吃饱，身体恢复了一点。"
@@ -817,7 +1096,9 @@
 			},
 			"conditions": [
 				{
-					"target": "sourceCard",
+					"target": {
+						"card": "sourceCard"
+					},
 					"attributes": [
 						{
 							"id": 3,
@@ -830,7 +1111,6 @@
 				{
 					"id": 5,
 					"kind": "changeAttributes",
-					"target": "sourceCard",
 					"changes": [
 						{
 							"attributeId": 2,
@@ -849,14 +1129,19 @@
 							"delta": 1
 						}
 					],
-					"desc": "修改属性：属性2 +18，属性1 -3，属性4 -4，属性3 +1"
+					"desc": "修改属性：体力 +18、饱食 -3、损伤 -4、生命 +1",
+					"target": {
+						"card": "sourceCard"
+					}
 				},
 				{
 					"id": 3,
 					"kind": "removeTag",
-					"target": "sourceCard",
 					"tagId": 11,
-					"desc": "移除标签 #11"
+					"desc": "移除标签：流血",
+					"target": {
+						"card": "sourceCard"
+					}
 				}
 			],
 			"createdAt": 1767974400001,
@@ -865,7 +1150,7 @@
 		{
 			"id": 2,
 			"verb": "work",
-			"desc": "消耗体力与饱食，换取一份面包。",
+			"desc": "在村庄消耗体力与饱食，换取面包。",
 			"timeCost": {
 				"op": "add",
 				"args": [
@@ -899,20 +1184,21 @@
 			},
 			"conditions": [
 				{
-					"target": "sourceCard",
 					"attributes": [
 						{
 							"id": 2,
 							"gte": 18
 						}
-					]
+					],
+					"target": {
+						"card": "sourceCard"
+					}
 				}
 			],
 			"effects": [
 				{
 					"id": 6,
 					"kind": "changeAttributes",
-					"target": "sourceCard",
 					"changes": [
 						{
 							"attributeId": 2,
@@ -931,13 +1217,16 @@
 							"delta": 2
 						}
 					],
-					"desc": "修改属性：属性2 -18，属性1 -10，属性3 -2，属性4 +2"
+					"desc": "修改属性：体力 -18、饱食 -10、生命 -2、损伤 +2",
+					"target": {
+						"card": "sourceCard"
+					}
 				},
 				{
 					"id": 4,
 					"kind": "addCard",
 					"templateId": 3,
-					"desc": "生成模板 #3 的卡牌"
+					"desc": "生成卡牌：干硬面包"
 				}
 			],
 			"createdAt": 1767974400002,
@@ -953,20 +1242,21 @@
 			},
 			"conditions": [
 				{
-					"target": "sourceCard",
 					"attributes": [
 						{
 							"id": 3,
 							"gt": 0
 						}
-					]
+					],
+					"target": {
+						"card": "sourceCard"
+					}
 				}
 			],
 			"effects": [
 				{
 					"id": 7,
 					"kind": "changeAttributes",
-					"target": "sourceCard",
 					"changes": [
 						{
 							"attributeId": 4,
@@ -977,14 +1267,19 @@
 							"delta": -12
 						}
 					],
-					"desc": "修改属性：属性4 +25，属性3 -12"
+					"desc": "修改属性：损伤 +25、生命 -12",
+					"target": {
+						"card": "sourceCard"
+					}
 				},
 				{
 					"id": 2,
 					"kind": "addTag",
-					"target": "sourceCard",
 					"tagId": 11,
-					"desc": "添加标签 #11"
+					"desc": "添加标签：流血",
+					"target": {
+						"card": "sourceCard"
+					}
 				}
 			],
 			"createdAt": 1767974400003,
@@ -1000,20 +1295,21 @@
 			},
 			"conditions": [
 				{
-					"target": "sourceCard",
 					"attributes": [
 						{
 							"id": 3,
 							"gt": 0
 						}
-					]
+					],
+					"target": {
+						"card": "sourceCard"
+					}
 				}
 			],
 			"effects": [
 				{
 					"id": 8,
 					"kind": "changeAttributes",
-					"target": "sourceCard",
 					"changes": [
 						{
 							"attributeId": 5,
@@ -1032,25 +1328,32 @@
 							"delta": -5
 						}
 					],
-					"desc": "修改属性：属性5 +20，属性6 +15，属性3 -8，属性1 -5"
+					"desc": "修改属性：灵性 +20、污染 +15、生命 -8、饱食 -5",
+					"target": {
+						"card": "sourceCard"
+					}
 				},
 				{
 					"id": 1,
 					"kind": "changeTemplate",
-					"target": "sourceCard",
 					"templateId": 2,
 					"conditions": [
 						{
-							"target": "sourceCard",
 							"attributes": [
 								{
 									"id": 6,
 									"gte": 60
 								}
-							]
+							],
+							"target": {
+								"card": "sourceCard"
+							}
 						}
 					],
-					"desc": "切换模板到 #2"
+					"desc": "切换模板：异化流民",
+					"target": {
+						"card": "sourceCard"
+					}
 				}
 			],
 			"createdAt": 1767974400004,
@@ -1072,9 +1375,11 @@
 						"value": -15,
 						"conditions": [
 							{
-								"target": "slot",
-								"slot": "food",
-								"hasTag": 13
+								"hasTag": 13,
+								"target": {
+									"card": "slot",
+									"slot": "food"
+								}
 							}
 						]
 					}
@@ -1082,42 +1387,48 @@
 			},
 			"conditions": [
 				{
-					"target": "sourceCard",
 					"attributes": [
 						{
 							"id": 3,
 							"gt": 0
 						}
-					]
+					],
+					"target": {
+						"card": "sourceCard"
+					}
 				}
 			],
 			"slots": [
 				{
 					"id": "food",
 					"desc": "食物",
-					"count": 1,
 					"conditions": [
 						{
-							"target": "slot",
-							"hasTag": 8
+							"hasTag": 8,
+							"target": {
+								"card": "slot"
+							}
 						},
 						{
-							"target": "slot",
 							"attributes": [
 								{
 									"id": 9,
 									"gt": 0
 								}
-							]
+							],
+							"target": {
+								"card": "slot"
+							}
 						}
-					]
+					],
+					"min": 1,
+					"max": 3
 				}
 			],
 			"effects": [
 				{
 					"id": 9,
 					"kind": "changeAttributes",
-					"target": "sourceCard",
 					"changes": [
 						{
 							"attributeId": 1,
@@ -1132,9 +1443,11 @@
 							"delta": 25,
 							"conditions": [
 								{
-									"target": "slot",
-									"slot": "food",
-									"hasTag": 13
+									"hasTag": 13,
+									"target": {
+										"card": "slot",
+										"slot": "food"
+									}
 								}
 							]
 						},
@@ -1143,9 +1456,11 @@
 							"delta": 10,
 							"conditions": [
 								{
-									"target": "slot",
-									"slot": "food",
-									"hasTag": 13
+									"hasTag": 13,
+									"target": {
+										"card": "slot",
+										"slot": "food"
+									}
 								}
 							]
 						},
@@ -1154,21 +1469,28 @@
 							"delta": 2,
 							"conditions": [
 								{
-									"target": "slot",
-									"slot": "food",
-									"hasTag": 13
+									"hasTag": 13,
+									"target": {
+										"card": "slot",
+										"slot": "food"
+									}
 								}
 							]
 						}
 					],
-					"desc": "修改属性：属性1 +30，属性2 +5，属性1 +25，属性2 +10，属性3 +2"
+					"desc": "修改属性：饱食 +30、体力 +5；条件满足时额外：饱食 +25、体力 +10、生命 +2",
+					"target": {
+						"card": "sourceCard"
+					}
 				},
 				{
 					"id": 11,
 					"kind": "removeCard",
-					"target": "slot",
-					"slot": "food",
-					"desc": "移除目标卡牌"
+					"desc": "移除目标卡牌",
+					"target": {
+						"card": "slot",
+						"slot": "food"
+					}
 				}
 			],
 			"createdAt": 1767974400005,
@@ -1184,32 +1506,35 @@
 			},
 			"conditions": [
 				{
-					"target": "sourceCard",
 					"attributes": [
 						{
 							"id": 3,
 							"gt": 0
 						}
-					]
+					],
+					"target": {
+						"card": "sourceCard"
+					}
 				}
 			],
 			"effects": [
 				{
 					"id": 12,
 					"kind": "changeAttributes",
-					"target": "sourceCard",
 					"changes": [
 						{
 							"attributeId": 1,
 							"delta": -1
 						}
 					],
-					"desc": "修改属性：属性1 -1"
+					"desc": "修改属性：饱食 -1",
+					"target": {
+						"card": "sourceCard"
+					}
 				},
 				{
 					"id": 13,
 					"kind": "changeAttributes",
-					"target": "sourceCard",
 					"changes": [
 						{
 							"attributeId": 2,
@@ -1222,21 +1547,25 @@
 					],
 					"conditions": [
 						{
-							"target": "sourceCard",
 							"attributes": [
 								{
 									"id": 1,
 									"lte": 0
 								}
-							]
+							],
+							"target": {
+								"card": "sourceCard"
+							}
 						}
 					],
-					"desc": "修改属性：属性2 -1，属性3 -1"
+					"desc": "修改属性：体力 -1、生命 -1",
+					"target": {
+						"card": "sourceCard"
+					}
 				},
 				{
 					"id": 14,
 					"kind": "changeAttributes",
-					"target": "sourceCard",
 					"changes": [
 						{
 							"attributeId": 2,
@@ -1245,30 +1574,36 @@
 					],
 					"conditions": [
 						{
-							"target": "sourceCard",
 							"attributes": [
 								{
 									"id": 1,
 									"gt": 0
 								}
-							]
+							],
+							"target": {
+								"card": "sourceCard"
+							}
 						},
 						{
-							"target": "sourceCard",
 							"attributes": [
 								{
 									"id": 1,
 									"lt": 20
 								}
-							]
+							],
+							"target": {
+								"card": "sourceCard"
+							}
 						}
 					],
-					"desc": "修改属性：属性2 -0.5"
+					"desc": "修改属性：体力 -0.5",
+					"target": {
+						"card": "sourceCard"
+					}
 				},
 				{
 					"id": 15,
 					"kind": "changeAttributes",
-					"target": "sourceCard",
 					"changes": [
 						{
 							"attributeId": 2,
@@ -1285,16 +1620,21 @@
 					],
 					"conditions": [
 						{
-							"target": "sourceCard",
 							"attributes": [
 								{
 									"id": 1,
 									"gte": 50
 								}
-							]
+							],
+							"target": {
+								"card": "sourceCard"
+							}
 						}
 					],
-					"desc": "修改属性：属性2 +0.5，属性4 -0.5，属性3 +0.5"
+					"desc": "修改属性：体力 +0.5、损伤 -0.5、生命 +0.5",
+					"target": {
+						"card": "sourceCard"
+					}
 				}
 			],
 			"createdAt": 1767974400006,
@@ -1312,14 +1652,16 @@
 				{
 					"id": 16,
 					"kind": "changeAttributes",
-					"target": "sourceCard",
 					"changes": [
 						{
 							"attributeId": 9,
 							"delta": -1
 						}
 					],
-					"desc": "修改属性：属性9 -1"
+					"desc": "修改属性：新鲜度 -1",
+					"target": {
+						"card": "sourceCard"
+					}
 				}
 			],
 			"createdAt": 1767974400007,
@@ -1335,13 +1677,15 @@
 			},
 			"conditions": [
 				{
-					"target": "sourceCard",
 					"attributes": [
 						{
 							"id": 3,
 							"gt": 0
 						}
-					]
+					],
+					"target": {
+						"card": "sourceCard"
+					}
 				}
 			],
 			"effects": [
@@ -1349,7 +1693,7 @@
 					"id": 17,
 					"kind": "addCard",
 					"templateId": 6,
-					"desc": "生成模板 #6 的卡牌"
+					"desc": "生成卡牌：木柴"
 				}
 			],
 			"createdAt": 1767974400010,
@@ -1365,13 +1709,15 @@
 			},
 			"conditions": [
 				{
-					"target": "sourceCard",
 					"attributes": [
 						{
 							"id": 3,
 							"gt": 0
 						}
-					]
+					],
+					"target": {
+						"card": "sourceCard"
+					}
 				}
 			],
 			"slots": [
@@ -1381,17 +1727,21 @@
 					"count": 1,
 					"conditions": [
 						{
-							"target": "slot",
-							"hasTag": 8
+							"hasTag": 8,
+							"target": {
+								"card": "slot"
+							}
 						},
 						{
-							"target": "slot",
 							"attributes": [
 								{
 									"id": 9,
 									"gt": 0
 								}
-							]
+							],
+							"target": {
+								"card": "slot"
+							}
 						}
 					]
 				},
@@ -1401,8 +1751,10 @@
 					"count": 1,
 					"conditions": [
 						{
-							"target": "slot",
-							"hasTag": 12
+							"hasTag": 12,
+							"target": {
+								"card": "slot"
+							}
 						}
 					]
 				}
@@ -1411,26 +1763,247 @@
 				{
 					"id": 18,
 					"kind": "removeCard",
-					"target": "slot",
-					"slot": "bread",
-					"desc": "移除目标卡牌"
+					"desc": "移除目标卡牌",
+					"target": {
+						"card": "slot",
+						"slot": "bread"
+					}
 				},
 				{
 					"id": 19,
 					"kind": "removeCard",
-					"target": "slot",
-					"slot": "fuel",
-					"desc": "移除目标卡牌"
+					"desc": "移除目标卡牌",
+					"target": {
+						"card": "slot",
+						"slot": "fuel"
+					}
 				},
 				{
 					"id": 20,
 					"kind": "addCard",
 					"templateId": 7,
-					"desc": "生成模板 #7 的卡牌"
+					"desc": "生成卡牌：烤面包"
 				}
 			],
 			"createdAt": 1767974400011,
 			"title": "烤面包"
+		},
+		{
+			"id": 40,
+			"verb": "eatBread",
+			"title": "吃掉面包",
+			"desc": "直接吃掉这张面包，恢复饱食和体力。",
+			"timeCost": {
+				"op": "number",
+				"value": 60
+			},
+			"conditions": [
+				{
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					],
+					"target": {
+						"card": "sourceCard"
+					}
+				}
+			],
+			"slots": [],
+			"effects": [
+				{
+					"id": 40,
+					"kind": "changeAttributes",
+					"changes": [
+						{
+							"attributeId": 1,
+							"delta": 30
+						},
+						{
+							"attributeId": 2,
+							"delta": 5
+						}
+					],
+					"desc": "修改属性：饱食 +30、体力 +5",
+					"target": {
+						"card": "sourceCard"
+					}
+				},
+				{
+					"id": 41,
+					"kind": "removeCard",
+					"desc": "移除目标卡牌",
+					"target": {
+						"card": "targetCard"
+					}
+				}
+			],
+			"createdAt": 1767974400040
+		},
+		{
+			"id": 30,
+			"verb": "travelForest",
+			"title": "进入森林",
+			"desc": "沿小路进入森林。",
+			"timeCost": {
+				"op": "number",
+				"value": 30
+			},
+			"conditions": [
+				{
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					],
+					"target": {
+						"card": "sourceCard"
+					}
+				}
+			],
+			"slots": [],
+			"effects": [
+				{
+					"id": 30,
+					"kind": "changeLocation",
+					"toLocation": "forest",
+					"desc": "移动到森林",
+					"target": {
+						"card": "sourceCard"
+					}
+				}
+			],
+			"createdAt": 1767974400030
+		},
+		{
+			"id": 31,
+			"verb": "travelVillage",
+			"title": "返回村庄",
+			"desc": "沿小路返回村庄。",
+			"timeCost": {
+				"op": "number",
+				"value": 30
+			},
+			"conditions": [
+				{
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					],
+					"target": {
+						"card": "sourceCard"
+					}
+				}
+			],
+			"slots": [],
+			"effects": [
+				{
+					"id": 31,
+					"kind": "changeLocation",
+					"toLocation": "village",
+					"desc": "移动到村庄",
+					"target": {
+						"card": "sourceCard"
+					}
+				}
+			],
+			"createdAt": 1767974400031
+		},
+		{
+			"id": 50,
+			"verb": "pickup",
+			"title": "拾起",
+			"desc": "把物品放进背包。",
+			"timeCost": {
+				"op": "number",
+				"value": 5
+			},
+			"conditions": [
+				{
+					"target": {
+						"card": "sourceCard"
+					},
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				},
+				{
+					"target": {
+						"card": "targetCard"
+					},
+					"attributes": [
+						{
+							"refExists": false,
+							"refId": 21
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"id": 50,
+					"kind": "moveItemCard",
+					"target": {
+						"card": "targetCard"
+					},
+					"to": "sourceBackpack",
+					"desc": "移动物品"
+				}
+			],
+			"createdAt": 1767974400050
+		},
+		{
+			"id": 51,
+			"verb": "drop",
+			"title": "放下",
+			"desc": "把物品放到当前地点。",
+			"timeCost": {
+				"op": "number",
+				"value": 5
+			},
+			"conditions": [
+				{
+					"target": {
+						"card": "sourceCard"
+					},
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				},
+				{
+					"target": {
+						"card": "targetCard"
+					},
+					"attributes": [
+						{
+							"refExists": true,
+							"refId": 21
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"id": 51,
+					"kind": "moveItemCard",
+					"target": {
+						"card": "targetCard"
+					},
+					"to": "sourceLocation",
+					"desc": "移动物品"
+				}
+			],
+			"createdAt": 1767974400051
 		}
 	]
 }

@@ -1,4 +1,4 @@
-import type { Condition, ConditionTarget } from "./condition_types.ts";
+import type { Condition, TargetRef } from "./condition_types.ts";
 
 /** 单个属性的增量或覆盖。 */
 export interface ChangeAttributeChange {
@@ -27,6 +27,19 @@ export type RemoveTagEffect = {
 	tagId: number;
 };
 
+/** 物品移动目标。 */
+export type MoveItemDestination =
+	| "sourceBackpack"
+	| "sourceLocation"
+	| "targetBackpack"
+	| "targetLocation";
+
+/** 在背包和地点之间移动物品。 */
+export type MoveItemCardEffect = {
+	kind: "moveItemCard";
+	to: MoveItemDestination;
+};
+
 /** 切换目标卡牌模板。 */
 export type ChangeTemplateEffect = {
 	kind: "changeTemplate";
@@ -44,15 +57,24 @@ export type RemoveCardEffect = {
 	kind: "removeCard";
 };
 
+/** 改变卡牌所在地点。 */
+export type ChangeLocationEffect = {
+	kind: "changeLocation";
+	toLocation: string;
+};
+
+/** 物品移动目标。第一版支持背包和当前地点。 */
 export type EffectKind =
 	| ChangeAttributesEffect
 	| AddTagEffect
 	| RemoveTagEffect
 	| ChangeTemplateEffect
 	| AddCardEffect
-	| RemoveCardEffect;
+	| RemoveCardEffect
+	| ChangeLocationEffect
+	| MoveItemCardEffect;
 
-export type EffectTarget = ConditionTarget;
+export type EffectTarget = TargetRef;
 
 /**
  * 直接写在动作 / 标签 auto 中的单次效果。
@@ -62,10 +84,8 @@ export type InlineEffect = EffectKind & {
 	id: number;
 	/** 给编辑者看的效果说明，不参与运行时执行 */
 	desc?: string;
-	/** 作用对象；缺省由所在上下文决定 */
+	/** 作用对象；普通动作缺省 sourceCard，tag auto 缺省 sourceTag */
 	target?: EffectTarget;
-	/** target 为 slot 时指定卡槽 id */
-	slot?: string;
 	/** 效果自身条件，数组内 AND */
 	conditions?: Condition[];
 };

@@ -1,13 +1,16 @@
-import type { Condition } from "../card_story_game_types/index.ts";
+import type { AttributeValue, Condition } from "../card_story_game_types/index.ts";
+import { getNumberAttribute } from "../game/famine_refugee/attribute_value.ts";
 import type { Formula } from "../card_story_game_types/formula_types.ts";
 
 export interface FormulaContext {
 	evaluateConditions?: (conditions: Condition[]) => boolean;
+	/** 通过 cardRef / cardRefList 中的 id 查找卡牌 */
+	resolveCard?: (id: string) => { values: Record<number, AttributeValue> } | null;
 }
 
 export function evaluateFormula(
 	formula: Formula,
-	values: Record<number, number>,
+	values: Record<number, AttributeValue>,
 	context?: FormulaContext,
 ): number {
 	if (formula.conditions && formula.conditions.length > 0) {
@@ -17,7 +20,7 @@ export function evaluateFormula(
 		case "number":
 			return formula.value;
 		case "attr":
-			return values[formula.attributeId] ?? 0;
+			return getNumberAttribute(values, formula.attributeId);
 		case "add": {
 			let total = 0;
 			for (let i = 0; i < formula.args.length; i++) {
@@ -49,12 +52,28 @@ export function evaluateFormula(
 			}
 			return total;
 		}
+		case "refListsAttributeSum": {
+			const list = values[formula.refAttributeId];
+			if (!Array.isArray(list) || !context?.resolveCard) return 0;
+			let total = 0;
+			for (let i = 0; i < list.length; i++) {
+				const id = list[i];
+				if (typeof id !== "string") continue;
+				const card = context.resolveCard(id);
+				if (card) total += getNumberAttribute(card.values, formula.valueAttributeId);
+			}
+			return total;
+		}
+		case "refListsAttributeCount": {
+			const list = values[formula.refAttributeId];
+			return Array.isArray(list) ? list.length : 0;
+		}
 		case "clamp":
 			return Math.min(formula.max, Math.max(formula.min, evaluateFormula(formula.value, values, context)));
 		case "normalize": {
 			const range = formula.max - formula.min;
 			if (range === 0) return 0;
-			const raw = values[formula.attributeId] ?? 0;
+			const raw = getNumberAttribute(values, formula.attributeId);
 			return (raw - formula.min) / range;
 		}
 	}

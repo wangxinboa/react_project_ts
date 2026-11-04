@@ -9,7 +9,9 @@ export type FormulaNode =
 	| { op: "attr"; attributeId: number }
 	| { op: "add" | "sub" | "mul" | "div"; args: Formula[] }
 	| { op: "clamp"; value: Formula; min: number; max: number }
-	| { op: "normalize"; attributeId: number; min: number; max: number };
+	| { op: "normalize"; attributeId: number; min: number; max: number }
+	| { op: "refListsAttributeSum"; refAttributeId: number; valueAttributeId: number }
+	| { op: "refListsAttributeCount"; refAttributeId: number };
 
 /** 公式 = AST 节点 + 可选条件。 */
 export type Formula = FormulaNode & {

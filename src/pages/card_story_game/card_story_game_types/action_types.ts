@@ -14,7 +14,7 @@ export interface ActionSlot {
 	conditions?: Condition[];
 }
 
-/** 动作定义；所有动作都始于某张 source 卡牌。 */
+/** 动作定义；source 是发起者，incoming 的 target 是当前选中卡。 */
 export interface RuleAction {
 	id: number;
 	verb: string;
@@ -25,7 +25,7 @@ export interface RuleAction {
 	createdAt: number;
 	/** 时间计算公式；节点 conditions 不满足时该节点为 0 */
 	timeCost?: Formula;
-	/** source 可用条件，数组内 AND */
+	/** 动作可用条件；普通动作用 sourceCard，incoming 可用 targetCard，数组内 AND */
 	conditions?: Condition[];
 	/** 命名目标槽 */
 	slots?: ActionSlot[];

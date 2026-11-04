@@ -1,12 +1,15 @@
-export { ConditionTarget } from "./condition_types.ts";
-export type { AttributeCheck, Condition } from "./condition_types.ts";
+export { CardType, ConditionTarget } from "./condition_types.ts";
+export type { AttributeCheck, Condition, TargetRef } from "./condition_types.ts";
 export type { Formula, FormulaNode, FormulaValidationIssue } from "./formula_types.ts";
-export type { AttributeBinding, AttributeDefinition, NumberAttributeTypeParams } from "./attribute_types.ts";
+export type { AttributeBinding, AttributeDefinition, AttributeValue, AttributeValueType, NumberAttributeTypeParams } from "./attribute_types.ts";
 export type {
 	AddCardEffect,
 	AddTagEffect,
 	ChangeAttributeChange,
 	ChangeAttributesEffect,
+	ChangeLocationEffect,
+	MoveItemCardEffect,
+	MoveItemDestination,
 	ChangeTemplateEffect,
 	EffectCall,
 	EffectDefinition,

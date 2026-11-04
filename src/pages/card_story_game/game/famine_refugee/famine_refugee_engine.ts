@@ -1,4 +1,6 @@
 import { evaluateFormula } from "../../formula/formula_eval.ts";
+import type { AttributeValue, CardType } from "../../card_story_game_types/index.ts";
+import { getNumberAttribute, getNumberValues, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import type {
 	ActionSlot,
 	AttributeCheck,
@@ -20,24 +22,43 @@ import type {
 const MAX_LOGS = 30;
 
 interface EntitySnapshot {
-	values: Record<number, number>;
+	values: Record<number, AttributeValue>;
 	tagIds: Set<number>;
 	templateId?: number;
+	cardType?: CardType;
+	cardId?: string;
 }
 
 interface ConditionContext {
 	sourceCard?: EntitySnapshot;
 	sourceTag?: EntitySnapshot;
+	targetCard?: EntitySnapshot;
 	host?: EntitySnapshot;
 	slot?: EntitySnapshot;
+	referencedCard?: EntitySnapshot;
+	cards?: CardState[];
+	config?: FamineRefugeeConfig;
 }
 
-function snapshotFromDerived(derived: CardDerived): EntitySnapshot {
-	return { values: derived.values, tagIds: new Set(derived.tagIds), templateId: derived.template.id };
+function snapshotFromDerived(derived: CardDerived, card?: CardState): EntitySnapshot {
+	return {
+		values: card ? { ...card.values, ...derived.values } : derived.values,
+		tagIds: new Set(derived.tagIds),
+		templateId: derived.template.id,
+		cardType: derived.template.cardType,
+		cardId: card?.id,
+	};
 }
 
 function snapshotFromTag(tag: TagInstanceState): EntitySnapshot {
 	return { values: tag.values, tagIds: new Set<number>() };
+}
+
+function getAttributeId(config: FamineRefugeeConfig, key: string): number {
+	for (let i = 0; i < config.allAttributes.length; i++) {
+		if (config.allAttributes[i].key === key) return config.allAttributes[i].id;
+	}
+	return 0;
 }
 
 function getTemplate(config: FamineRefugeeConfig, id: number): FamineTemplate {
@@ -61,7 +82,7 @@ function createTagInstance(config: FamineRefugeeConfig, tagId: number): TagInsta
 	if (definition?.attributes) {
 		for (let i = 0; i < definition.attributes.length; i++) {
 			const binding = definition.attributes[i];
-			values[binding.id] = binding.value;
+			if (typeof binding.value === "number") values[binding.id] = binding.value;
 		}
 	}
 	return { tagId, values };
@@ -78,19 +99,48 @@ function matchesAttribute(actual: number, check: AttributeCheck): boolean {
 
 function evaluateCondition(condition: Condition, context: ConditionContext): boolean {
 	let entity: EntitySnapshot | undefined;
-	if (condition.target === "sourceCard") entity = context.sourceCard;
-	else if (condition.target === "sourceTag") entity = context.sourceTag;
-	else if (condition.target === "host") entity = context.host;
+	if (condition.target.card === "sourceCard") entity = context.sourceCard;
+	else if (condition.target.card === "sourceTag") entity = context.sourceTag;
+	else if (condition.target.card === "targetCard") entity = context.targetCard;
+	else if (condition.target.card === "host") entity = context.host;
+	else if (condition.target.card === "referencedCard") entity = context.referencedCard;
 	else entity = context.slot;
 	if (!entity) return false;
 
 	if (condition.attributes) {
 		for (let i = 0; i < condition.attributes.length; i++) {
 			const check = condition.attributes[i];
-			const actual = entity.values[check.id];
-			if (typeof actual !== "number" || !matchesAttribute(actual, check)) {
-				return false;
+			const ids = [check.id, check.refId, check.refListId].filter((id): id is number => typeof id === "number");
+			if (ids.length !== 1) return false;
+			const attributeId = ids[0];
+			const value = entity.values[attributeId];
+			if (typeof check.refExists === "boolean") {
+				const exists = value !== undefined && value !== "" && (!Array.isArray(value) || value.length > 0);
+				if (exists !== check.refExists) return false;
+				continue;
 			}
+			if (check.refListsMatch) {
+				if (!Array.isArray(value) || !context.config) return false;
+				const cards = context.cards ?? [];
+				let matched = 0;
+				for (let j = 0; j < value.length; j++) {
+					const id = value[j];
+					if (typeof id !== "string") continue;
+					const card = getCard(cards, id);
+					if (!card) continue;
+					const nextContext: ConditionContext = {
+						...context,
+						referencedCard: snapshotFromDerived(deriveCard(context.config, card, cards), card),
+					};
+					if (!check.refListsMatch.match || evaluateConditions(check.refListsMatch.match, nextContext)) matched++;
+				}
+				const count = check.refListsMatch.count;
+				const min = check.refListsMatch.min ?? 0;
+				const max = check.refListsMatch.max ?? Number.POSITIVE_INFINITY;
+				if (typeof count === "number" ? matched !== count : matched < min || matched > max) return false;
+				continue;
+			}
+			if (typeof value !== "number" || !matchesAttribute(value, check)) return false;
 		}
 	}
 
@@ -119,6 +169,8 @@ function evaluateCondition(condition: Condition, context: ConditionContext): boo
 			if (!entity.tagIds.has(condition.onlyHasTags[i])) return false;
 		}
 	}
+	if (condition.hasCardType && entity.cardType !== condition.hasCardType) return false;
+	if (condition.hasAnyCardType && condition.hasAnyCardType.length > 0 && (!entity.cardType || !condition.hasAnyCardType.includes(entity.cardType))) return false;
 	if (typeof condition.hasTemplate === "number" && entity.templateId !== condition.hasTemplate) return false;
 	if (condition.hasAnyTemplate && condition.hasAnyTemplate.length > 0) {
 		if (typeof entity.templateId !== "number" || !condition.hasAnyTemplate.includes(entity.templateId)) return false;
@@ -153,7 +205,7 @@ function getDerivedTags(
 
 function createCardState(config: FamineRefugeeConfig, saveCard: SaveCard): CardState {
 	const template = getTemplate(config, saveCard.templateId);
-	const values: Record<number, number> = {};
+	const values: Record<number, AttributeValue> = {};
 	for (let i = 0; i < (template.attributes ?? []).length; i++) {
 		const binding = (template.attributes ?? [])[i];
 		values[binding.id] = binding.value;
@@ -181,17 +233,24 @@ export function createInitialState(config: FamineRefugeeConfig): FamineState {
 	};
 }
 
-export function deriveCard(config: FamineRefugeeConfig, card: CardState): CardDerived {
+export function deriveCard(
+	config: FamineRefugeeConfig,
+	card: CardState,
+	cards: CardState[] = [card],
+): CardDerived {
 	const template = getTemplate(config, card.templateId);
 	const values = { ...card.values };
 	for (let i = 0; i < config.allAttributes.length; i++) {
 		const definition = config.allAttributes[i];
 		if (definition.kind === "derived" && definition.formula) {
-			values[definition.id] = evaluateFormula(definition.formula, values);
+			values[definition.id] = evaluateFormula(definition.formula, values, {
+				resolveCard: (id) => getCard(cards, id),
+			});
 		}
 	}
-	const tagIds = getDerivedTags(config, values, card.tags);
-	const derived = { template, values, tagIds: Array.from(tagIds), gameOver: false };
+	const numericValues = getNumberValues(values);
+	const tagIds = getDerivedTags(config, numericValues, card.tags);
+	const derived = { template, values: numericValues, tagIds: Array.from(tagIds), gameOver: false };
 	derived.gameOver = evaluateConditions(config.gameOver, { sourceCard: snapshotFromDerived(derived) });
 	return derived;
 }
@@ -247,37 +306,38 @@ export function getEligibleCards(
 	if (!player) return [];
 	const slot = (action.slots ?? []).find((item) => item.id === slotId);
 	if (!slot) return [];
-	const source = snapshotFromDerived(deriveCard(config, player));
+	const source = snapshotFromDerived(deriveCard(config, player, state.cards));
 	const cards: CardState[] = [];
 	for (let i = 0; i < state.cards.length; i++) {
 		const card = state.cards[i];
 		if (card.id === player.id) continue;
+		if (getStringAttribute(card.values, getAttributeId(config, "location")) !== getStringAttribute(player.values, getAttributeId(config, "location"))) continue;
 		if (slotMatches(config, slot, card, source)) cards.push(card);
 	}
 	return cards;
 }
 
-function getVisibleActionsFromSource(config: FamineRefugeeConfig, source: CardState): FamineAction[] {
-	const derived = deriveCard(config, source);
-	const sourceSnapshot = snapshotFromDerived(derived);
+function getVisibleActionsFromSource(config: FamineRefugeeConfig, source: CardState, cards: CardState[]): FamineAction[] {
+	const derived = deriveCard(config, source, cards);
+	const sourceSnapshot = snapshotFromDerived(derived, source);
 	const actions: FamineAction[] = [];
 	for (let i = 0; i < (derived.template.outgoing ?? []).length; i++) {
 		const action = findAction(config, (derived.template.outgoing ?? [])[i]);
 		if (!action) continue;
-		if (evaluateConditions(action.conditions, { sourceCard: sourceSnapshot })) actions.push(action);
+		if (evaluateConditions(action.conditions, { sourceCard: sourceSnapshot, cards, config })) actions.push(action);
 	}
 	return actions;
 }
 
 export function getVisibleActions(config: FamineRefugeeConfig, state: FamineState): FamineAction[] {
 	const player = getPlayerCard(config, state);
-	return player ? getVisibleActionsFromSource(config, player) : [];
+	return player ? getVisibleActionsFromSource(config, player, state.cards) : [];
 }
 
 function getConditionSlotId(conditions: Condition[] | undefined): string | null {
 	if (!conditions) return null;
 	for (let i = 0; i < conditions.length; i++) {
-		if (conditions[i].target === "slot" && conditions[i].slot) return conditions[i].slot ?? null;
+		if (conditions[i].target.card === "slot" && conditions[i].target.slot) return conditions[i].target.slot ?? null;
 	}
 	return null;
 }
@@ -300,8 +360,8 @@ export function getActionTimeCost(
 	assignments: Record<string, string[]> = {},
 	cards: CardState[] = [player],
 ): number {
-	const derived = deriveCard(config, player);
-	const sourceSnapshot = snapshotFromDerived(derived);
+	const derived = deriveCard(config, player, cards);
+	const sourceSnapshot = snapshotFromDerived(derived, player);
 	const result = evaluateFormula(action.timeCost, derived.values, {
 		evaluateConditions: (conditions) => {
 			const slotId = getConditionSlotId(conditions);
@@ -325,7 +385,7 @@ function applyChangeAttributes(
 		if (change.conditions && evaluateChangeConditions && !evaluateChangeConditions(change.conditions)) continue;
 		const definition = config.allAttributes.find((attribute) => attribute.id === change.attributeId);
 		if (!definition || definition.kind !== "base") continue;
-		const current = values[change.attributeId] ?? 0;
+		const current = getNumberAttribute(values, change.attributeId);
 		let next = change.set ?? current + (change.delta ?? 0);
 		if (typeof definition.typeParams?.min === "number") next = Math.max(definition.typeParams?.min, next);
 		if (typeof definition.typeParams?.max === "number") next = Math.min(definition.typeParams?.max, next);
@@ -353,6 +413,11 @@ function applyCardEffect(
 			if (card.tags[i].tagId !== effect.tagId) tags.push(card.tags[i]);
 		}
 		return { ...card, tags };
+	}
+	if (effect.kind === "changeLocation") {
+		const values = { ...card.values };
+		values[getAttributeId(config, "location")] = effect.toLocation;
+		return { ...card, values };
 	}
 	if (effect.kind === "changeTemplate") {
 		const template = getTemplate(config, effect.templateId);
@@ -392,7 +457,7 @@ function validateAssignments(
 	assignments: Record<string, string[]>,
 	cards: CardState[],
 ): SlotAssignment[] | null {
-	const sourceSnapshot = snapshotFromDerived(deriveCard(config, source));
+	const sourceSnapshot = snapshotFromDerived(deriveCard(config, source, cards));
 	const used = new Set<string>();
 	const result: SlotAssignment[] = [];
 	for (let i = 0; i < (action.slots ?? []).length; i++) {
@@ -423,16 +488,20 @@ function getConditionContext(
 	config: FamineRefugeeConfig,
 	conditions: Condition[] | undefined,
 	source: CardState,
+	targetCard: CardState | null,
 	fallbackSlot: CardState | null,
 	slotMap: Record<string, string[]>,
 	cards: CardState[],
 ): ConditionContext {
-	const sourceSnapshot = snapshotFromDerived(deriveCard(config, source));
+	const sourceSnapshot = snapshotFromDerived(deriveCard(config, source, cards));
 	const slotId = getConditionSlotId(conditions);
 	const slotCard = slotId ? getSlotCard(slotId, slotMap, cards) : fallbackSlot;
 	return {
 		sourceCard: sourceSnapshot,
-		slot: slotCard ? snapshotFromDerived(deriveCard(config, slotCard)) : undefined,
+		targetCard: targetCard ? snapshotFromDerived(deriveCard(config, targetCard), targetCard) : undefined,
+		slot: slotCard ? snapshotFromDerived(deriveCard(config, slotCard), slotCard) : undefined,
+		cards,
+		config,
 	};
 }
 
@@ -443,6 +512,7 @@ function applyActionEffects(
 	assignments: SlotAssignment[],
 	cards: CardState[],
 	nextCardId: number,
+	targetId?: string,
 ): { cards: CardState[]; nextCardId: number } {
 	let currentCards = cards.slice();
 	let currentId = nextCardId;
@@ -458,34 +528,84 @@ function applyActionEffects(
 		if (effect.kind === "addCard") {
 			const source = getCard(currentCards, sourceId);
 			if (!source) continue;
-			const context = getConditionContext(config, effect.conditions, source, null, slotMap, currentCards);
+			const context = getConditionContext(config, effect.conditions, source, targetId ? getCard(currentCards, targetId) : null, null, slotMap, currentCards);
 			if (!evaluateConditions(effect.conditions, context)) continue;
 			const id = `card_${currentId}`;
 			currentId += 1;
-			currentCards = [...currentCards, createCardState(config, { id, templateId: effect.templateId })];
+			currentCards = [...currentCards, createCardState(config, { id, templateId: effect.templateId, values: { [getAttributeId(config, "location")]: getStringAttribute(source.values, getAttributeId(config, "location")) ?? "" } })];
+			continue;
+		}
+		if (effect.kind === "moveItemCard") {
+			const itemIds = effect.target?.card === "slot" && effect.target.slot ? slotMap[effect.target.slot] ?? [] : targetId ? [targetId] : [];
+			const source = getCard(currentCards, sourceId);
+			if (!source) continue;
+			const sourceLocation = getStringAttribute(source.values, getAttributeId(config, "location")) ?? "";
+			const sourceBackpack = getStringListAttribute(source.values, getAttributeId(config, "backpack"));
+			const capacity = getNumberAttribute(deriveCard(config, source, currentCards).values, getAttributeId(config, "carryCapacity"));
+			const slots = getNumberAttribute(deriveCard(config, source, currentCards).values, getAttributeId(config, "carrySlots"));
+			let carriedWeight = 0;
+			for (let i = 0; i < sourceBackpack.length; i++) {
+				const carried = getCard(currentCards, sourceBackpack[i]);
+				if (carried) carriedWeight += getNumberAttribute(carried.values, getAttributeId(config, "weight"));
+			}
+			for (let j = 0; j < itemIds.length; j++) {
+				const item = getCard(currentCards, itemIds[j]);
+				if (!item) continue;
+				let updatedCards = currentCards.map((card) => {
+					const backpack = getStringListAttribute(card.values, getAttributeId(config, "backpack"));
+					if (!backpack.includes(item.id)) return card;
+					const values = { ...card.values };
+					values[getAttributeId(config, "backpack")] = backpack.filter((id) => id !== item.id);
+					return { ...card, values };
+				});
+				const values = { ...item.values };
+				if (effect.to === "sourceBackpack" || effect.to === "targetBackpack") {
+					const carrier = effect.to === "sourceBackpack" ? source : targetId ? getCard(updatedCards, targetId) : null;
+					if (!carrier) continue;
+					if (carrier.id === source.id) {
+						if (sourceBackpack.length + 1 > slots) continue;
+						if (carriedWeight + getNumberAttribute(item.values, getAttributeId(config, "weight")) > capacity) continue;
+					}
+					values[getAttributeId(config, "carrier")] = carrier.id;
+					values[getAttributeId(config, "location")] = "";
+					updatedCards = updatedCards.map((card) => {
+						if (card.id !== carrier.id) return card;
+						const own = { ...card.values };
+						own[getAttributeId(config, "backpack")] = [...getStringListAttribute(card.values, getAttributeId(config, "backpack")), item.id];
+						return { ...card, values: own };
+					});
+				} else {
+					values[getAttributeId(config, "carrier")] = "";
+					values[getAttributeId(config, "location")] = effect.to === "sourceLocation" ? sourceLocation : "";
+				}
+				updatedCards = updatedCards.map((card) => (card.id === item.id ? { ...card, values } : card));
+				currentCards = updatedCards;
+			}
 			continue;
 		}
 		if (effect.kind === "removeCard") {
 			let ids: string[];
-			if (effect.target === "slot" && effect.slot) ids = slotMap[effect.slot] ?? [];
+			if (effect.target?.card === "slot" && effect.target.slot) ids = slotMap[effect.target.slot] ?? [];
+			else if (effect.target?.card === "targetCard" && targetId) ids = [targetId];
 			else ids = [sourceId];
 			for (let j = 0; j < ids.length; j++) removeIds.add(ids[j]);
 			continue;
 		}
 
 		let targetIds: string[] = [];
-		if (effect.target === "slot" && effect.slot) targetIds = slotMap[effect.slot] ?? [];
-		else if (effect.target === "sourceCard" || !effect.target) targetIds = [sourceId];
+		if (effect.target?.card === "slot" && effect.target.slot) targetIds = slotMap[effect.target.slot] ?? [];
+		else if (effect.target?.card === "targetCard" && targetId) targetIds = [targetId];
+		else if (effect.target?.card === "sourceCard" || !effect.target) targetIds = [sourceId];
 
 		for (let j = 0; j < targetIds.length; j++) {
 			const card = getCard(currentCards, targetIds[j]);
 			if (!card) continue;
 			const source = getCard(currentCards, sourceId);
 			if (!source) continue;
-			const context = getConditionContext(config, effect.conditions, source, card, slotMap, currentCards);
+			const context = getConditionContext(config, effect.conditions, source, targetId ? getCard(currentCards, targetId) : null, card, slotMap, currentCards);
 			if (!evaluateConditions(effect.conditions, context)) continue;
 			const applyUpdated = applyCardEffect(config, card, effect, (conditions) => {
-				const changeContext = getConditionContext(config, conditions, source, card, slotMap, currentCards);
+				const changeContext = getConditionContext(config, conditions, source, targetId ? getCard(currentCards, targetId) : null, card, slotMap, currentCards);
 				return evaluateConditions(conditions, changeContext);
 			});
 			currentCards = replaceCard(currentCards, applyUpdated);
@@ -498,6 +618,15 @@ function applyActionEffects(
 			if (!removeIds.has(currentCards[i].id)) kept.push(currentCards[i]);
 		}
 		currentCards = kept;
+		for (let i = 0; i < currentCards.length; i++) {
+			const backpack = getStringListAttribute(currentCards[i].values, getAttributeId(config, "backpack"));
+			if (backpack.length === 0) continue;
+			const filtered = backpack.filter((id) => !removeIds.has(id));
+			if (filtered.length === backpack.length) continue;
+			const values = { ...currentCards[i].values };
+			values[getAttributeId(config, "backpack")] = filtered;
+			currentCards[i] = { ...currentCards[i], values };
+		}
 	}
 	return { cards: currentCards, nextCardId: currentId };
 }
@@ -517,18 +646,18 @@ function applyTagAutoEffects(
 		const tagSnapshot = snapshotFromTag(currentTag);
 		if (!evaluateConditions(effect.conditions, { sourceTag: tagSnapshot, host: hostSnapshot })) continue;
 		const tagCondition = (conditions: Condition[]): boolean => evaluateConditions(conditions, { sourceTag: tagSnapshot, host: snapshotFromDerived(deriveCard(config, currentHost)) });
-		if (effect.kind === "changeAttributes" && effect.target === "host") {
+		if (effect.kind === "changeAttributes" && effect.target?.card === "host") {
 			currentHost = applyChangeAttributes(config, currentHost, effect.changes, tagCondition);
 			continue;
 		}
-		if (effect.kind === "changeAttributes" && (effect.target === "sourceTag" || !effect.target)) {
+		if (effect.kind === "changeAttributes" && (effect.target?.card === "sourceTag" || !effect.target)) {
 			const values = { ...currentTag.values };
 			for (let j = 0; j < effect.changes.length; j++) {
 				const change = effect.changes[j];
 				if (change.conditions && !tagCondition(change.conditions)) continue;
 				const definition = config.allAttributes.find((attribute) => attribute.id === change.attributeId);
 				if (!definition) continue;
-				const current = values[change.attributeId] ?? 0;
+				const current = getNumberAttribute(values, change.attributeId);
 				let next = change.set ?? current + (change.delta ?? 0);
 				if (typeof definition.typeParams?.min === "number") next = Math.max(definition.typeParams?.min, next);
 				if (typeof definition.typeParams?.max === "number") next = Math.min(definition.typeParams?.max, next);
@@ -566,7 +695,7 @@ function runAutoActions(config: FamineRefugeeConfig, card: CardState): CardState
 		const action = findAction(config, (template.auto ?? [])[i]);
 		if (!action) continue;
 		const derived = deriveCard(config, current);
-		if (!evaluateConditions(action.conditions, { sourceCard: snapshotFromDerived(derived) })) continue;
+		if (!evaluateConditions(action.conditions, { sourceCard: snapshotFromDerived(derived, current), cards: [current], config })) continue;
 		const result = applyActionEffects(config, action, current.id, [], [current], 0);
 		const updated = getCard(result.cards, current.id);
 		if (updated) current = updated;
@@ -613,6 +742,87 @@ function advanceMinutes(config: FamineRefugeeConfig, state: FamineState, minutes
 	return appendLog(current, message);
 }
 
+
+export function getVisibleCards(config: FamineRefugeeConfig, state: FamineState): CardState[] {
+	const player = getPlayerCard(config, state);
+	if (!player) return [];
+	const locationAttributeId = getAttributeId(config, "location");
+	const locationId = getStringAttribute(player.values, locationAttributeId);
+	const cards: CardState[] = [];
+	for (let i = 0; i < state.cards.length; i++) {
+		const card = state.cards[i];
+		if (card.id === player.id) continue;
+		if (getTemplate(config, card.templateId).cardType === "place") {
+			if (card.id === locationId) cards.push(card);
+			continue;
+		}
+		if (getStringAttribute(card.values, locationAttributeId) === locationId) cards.push(card);
+	}
+	return cards;
+}
+
+export function getIncomingActions(
+	config: FamineRefugeeConfig,
+	state: FamineState,
+	targetId: string,
+): FamineAction[] {
+	const player = getPlayerCard(config, state);
+	let target: CardState | null = null;
+	for (let i = 0; i < state.cards.length; i++) {
+		if (state.cards[i].id === targetId) {
+			target = state.cards[i];
+			break;
+		}
+	}
+	if (!player || !target) return [];
+	const sourceDerived = deriveCard(config, player, state.cards);
+	const targetDerived = deriveCard(config, target, state.cards);
+	const actions: FamineAction[] = [];
+	for (let i = 0; i < (targetDerived.template.incoming ?? []).length; i++) {
+		const action = findAction(config, (targetDerived.template.incoming ?? [])[i]);
+		if (!action) continue;
+		if (evaluateConditions(action.conditions, {
+			sourceCard: snapshotFromDerived(sourceDerived, player),
+			targetCard: snapshotFromDerived(targetDerived, target),
+			cards: state.cards,
+			config,
+		})) actions.push(action);
+	}
+	return actions;
+}
+
+export function applyIncomingAction(
+	config: FamineRefugeeConfig,
+	state: FamineState,
+	targetId: string,
+	actionId: number,
+): FamineState {
+	const player = getPlayerCard(config, state);
+	let target: CardState | null = null;
+	for (let i = 0; i < state.cards.length; i++) {
+		if (state.cards[i].id === targetId) {
+			target = state.cards[i];
+			break;
+		}
+	}
+	if (!player || !target) return state;
+	const action = findAction(config, actionId);
+	if (!action) return state;
+	const sourceDerived = deriveCard(config, player, state.cards);
+	const targetDerived = deriveCard(config, target, state.cards);
+	if (!evaluateConditions(action.conditions, {
+		sourceCard: snapshotFromDerived(sourceDerived, player),
+		targetCard: snapshotFromDerived(targetDerived, target),
+		cards: state.cards,
+		config,
+	})) return state;
+	const timeCost = getActionTimeCost(config, action, player, {}, state.cards);
+	const result = applyActionEffects(config, action, player.id, [], state.cards, state.nextCardId, targetId);
+	let next = appendLog({ ...state, cards: result.cards, nextCardId: result.nextCardId }, action.title);
+	next = advanceMinutes(config, next, timeCost);
+	return next;
+}
+
 export function applyAction(
 	config: FamineRefugeeConfig,
 	state: FamineState,
@@ -623,8 +833,8 @@ export function applyAction(
 	if (!player) return state;
 	const action = findAction(config, actionId);
 	if (!action) return state;
-	const sourceDerived = deriveCard(config, player);
-	if (!evaluateConditions(action.conditions, { sourceCard: snapshotFromDerived(sourceDerived) })) return state;
+	const sourceDerived = deriveCard(config, player, state.cards);
+	if (!evaluateConditions(action.conditions, { sourceCard: snapshotFromDerived(sourceDerived, player), cards: state.cards, config })) return state;
 	const resolved = validateAssignments(config, action, player, assignments, state.cards);
 	if (!resolved) return state;
 
