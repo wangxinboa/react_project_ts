@@ -137,6 +137,17 @@ export default function FamineRefugeePage() {
 		return cardViews.find((view) => view.card.id === selectedCardId) ?? playerView;
 	}, [cardViews, selectedCardId, playerView]);
 
+	const backpackViews = useMemo(() => {
+		if (!playerView) return [];
+		const ids = getStringListAttribute(playerView.card.values, 22);
+		const views: CardView[] = [];
+		for (let i = 0; i < ids.length; i++) {
+			const view = cardViews.find((item) => item.card.id === ids[i]);
+			if (view) views.push(view);
+		}
+		return views;
+	}, [cardViews, playerView]);
+
 	const currentLocationName = useMemo(() => {
 		if (!config || !playerView) return "未知地点";
 		const locationAttribute = config.allAttributes.find((attribute) => attribute.key === "location");
@@ -181,12 +192,13 @@ export default function FamineRefugeePage() {
 
 	const gridViews = useMemo(() => {
 		if (placementActionId === null) return sceneViews;
+		const candidates = [...sceneViews, ...backpackViews];
 		const views: CardView[] = [];
-		for (let i = 0; i < sceneViews.length; i++) {
-			if (!assignedCardIds.has(sceneViews[i].card.id)) views.push(sceneViews[i]);
+		for (let i = 0; i < candidates.length; i++) {
+			if (!assignedCardIds.has(candidates[i].card.id)) views.push(candidates[i]);
 		}
 		return views;
-	}, [sceneViews, placementActionId, assignedCardIds]);
+	}, [sceneViews, backpackViews, placementActionId, assignedCardIds]);
 
 	const activeSlot = useMemo(() => {
 		if (!placementAction) return null;

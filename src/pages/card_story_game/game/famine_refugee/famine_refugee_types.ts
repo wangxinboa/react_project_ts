@@ -88,6 +88,7 @@ export interface CardState {
 	id: string;
 	templateId: number;
 	values: Record<number, AttributeValue>;
+	nextBehaviorTime?: number;
 	tags: TagInstanceState[];
 }
 

@@ -1,5 +1,5 @@
 import { evaluateFormula } from "../../formula/formula_eval.ts";
-import type { AttributeValue, CardType } from "../../card_story_game_types/index.ts";
+import type { AttributeValue, CardType, TargetRef } from "../../card_story_game_types/index.ts";
 import { getNumberAttribute, getNumberValues, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import type {
 	ActionSlot,
@@ -97,16 +97,16 @@ function matchesAttribute(actual: number, check: AttributeCheck): boolean {
 	return true;
 }
 
-function evaluateCondition(condition: Condition, context: ConditionContext): boolean {
-	let entity: EntitySnapshot | undefined;
-	if (condition.target.card === "sourceCard") entity = context.sourceCard;
-	else if (condition.target.card === "sourceTag") entity = context.sourceTag;
-	else if (condition.target.card === "targetCard") entity = context.targetCard;
-	else if (condition.target.card === "host") entity = context.host;
-	else if (condition.target.card === "referencedCard") entity = context.referencedCard;
-	else entity = context.slot;
-	if (!entity) return false;
+function resolveTargetEntity(target: TargetRef, context: ConditionContext): EntitySnapshot | undefined {
+	if (target.card === "sourceCard") return context.sourceCard;
+	if (target.card === "sourceTag") return context.sourceTag;
+	if (target.card === "targetCard") return context.targetCard;
+	if (target.card === "host") return context.host;
+	if (target.card === "referencedCard") return context.referencedCard;
+	return context.slot;
+}
 
+function evaluateAttributeChecks(condition: Condition, entity: EntitySnapshot, context: ConditionContext): boolean {
 	if (condition.attributes) {
 		for (let i = 0; i < condition.attributes.length; i++) {
 			const check = condition.attributes[i];
@@ -144,6 +144,10 @@ function evaluateCondition(condition: Condition, context: ConditionContext): boo
 		}
 	}
 
+	return true;
+}
+
+function evaluateTagChecks(condition: Condition, entity: EntitySnapshot): boolean {
 	if (typeof condition.hasTag === "number" && !entity.tagIds.has(condition.hasTag)) return false;
 	if (condition.hasTags) {
 		for (let i = 0; i < condition.hasTags.length; i++) {
@@ -169,6 +173,10 @@ function evaluateCondition(condition: Condition, context: ConditionContext): boo
 			if (!entity.tagIds.has(condition.onlyHasTags[i])) return false;
 		}
 	}
+	return true;
+}
+
+function evaluateDefinitionChecks(condition: Condition, entity: EntitySnapshot): boolean {
 	if (condition.hasCardType && entity.cardType !== condition.hasCardType) return false;
 	if (condition.hasAnyCardType && condition.hasAnyCardType.length > 0 && (!entity.cardType || !condition.hasAnyCardType.includes(entity.cardType))) return false;
 	if (typeof condition.hasTemplate === "number" && entity.templateId !== condition.hasTemplate) return false;
@@ -177,6 +185,14 @@ function evaluateCondition(condition: Condition, context: ConditionContext): boo
 	}
 	if (typeof condition.onlyHasTemplate === "number" && entity.templateId !== condition.onlyHasTemplate) return false;
 	return true;
+}
+
+function evaluateCondition(condition: Condition, context: ConditionContext): boolean {
+	const entity = resolveTargetEntity(condition.target, context);
+	if (!entity) return false;
+	return evaluateAttributeChecks(condition, entity, context)
+		&& evaluateTagChecks(condition, entity)
+		&& evaluateDefinitionChecks(condition, entity);
 }
 
 function evaluateConditions(conditions: Condition[] | undefined, context: ConditionContext): boolean {
@@ -218,6 +234,7 @@ function createCardState(config: FamineRefugeeConfig, saveCard: SaveCard): CardS
 		id: saveCard.id,
 		templateId: saveCard.templateId,
 		values,
+		nextBehaviorTime: 0,
 		tags: (template.tags ?? []).map((tagId) => createTagInstance(config, tagId)),
 	};
 }
@@ -296,23 +313,39 @@ function slotMatches(config: FamineRefugeeConfig, slot: ActionSlot, card: CardSt
 	});
 }
 
+export function getAccessibleCards(config: FamineRefugeeConfig, cards: CardState[], actor: CardState): CardState[] {
+	const locationId = getStringAttribute(actor.values, getAttributeId(config, "location"));
+	const result: CardState[] = [];
+	for (let i = 0; i < cards.length; i++) {
+		const card = cards[i];
+		if (card.id === actor.id) continue;
+		const carrier = getStringAttribute(card.values, getAttributeId(config, "carrier"));
+		if (carrier === actor.id) {
+			result.push(card);
+			continue;
+		}
+		if (carrier) continue;
+		if (getStringAttribute(card.values, getAttributeId(config, "location")) === locationId) result.push(card);
+	}
+	return result;
+}
+
 export function getEligibleCards(
 	config: FamineRefugeeConfig,
 	state: FamineState,
 	action: FamineAction,
 	slotId: string,
+	actor?: CardState,
 ): CardState[] {
-	const player = getPlayerCard(config, state);
+	const player = actor ?? getPlayerCard(config, state);
 	if (!player) return [];
 	const slot = (action.slots ?? []).find((item) => item.id === slotId);
 	if (!slot) return [];
 	const source = snapshotFromDerived(deriveCard(config, player, state.cards));
 	const cards: CardState[] = [];
-	for (let i = 0; i < state.cards.length; i++) {
-		const card = state.cards[i];
-		if (card.id === player.id) continue;
-		if (getStringAttribute(card.values, getAttributeId(config, "location")) !== getStringAttribute(player.values, getAttributeId(config, "location"))) continue;
-		if (slotMatches(config, slot, card, source)) cards.push(card);
+	const accessible = getAccessibleCards(config, state.cards, player);
+	for (let i = 0; i < accessible.length; i++) {
+		if (slotMatches(config, slot, accessible[i], source)) cards.push(accessible[i]);
 	}
 	return cards;
 }
@@ -505,6 +538,128 @@ function getConditionContext(
 	};
 }
 
+interface EffectRuntime {
+	config: FamineRefugeeConfig;
+	sourceId: string;
+	targetId?: string;
+	slotMap: Record<string, string[]>;
+	cards: CardState[];
+	nextCardId: number;
+	removeIds: Set<string>;
+}
+
+type EffectHandler = (runtime: EffectRuntime, effect: InlineEffect) => void;
+
+function getEffectTargetIds(runtime: EffectRuntime, effect: InlineEffect): string[] {
+	if (effect.target?.card === "slot" && effect.target.slot) return runtime.slotMap[effect.target.slot] ?? [];
+	if (effect.target?.card === "targetCard" && runtime.targetId) return [runtime.targetId];
+	if (effect.target?.card === "sourceCard" || !effect.target) return [runtime.sourceId];
+	return [];
+}
+
+function applyTargetedEffect(runtime: EffectRuntime, effect: InlineEffect): void {
+	const source = getCard(runtime.cards, runtime.sourceId);
+	if (!source) return;
+	const targetIds = getEffectTargetIds(runtime, effect);
+	for (let i = 0; i < targetIds.length; i++) {
+		const card = getCard(runtime.cards, targetIds[i]);
+		if (!card) continue;
+		const context = getConditionContext(runtime.config, effect.conditions, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, card, runtime.slotMap, runtime.cards);
+		if (!evaluateConditions(effect.conditions, context)) continue;
+		const updated = applyCardEffect(runtime.config, card, effect, (conditions) => {
+			const changeContext = getConditionContext(runtime.config, conditions, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, card, runtime.slotMap, runtime.cards);
+			return evaluateConditions(conditions, changeContext);
+		});
+		runtime.cards = replaceCard(runtime.cards, updated);
+	}
+}
+
+function applyCreateCardEffect(runtime: EffectRuntime, effect: InlineEffect): void {
+	if (effect.kind !== "addCard") return;
+	const source = getCard(runtime.cards, runtime.sourceId);
+	if (!source) return;
+	const context = getConditionContext(runtime.config, effect.conditions, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, null, runtime.slotMap, runtime.cards);
+	if (!evaluateConditions(effect.conditions, context)) return;
+	const id = `card_${runtime.nextCardId}`;
+	runtime.nextCardId += 1;
+	const sourceLocation = getStringAttribute(source.values, getAttributeId(runtime.config, "location")) ?? "";
+	if (effect.to === "sourceLocation") {
+		runtime.cards = [...runtime.cards, createCardState(runtime.config, { id, templateId: effect.templateId, values: { [getAttributeId(runtime.config, "location")]: sourceLocation } })];
+		return;
+	}
+	const sourceBackpack = getStringListAttribute(source.values, getAttributeId(runtime.config, "backpack"));
+	const created = createCardState(runtime.config, { id, templateId: effect.templateId, values: { [getAttributeId(runtime.config, "carrier")]: source.id, [getAttributeId(runtime.config, "location")]: "" } });
+	const ownerValues = { ...source.values };
+	ownerValues[getAttributeId(runtime.config, "backpack")] = [...sourceBackpack, id];
+	runtime.cards = [...runtime.cards.map((card) => (card.id === source.id ? { ...card, values: ownerValues } : card)), created];
+}
+
+function applyMoveItemEffect(runtime: EffectRuntime, effect: InlineEffect): void {
+	if (effect.kind !== "moveItemCard") return;
+	const itemIds = effect.target?.card === "slot" && effect.target.slot ? runtime.slotMap[effect.target.slot] ?? [] : runtime.targetId ? [runtime.targetId] : [];
+	const source = getCard(runtime.cards, runtime.sourceId);
+	if (!source) return;
+	const sourceLocation = getStringAttribute(source.values, getAttributeId(runtime.config, "location")) ?? "";
+	const sourceBackpack = getStringListAttribute(source.values, getAttributeId(runtime.config, "backpack"));
+	const capacity = getNumberAttribute(deriveCard(runtime.config, source, runtime.cards).values, getAttributeId(runtime.config, "carryCapacity"));
+	const slots = getNumberAttribute(deriveCard(runtime.config, source, runtime.cards).values, getAttributeId(runtime.config, "carrySlots"));
+	let carriedWeight = 0;
+	for (let i = 0; i < sourceBackpack.length; i++) {
+		const carried = getCard(runtime.cards, sourceBackpack[i]);
+		if (carried) carriedWeight += getNumberAttribute(carried.values, getAttributeId(runtime.config, "weight"));
+	}
+	for (let i = 0; i < itemIds.length; i++) {
+		const item = getCard(runtime.cards, itemIds[i]);
+		if (!item) continue;
+		let updatedCards = runtime.cards.map((card) => {
+			const backpack = getStringListAttribute(card.values, getAttributeId(runtime.config, "backpack"));
+			if (!backpack.includes(item.id)) return card;
+			const values = { ...card.values };
+			values[getAttributeId(runtime.config, "backpack")] = backpack.filter((id) => id !== item.id);
+			return { ...card, values };
+		});
+		const values = { ...item.values };
+		if (effect.to === "sourceBackpack" || effect.to === "targetBackpack") {
+			const carrier = effect.to === "sourceBackpack" ? source : runtime.targetId ? getCard(updatedCards, runtime.targetId) : null;
+			if (!carrier) continue;
+			if (carrier.id === source.id) {
+				if (sourceBackpack.length + 1 > slots) continue;
+				if (carriedWeight + getNumberAttribute(item.values, getAttributeId(runtime.config, "weight")) > capacity) continue;
+			}
+			values[getAttributeId(runtime.config, "carrier")] = carrier.id;
+			values[getAttributeId(runtime.config, "location")] = "";
+			updatedCards = updatedCards.map((card) => {
+				if (card.id !== carrier.id) return card;
+				const own = { ...card.values };
+				own[getAttributeId(runtime.config, "backpack")] = [...getStringListAttribute(card.values, getAttributeId(runtime.config, "backpack")), item.id];
+				return { ...card, values: own };
+			});
+		} else {
+			values[getAttributeId(runtime.config, "carrier")] = "";
+			values[getAttributeId(runtime.config, "location")] = effect.to === "sourceLocation" ? sourceLocation : "";
+		}
+		updatedCards = updatedCards.map((card) => (card.id === item.id ? { ...card, values } : card));
+		runtime.cards = updatedCards;
+	}
+}
+
+function applyRemoveCardEffect(runtime: EffectRuntime, effect: InlineEffect): void {
+	if (effect.kind !== "removeCard") return;
+	const ids = getEffectTargetIds(runtime, effect);
+	for (let i = 0; i < ids.length; i++) runtime.removeIds.add(ids[i]);
+}
+
+const effectHandlers: Record<InlineEffect["kind"], EffectHandler> = {
+	changeAttributes: applyTargetedEffect,
+	addTag: applyTargetedEffect,
+	removeTag: applyTargetedEffect,
+	changeTemplate: applyTargetedEffect,
+	changeLocation: applyTargetedEffect,
+	addCard: applyCreateCardEffect,
+	removeCard: applyRemoveCardEffect,
+	moveItemCard: applyMoveItemEffect,
+};
+
 function applyActionEffects(
 	config: FamineRefugeeConfig,
 	action: FamineAction,
@@ -514,121 +669,27 @@ function applyActionEffects(
 	nextCardId: number,
 	targetId?: string,
 ): { cards: CardState[]; nextCardId: number } {
-	let currentCards = cards.slice();
-	let currentId = nextCardId;
 	const slotMap: Record<string, string[]> = {};
-	for (let i = 0; i < assignments.length; i++) {
-		slotMap[assignments[i].slot.id] = assignments[i].cards.map((card) => card.id);
-	}
-	const removeIds = new Set<string>();
-
+	for (let i = 0; i < assignments.length; i++) slotMap[assignments[i].slot.id] = assignments[i].cards.map((card) => card.id);
+	const runtime: EffectRuntime = { config, sourceId, targetId, slotMap, cards: cards.slice(), nextCardId, removeIds: new Set<string>() };
 	for (let i = 0; i < (action.effects ?? []).length; i++) {
 		const effect = resolveEffect(config, (action.effects ?? [])[i]);
 		if (!effect) continue;
-		if (effect.kind === "addCard") {
-			const source = getCard(currentCards, sourceId);
-			if (!source) continue;
-			const context = getConditionContext(config, effect.conditions, source, targetId ? getCard(currentCards, targetId) : null, null, slotMap, currentCards);
-			if (!evaluateConditions(effect.conditions, context)) continue;
-			const id = `card_${currentId}`;
-			currentId += 1;
-			currentCards = [...currentCards, createCardState(config, { id, templateId: effect.templateId, values: { [getAttributeId(config, "location")]: getStringAttribute(source.values, getAttributeId(config, "location")) ?? "" } })];
-			continue;
-		}
-		if (effect.kind === "moveItemCard") {
-			const itemIds = effect.target?.card === "slot" && effect.target.slot ? slotMap[effect.target.slot] ?? [] : targetId ? [targetId] : [];
-			const source = getCard(currentCards, sourceId);
-			if (!source) continue;
-			const sourceLocation = getStringAttribute(source.values, getAttributeId(config, "location")) ?? "";
-			const sourceBackpack = getStringListAttribute(source.values, getAttributeId(config, "backpack"));
-			const capacity = getNumberAttribute(deriveCard(config, source, currentCards).values, getAttributeId(config, "carryCapacity"));
-			const slots = getNumberAttribute(deriveCard(config, source, currentCards).values, getAttributeId(config, "carrySlots"));
-			let carriedWeight = 0;
-			for (let i = 0; i < sourceBackpack.length; i++) {
-				const carried = getCard(currentCards, sourceBackpack[i]);
-				if (carried) carriedWeight += getNumberAttribute(carried.values, getAttributeId(config, "weight"));
-			}
-			for (let j = 0; j < itemIds.length; j++) {
-				const item = getCard(currentCards, itemIds[j]);
-				if (!item) continue;
-				let updatedCards = currentCards.map((card) => {
-					const backpack = getStringListAttribute(card.values, getAttributeId(config, "backpack"));
-					if (!backpack.includes(item.id)) return card;
-					const values = { ...card.values };
-					values[getAttributeId(config, "backpack")] = backpack.filter((id) => id !== item.id);
-					return { ...card, values };
-				});
-				const values = { ...item.values };
-				if (effect.to === "sourceBackpack" || effect.to === "targetBackpack") {
-					const carrier = effect.to === "sourceBackpack" ? source : targetId ? getCard(updatedCards, targetId) : null;
-					if (!carrier) continue;
-					if (carrier.id === source.id) {
-						if (sourceBackpack.length + 1 > slots) continue;
-						if (carriedWeight + getNumberAttribute(item.values, getAttributeId(config, "weight")) > capacity) continue;
-					}
-					values[getAttributeId(config, "carrier")] = carrier.id;
-					values[getAttributeId(config, "location")] = "";
-					updatedCards = updatedCards.map((card) => {
-						if (card.id !== carrier.id) return card;
-						const own = { ...card.values };
-						own[getAttributeId(config, "backpack")] = [...getStringListAttribute(card.values, getAttributeId(config, "backpack")), item.id];
-						return { ...card, values: own };
-					});
-				} else {
-					values[getAttributeId(config, "carrier")] = "";
-					values[getAttributeId(config, "location")] = effect.to === "sourceLocation" ? sourceLocation : "";
-				}
-				updatedCards = updatedCards.map((card) => (card.id === item.id ? { ...card, values } : card));
-				currentCards = updatedCards;
-			}
-			continue;
-		}
-		if (effect.kind === "removeCard") {
-			let ids: string[];
-			if (effect.target?.card === "slot" && effect.target.slot) ids = slotMap[effect.target.slot] ?? [];
-			else if (effect.target?.card === "targetCard" && targetId) ids = [targetId];
-			else ids = [sourceId];
-			for (let j = 0; j < ids.length; j++) removeIds.add(ids[j]);
-			continue;
-		}
-
-		let targetIds: string[] = [];
-		if (effect.target?.card === "slot" && effect.target.slot) targetIds = slotMap[effect.target.slot] ?? [];
-		else if (effect.target?.card === "targetCard" && targetId) targetIds = [targetId];
-		else if (effect.target?.card === "sourceCard" || !effect.target) targetIds = [sourceId];
-
-		for (let j = 0; j < targetIds.length; j++) {
-			const card = getCard(currentCards, targetIds[j]);
-			if (!card) continue;
-			const source = getCard(currentCards, sourceId);
-			if (!source) continue;
-			const context = getConditionContext(config, effect.conditions, source, targetId ? getCard(currentCards, targetId) : null, card, slotMap, currentCards);
-			if (!evaluateConditions(effect.conditions, context)) continue;
-			const applyUpdated = applyCardEffect(config, card, effect, (conditions) => {
-				const changeContext = getConditionContext(config, conditions, source, targetId ? getCard(currentCards, targetId) : null, card, slotMap, currentCards);
-				return evaluateConditions(conditions, changeContext);
-			});
-			currentCards = replaceCard(currentCards, applyUpdated);
-		}
+		effectHandlers[effect.kind](runtime, effect);
 	}
-
-	if (removeIds.size > 0) {
-		const kept: CardState[] = [];
-		for (let i = 0; i < currentCards.length; i++) {
-			if (!removeIds.has(currentCards[i].id)) kept.push(currentCards[i]);
-		}
-		currentCards = kept;
-		for (let i = 0; i < currentCards.length; i++) {
-			const backpack = getStringListAttribute(currentCards[i].values, getAttributeId(config, "backpack"));
+	if (runtime.removeIds.size > 0) {
+		runtime.cards = runtime.cards.filter((card) => !runtime.removeIds.has(card.id));
+		for (let i = 0; i < runtime.cards.length; i++) {
+			const backpack = getStringListAttribute(runtime.cards[i].values, getAttributeId(config, "backpack"));
 			if (backpack.length === 0) continue;
-			const filtered = backpack.filter((id) => !removeIds.has(id));
+			const filtered = backpack.filter((id) => !runtime.removeIds.has(id));
 			if (filtered.length === backpack.length) continue;
-			const values = { ...currentCards[i].values };
+			const values = { ...runtime.cards[i].values };
 			values[getAttributeId(config, "backpack")] = filtered;
-			currentCards[i] = { ...currentCards[i], values };
+			runtime.cards[i] = { ...runtime.cards[i], values };
 		}
 	}
-	return { cards: currentCards, nextCardId: currentId };
+	return { cards: runtime.cards, nextCardId: runtime.nextCardId };
 }
 
 function applyTagAutoEffects(
@@ -716,6 +777,56 @@ function appendLog(state: FamineState, message: string): FamineState {
 	return { ...state, logs: logs.slice(-MAX_LOGS) };
 }
 
+function runNpcBehaviors(config: FamineRefugeeConfig, state: FamineState): FamineState {
+	const player = getPlayerCard(config, state);
+	if (!player) return state;
+	let current = state;
+	const npcIds = current.cards.map((card) => card.id);
+	for (let n = 0; n < npcIds.length; n++) {
+		const npc = getCard(current.cards, npcIds[n]);
+		if (!npc || npc.id === player.id) continue;
+		const template = getTemplate(config, npc.templateId);
+		const behavior = template.behavior;
+		if (!behavior || (npc.nextBehaviorTime ?? 0) > current.time) continue;
+		let acted = false;
+		for (let i = 0; i < (template.outgoing ?? []).length && !acted; i++) {
+			const action = findAction(config, (template.outgoing ?? [])[i]);
+			if (!action) continue;
+			const sourceSnapshot = snapshotFromDerived(deriveCard(config, npc, current.cards), npc);
+			if (!evaluateConditions(action.conditions, { sourceCard: sourceSnapshot, cards: current.cards, config })) continue;
+			const assignments: SlotAssignment[] = [];
+			const used = new Set<string>();
+			let valid = true;
+			for (let j = 0; j < (action.slots ?? []).length; j++) {
+				const slot = (action.slots ?? [])[j];
+				const range = getSlotRange(slot);
+				const eligible = getEligibleCards(config, current, action, slot.id, npc).filter((card) => !used.has(card.id));
+				if (eligible.length < range.min) {
+					valid = false;
+					break;
+				}
+				const picked = eligible.slice(0, range.min);
+				for (let k = 0; k < picked.length; k++) used.add(picked[k].id);
+				assignments.push({ slot, cards: picked });
+			}
+			if (!valid) continue;
+			const assignmentMap: Record<string, string[]> = {};
+			for (let j = 0; j < assignments.length; j++) assignmentMap[assignments[j].slot.id] = assignments[j].cards.map((card) => card.id);
+			const actionCost = getActionTimeCost(config, action, npc, assignmentMap, current.cards);
+			const result = applyActionEffects(config, action, npc.id, assignments, current.cards, current.nextCardId);
+			const nextCards = result.cards.map((card) => card.id === npc.id
+				? { ...card, nextBehaviorTime: current.time + Math.max(behavior.decisionInterval, actionCost) }
+				: card);
+			current = appendLog({ ...current, cards: nextCards, nextCardId: result.nextCardId }, `${template.key}：${action.title}`);
+			acted = true;
+		}
+		if (!acted) {
+			current = { ...current, cards: current.cards.map((card) => card.id === npc.id ? { ...card, nextBehaviorTime: current.time + behavior.decisionInterval } : card) };
+		}
+	}
+	return current;
+}
+
 function advanceMinutes(config: FamineRefugeeConfig, state: FamineState, minutes: number): FamineState {
 	if (minutes <= 0) return state;
 	let current = state;
@@ -739,7 +850,7 @@ function advanceMinutes(config: FamineRefugeeConfig, state: FamineState, minutes
 			break;
 		}
 	}
-	return appendLog(current, message);
+	return runNpcBehaviors(config, appendLog(current, message));
 }
 
 

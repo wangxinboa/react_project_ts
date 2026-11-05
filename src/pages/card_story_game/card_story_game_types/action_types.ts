@@ -1,6 +1,6 @@
 import type { Formula } from "./formula_types.ts";
 import type { Condition } from "./condition_types.ts";
-import type { EffectCall } from "./effect_types.ts";
+import type { EffectCall } from "./effect_types/effect_types.ts";
 
 /** 动作的命名卡槽。每个槽位独立放置，槽位之间不复用同一张卡。 */
 export interface ActionSlot {
@@ -10,7 +10,7 @@ export interface ActionSlot {
 	count?: number;
 	min?: number;
 	max?: number;
-	/** 槽内卡牌必须满足的条件；target 通常为 slot */
+	/** 槽内卡牌必须满足的条件；target.card 通常为 slot */
 	conditions?: Condition[];
 }
 
@@ -31,6 +31,6 @@ export interface RuleAction {
 	slots?: ActionSlot[];
 	/** 执行效果，按顺序应用 */
 	effects?: EffectCall[];
-	/** 过渡字段：Editor 表单迁移到 slots 后删除 */
+	/** 旧 Editor 过渡字段；新规范使用 slots，不再使用 targets */
 	targets?: unknown[];
 }

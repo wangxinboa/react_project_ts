@@ -38,11 +38,14 @@ export type AttributeCheck = {
 	eq?: number;
 	/** cardRef 是否存在 */
 	refExists?: boolean;
-	/** cardRefList 引用卡匹配 */
+	/** cardRefList 引用卡匹配；match 内用 referencedCard 指向当前引用卡 */
 	refListsMatch?: {
 		match?: Condition[];
+		/** 匹配数量下限；未写 count 时生效 */
 		min?: number;
+		/** 匹配数量上限；未写 count 时生效 */
 		max?: number;
+		/** 精确匹配数量，优先于 min/max */
 		count?: number;
 	};
 };
@@ -81,26 +84,26 @@ export interface Condition {
 }
 
 /**
- * 条件/效果的作用对象。
- *
- * - sourceCard：发起当前动作的卡牌（玩家或 NPC）
- * - sourceTag：标签 auto 中的标签实例
- * - targetCard：incoming 动作中被响应的目标卡
- * - host：标签附着的宿主卡
- * - slot：动作命名卡槽中的卡
+ * Condition / Effect 指向的卡牌或上下文对象。
  */
 export const ConditionTarget = {
+	/** 发起当前动作的卡牌（玩家或 NPC） */
 	SOURCE_CARD: "sourceCard",
+	/** 标签 auto 中的标签实例 */
 	SOURCE_TAG: "sourceTag",
+	/** incoming 动作中被响应的目标卡 */
 	TARGET_CARD: "targetCard",
+	/** 标签附着的宿主卡 */
 	HOST: "host",
+	/** 动作命名卡槽中的卡；TargetRef.slot 指定卡槽 id */
 	SLOT: "slot",
+	/** refListsMatch.match 中当前遍历到的引用卡 */
 	REFERENCED_CARD: "referencedCard",
 } as const;
 
 export type ConditionTarget = (typeof ConditionTarget)[keyof typeof ConditionTarget];
 
-/** 条件判断目标。 */
+/** Condition / Effect 的目标引用。 */
 export interface TargetRef {
 	card: ConditionTarget;
 	/** card 为 slot 时指定卡槽 */

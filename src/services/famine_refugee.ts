@@ -29,7 +29,7 @@ export async function serviceGetFamineRefugeeConfig(): Promise<FamineRefugeeConf
 		}
 	}
 	for (let i = 0; i < config.allActions.length; i++) {
-		const issues = validateFormula(config.allActions[i].timeCost, `allRules[${i}].timeCost`);
+		const issues = validateFormula(config.allActions[i].timeCost, `allActions[${i}].timeCost`);
 		if (issues.length > 0) {
 			throw new Error(`原型配置时间公式错误：${issues[0].path} ${issues[0].message}`);
 		}
