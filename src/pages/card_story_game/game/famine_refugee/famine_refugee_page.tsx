@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ConfigProvider, Popover } from "antd";
+import { Button, ConfigProvider, Popover } from "antd";
 import { editorTheme } from "../../editor/editor_theme.ts";
 import type { DragEvent } from "react";
 
@@ -18,6 +18,10 @@ import {
 	getVisibleCards,
 	applyIncomingAction,
 	previewAction,
+	getDialogueOptions,
+	chooseDialogueOption,
+	advanceDialogue,
+	getDialogueSpeakerCard,
 } from "./famine_refugee_engine.ts";
 import type {
 	ActionSlot,
@@ -167,6 +171,29 @@ export default function FamineRefugeePage() {
 		return place?.derived.template.key ?? "未知地点";
 	}, [cardViews, config, playerView]);
 
+	const dialogueDefinition = useMemo(() => {
+		if (!config || !game?.dialogue) return null;
+		return config.allDialogues.find((dialogue) => dialogue.id === game.dialogue?.dialogueId) ?? null;
+	}, [config, game]);
+
+	const dialogueNode = useMemo(() => {
+		if (!dialogueDefinition || !game?.dialogue) return null;
+		return dialogueDefinition.nodes.find((node) => node.id === game.dialogue?.nodeId) ?? null;
+	}, [dialogueDefinition, game]);
+
+	const dialogueOptions = useMemo(() => {
+		return config && game?.dialogue ? getDialogueOptions(config, game) : [];
+	}, [config, game]);
+
+	const dialogueSpeaker = useMemo(() => {
+		return game?.dialogue && dialogueNode ? getDialogueSpeakerCard(game, dialogueNode.speaker) : null;
+	}, [game, dialogueNode]);
+
+	const dialogueSpeakerName = useMemo(() => {
+		if (!dialogueSpeaker) return "旁白";
+		return cardViews.find((view) => view.card.id === dialogueSpeaker.id)?.derived.template.key ?? dialogueSpeaker.id;
+	}, [dialogueSpeaker, cardViews]);
+
 	const visibleActions = useMemo(() => {
 		return config && game ? getVisibleActions(config, game) : [];
 	}, [config, game]);
@@ -255,10 +282,10 @@ export default function FamineRefugeePage() {
 	);
 
 	const handlePreview = useCallback(
-		(action: FamineAction, targetId?: string) => {
+		(action: FamineAction, targetId?: string, assignments: Record<string, string[]> = {}) => {
 			if (!config || !game) return;
 			setPreviewTitle(action.title);
-			setPreviewLines(previewAction(config, game, action.id, targetId));
+			setPreviewLines(previewAction(config, game, action.id, targetId, assignments));
 		},
 		[config, game],
 	);
@@ -420,6 +447,15 @@ export default function FamineRefugeePage() {
 		const item = cardViews.find((view) => view.card.id === backpackIds[i]);
 		if (item) backpackWeight += getNumberAttribute(item.card.values, 13);
 	}
+
+	const previewContent = (
+		<div className={style.actionPreview}>
+			<div className={style.actionPreviewTitle}>{previewTitle}</div>
+			{previewLines.map((line, index) => (
+				<div key={`${line}-${index}`}>{line}</div>
+			))}
+		</div>
+	);
 
 	const isEligible = (cardId: string): boolean => {
 		if (!placementAction) return false;
@@ -633,9 +669,19 @@ export default function FamineRefugeePage() {
 										取消
 									</button>
 									{canExecute ? (
-										<button type="button" className={style.executePlacement} onClick={handleExecute}>
-											执行 {placementAction.title}
-										</button>
+										<Popover
+											trigger="hover"
+											placement="left"
+											onOpenChange={(open) => {
+												if (open) handlePreview(placementAction, undefined, slotAssignments);
+												else clearPreview();
+											}}
+											content={previewContent}
+										>
+											<button type="button" className={style.executePlacement} onClick={handleExecute}>
+												执行 {placementAction.title}
+											</button>
+										</Popover>
 									) : null}
 								</div>
 							</div>
@@ -664,24 +710,8 @@ export default function FamineRefugeePage() {
 								</div>
 								<div className={style.inspectorSectionTitle}>玩家行动</div>
 								<div className={style.actions}>
-									{visibleActions.map((action) => (
-										<Popover
-											key={action.id}
-											trigger="hover"
-											placement="left"
-												onOpenChange={(open) => {
-												if (open) handlePreview(action);
-												else clearPreview();
-											}}
-											content={
-												<div className={style.actionPreview}>
-													<div className={style.actionPreviewTitle}>{previewTitle}</div>
-													{previewLines.map((line, index) => (
-														<div key={`${line}-${index}`}>{line}</div>
-													))}
-												</div>
-											}
-										>
+									{visibleActions.map((action) => {
+										const actionButton = (
 											<button
 												type="button"
 												className={style.actionButton}
@@ -694,8 +724,25 @@ export default function FamineRefugeePage() {
 													{formatDuration(getActionTimeCost(config, action, playerView.card, {}, game.cards))}
 												</small>
 											</button>
-										</Popover>
-									))}
+										);
+										if ((action.slots ?? []).length > 0) {
+											return <button key={action.id} type="button" className={style.actionButton} onClick={() => handleActionClick(action)} disabled={isDead}><span>{action.title}</span><small>{action.verb} · {formatDuration(getActionTimeCost(config, action, playerView.card, {}, game.cards))}</small></button>;
+										}
+										return (
+											<Popover
+												key={action.id}
+												trigger="hover"
+												placement="left"
+												onOpenChange={(open) => {
+													if (open) handlePreview(action);
+													else clearPreview();
+												}}
+												content={previewContent}
+											>
+												{actionButton}
+											</Popover>
+										);
+									})}
 									{visibleActions.length === 0 && !isDead ? (
 										<div className={style.emptyActions}>当前没有满足条件的动作。</div>
 									) : null}
@@ -718,14 +765,7 @@ export default function FamineRefugeePage() {
 													if (open) handlePreview(action, selectedView.card.id);
 													else clearPreview();
 												}}
-												content={
-													<div className={style.actionPreview}>
-														<div className={style.actionPreviewTitle}>{previewTitle}</div>
-														{previewLines.map((line, index) => (
-															<div key={`${line}-${index}`}>{line}</div>
-														))}
-													</div>
-												}
+												content={previewContent}
 											>
 												<button
 													type="button"
@@ -766,6 +806,34 @@ export default function FamineRefugeePage() {
 					每个动作按命名卡槽放置目标；卡槽之间不能复用同一张卡。修改 `public/famine_refugee_config.json`
 					后刷新页面调整配置。
 				</footer>
+				{game.dialogue && dialogueNode ? (
+					<div className={style.dialogueOverlay} onClick={() => setGame((prev) => (config && prev ? advanceDialogue(config, prev) : prev))}>
+						{dialogueOptions.length > 0 ? (
+							<div className={style.dialogueOptionLayer} onClick={(event) => event.stopPropagation()}>
+								{dialogueOptions.map((option) => (
+									<Button
+										key={option.id}
+										type="default"
+										className={style.dialogueOptionButton}
+										onClick={() => setGame((prev) => (config && prev ? chooseDialogueOption(config, prev, option.id) : prev))}
+									>
+										{option.text}
+									</Button>
+								))}
+							</div>
+						) : null}
+						<div className={style.dialogueBar} onClick={(event) => event.stopPropagation()}>
+							<div className={style.dialogueAvatar}>{dialogueSpeakerName.slice(0, 1)}</div>
+							<div className={style.dialogueBody}>
+								<div className={style.dialogueSpeaker}>{dialogueSpeakerName}</div>
+								<div className={style.dialogueText}>{dialogueNode.text}</div>
+								<div className={style.dialogueHint}>
+									{dialogueOptions.length > 0 ? "选择一项回应" : "点击空白处继续"}
+								</div>
+							</div>
+						</div>
+					</div>
+				) : null}
 			</div>
 		</ConfigProvider>
 	);

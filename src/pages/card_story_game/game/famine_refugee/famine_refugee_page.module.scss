@@ -14,9 +14,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: 0.12rem;
-	background:
-		radial-gradient(circle at 18% 0%, rgba(201, 162, 39, 0.08), transparent 34%),
-		#12100e;
+	background: radial-gradient(circle at 18% 0%, rgba(201, 162, 39, 0.08), transparent 34%), #12100e;
 	color: #d9d2c7;
 }
 
@@ -150,7 +148,13 @@
 	border: 1px solid #2e2a25;
 	border-radius: 5px;
 	background:
-		repeating-linear-gradient(0deg, transparent, transparent 0.6rem, rgba(255, 255, 255, 0.015) 0.6rem, rgba(255, 255, 255, 0.015) 0.61rem),
+		repeating-linear-gradient(
+			0deg,
+			transparent,
+			transparent 0.6rem,
+			rgba(255, 255, 255, 0.015) 0.6rem,
+			rgba(255, 255, 255, 0.015) 0.61rem
+		),
 		rgba(21, 18, 15, 0.7);
 	overflow-y: auto;
 }
@@ -640,7 +644,6 @@
 	flex-shrink: 0;
 }
 
-
 .backpackList {
 	display: flex;
 	flex-wrap: wrap;
@@ -679,4 +682,85 @@
 	margin-bottom: 3px;
 	color: #c9a227;
 	font-size: 11px;
+}
+
+.dialogueOverlay {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	align-items: stretch;
+	background: rgba(0, 0, 0, 0.62);
+}
+
+.dialogueOptionLayer {
+	align-self: flex-end;
+	width: min(320px, 32vw);
+	margin: 0 28px 8px 0;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 8px;
+	border: 1px solid #4a443b;
+	border-radius: 4px;
+	background: #1a1714;
+	box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.dialogueOptionButton {
+	justify-content: flex-start;
+	height: auto;
+	padding: 7px 10px;
+	text-align: left;
+	white-space: normal;
+}
+
+.dialogueBar {
+	display: flex;
+	gap: 14px;
+	width: 100%;
+	min-height: 132px;
+	padding: 18px 28px 22px;
+	border-top: 1px solid #4a443b;
+	background: #15120f;
+	box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.dialogueAvatar {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 64px;
+	width: 64px;
+	height: 64px;
+	border: 1px solid #4a443b;
+	border-radius: 50%;
+	background: #1a1714;
+	color: #c9a227;
+	font-size: 24px;
+}
+
+.dialogueBody {
+	flex: 1;
+	min-width: 0;
+}
+
+.dialogueSpeaker {
+	margin-bottom: 6px;
+	color: #c9a227;
+	font-size: 12px;
+}
+
+.dialogueText {
+	color: #d9d2c7;
+	font-size: 15px;
+	line-height: 1.8;
+}
+
+.dialogueHint {
+	margin-top: 8px;
+	color: #6b6459;
+	font-size: 10px;
 }

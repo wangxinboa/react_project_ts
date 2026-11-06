@@ -7,6 +7,7 @@ import type {
 	CardTemplate,
 	Condition,
 	EffectCall,
+	DialogueDefinition,
 	EffectDefinition,
 	RuleAction,
 	TagItem,
@@ -15,10 +16,13 @@ import type {
 
 export type {
 	ActionSlot,
+	DialogueNode,
+	DialogueOption,
 	AttributeBinding,
 	AttributeCheck,
 	Condition,
 	EffectCall,
+	DialogueDefinition,
 	EffectDefinition,
 	InlineEffect,
 	TagAuto,
@@ -75,6 +79,7 @@ export interface FamineRefugeeConfig {
 	allTags: FamineTag[];
 	allAttributes: FamineAttributeDefinition[];
 	allEffects?: EffectDefinition[];
+	allDialogues: DialogueDefinition[];
 	allActions: FamineAction[];
 	cardTemplates: FamineTemplate[];
 	saveData: SaveData;
@@ -92,11 +97,20 @@ export interface CardState {
 	tags: TagInstanceState[];
 }
 
+export interface DialogueState {
+	dialogueId: number;
+	nodeId: string;
+	sourceCardId: string;
+	targetCardId?: string;
+	slotMap: Record<string, string[]>;
+}
+
 export interface FamineState {
 	time: number;
 	nextCardId: number;
 	cards: CardState[];
 	logs: string[];
+	dialogue?: DialogueState;
 }
 
 export interface CardDerived {

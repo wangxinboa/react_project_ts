@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 49,
+	"schemaVersion": 51,
 	"allTags": [
 		{
 			"id": 1,
@@ -997,7 +997,10 @@
 			],
 			"behavior": {
 				"decisionInterval": 60
-			}
+			},
+			"incoming": [
+				70
+			]
 		},
 		{
 			"id": 6,
@@ -2167,6 +2170,95 @@
 				}
 			],
 			"createdAt": 1767974400051
+		},
+		{
+			"id": 70,
+			"verb": "talk",
+			"title": "交谈",
+			"desc": "和对方说几句话。",
+			"createdAt": 1767974400070,
+			"timeCost": 0,
+			"conditions": [
+				{
+					"target": {
+						"card": "targetCard"
+					},
+					"hasCardType": "person"
+				},
+				{
+					"target": {
+						"card": "sourceCard"
+					},
+					"attributes": [
+						{
+							"id": 3,
+							"gt": 0
+						}
+					]
+				}
+			],
+			"effects": [
+				{
+					"id": 70,
+					"kind": "startDialogue",
+					"dialogueId": 1,
+					"desc": "开始对话"
+				}
+			]
+		}
+	],
+	"allDialogues": [
+		{
+			"id": 1,
+			"key": "stranger_first_talk",
+			"title": "与流民交谈",
+			"nodes": [
+				{
+					"id": "start",
+					"speaker": {
+						"card": "targetCard"
+					},
+					"text": "你也是来找吃的吗？",
+					"options": [
+						{
+							"id": "ask_famine",
+							"text": "这里为什么会变成这样？",
+							"next": "answer_famine"
+						},
+						{
+							"id": "leave",
+							"text": "没什么，我先走了。"
+						}
+					]
+				},
+				{
+					"id": "answer_famine",
+					"speaker": {
+						"card": "sourceCard"
+					},
+					"text": "我只是想知道，还有没有能活下去的地方。",
+					"options": [
+						{
+							"id": "ask_plan",
+							"text": "你打算去哪里？",
+							"next": "answer_plan"
+						}
+					]
+				},
+				{
+					"id": "answer_plan",
+					"speaker": {
+						"card": "targetCard"
+					},
+					"text": "听说森林里还有能烧的东西。",
+					"options": [
+						{
+							"id": "end",
+							"text": "我知道了。"
+						}
+					]
+				}
+			]
 		}
 	]
 }

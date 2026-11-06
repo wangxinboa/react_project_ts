@@ -47,7 +47,6 @@ option {
 	margin: 0;
 	padding: 0;
 	border-width: 0;
-	user-select: none;
 	box-sizing: border-box;
 	outline: none;
 	-webkit-tap-highlight-color: transparent;

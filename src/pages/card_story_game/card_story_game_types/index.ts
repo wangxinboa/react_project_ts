@@ -19,8 +19,10 @@ export type {
 	InlineEffect,
 	RemoveCardEffect,
 	RemoveTagEffect,
+	StartDialogueEffect,
 } from "./effect_types/effect_types.ts";
 export type { TagAuto, TagItem, TagKind } from "./tag_types.ts";
+export type { DialogueDefinition, DialogueNode, DialogueOption } from "./dialogue_types.ts";
 export type { ActionSlot, RuleAction } from "./action_types.ts";
 export type { CardTemplate } from "./template_types.ts";
 export type { GameConfig } from "./game_config_types.ts";

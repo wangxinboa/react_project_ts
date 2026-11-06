@@ -3,6 +3,7 @@ import type { Condition } from "./condition_types.ts";
 import type { EffectDefinition } from "./effect_types/effect_types.ts";
 import type { RuleAction } from "./action_types.ts";
 import type { CardTemplate } from "./template_types.ts";
+import type { DialogueDefinition } from "./dialogue_types.ts";
 import type { TagItem } from "./tag_types.ts";
 
 /** 卡牌故事完整配置。famine 原型是当前实际使用的配置案例。 */
@@ -19,6 +20,8 @@ export interface GameConfig {
 	allEffects?: EffectDefinition[];
 	/** 卡牌模板 */
 	cardTemplates: CardTemplate[];
+	/** 对话定义 */
+	allDialogues?: DialogueDefinition[];
 	/** 初始存档；正式游戏启用后补齐具体结构 */
 	saveData?: unknown;
 	/** 初始日志 */

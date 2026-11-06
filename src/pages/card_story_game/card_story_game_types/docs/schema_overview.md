@@ -55,6 +55,16 @@ interface TargetRef {
 - 按 `effects` 数组顺序执行，最后统一 removeCard。
 - 详细说明见 [Action 执行规范](./action_execution.md)。
 
+## 对话
+
+- `allDialogues` 定义 `DialogueDefinition`。
+- `DialogueNode` 使用 `speaker: TargetRef`。
+- `DialogueOption` 支持 conditions / effects / next。
+- `DialogueNode.next` 用于无可见选项时点击空白继续；没有 next 则结束对话。
+- `startDialogue` effect 启动对话；玩家 incoming 默认使用 targetCard，NPC outgoing 可用 slot。
+- 对话状态保存 sourceCardId / targetCardId / slotMap。
+- 详细触发方式见项目状态与配置案例。
+
 ## NPC
 
 - `CardTemplate.behavior.decisionInterval` 控制决策间隔。

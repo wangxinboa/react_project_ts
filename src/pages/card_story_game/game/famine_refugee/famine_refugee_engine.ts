@@ -7,6 +7,10 @@ import type {
 	AttributeCheck,
 	CardDerived,
 	CardState,
+	DialogueDefinition,
+	DialogueNode,
+	DialogueOption,
+	DialogueState,
 	Condition,
 	EffectCall,
 	EffectDefinition,
@@ -624,6 +628,7 @@ interface EffectRuntime {
 	cards: CardState[];
 	nextCardId: number;
 	removeIds: Set<string>;
+	dialogue?: DialogueState;
 }
 
 type EffectHandler = (runtime: EffectRuntime, effect: InlineEffect) => void;
@@ -733,6 +738,22 @@ function applyRemoveCardEffect(runtime: EffectRuntime, effect: InlineEffect): vo
 	for (let i = 0; i < ids.length; i++) runtime.removeIds.add(ids[i]);
 }
 
+function applyStartDialogueEffect(runtime: EffectRuntime, effect: InlineEffect): void {
+	if (effect.kind !== "startDialogue") return;
+	const dialogue = runtime.config.allDialogues.find((item) => item.id === effect.dialogueId);
+	if (!dialogue || dialogue.nodes.length === 0) return;
+	const targetIds = effect.target?.card === "slot" && effect.target.slot
+		? runtime.slotMap[effect.target.slot] ?? []
+		: runtime.targetId ? [runtime.targetId] : [];
+	runtime.dialogue = {
+		dialogueId: dialogue.id,
+		nodeId: dialogue.nodes[0].id,
+		sourceCardId: runtime.sourceId,
+		targetCardId: targetIds[0],
+		slotMap: runtime.slotMap,
+	};
+}
+
 const effectHandlers: Record<InlineEffect["kind"], EffectHandler> = {
 	changeAttributes: applyTargetedEffect,
 	addTag: applyTargetedEffect,
@@ -742,6 +763,7 @@ const effectHandlers: Record<InlineEffect["kind"], EffectHandler> = {
 	addCard: applyCreateCardEffect,
 	removeCard: applyRemoveCardEffect,
 	moveItemCard: applyMoveItemEffect,
+	startDialogue: applyStartDialogueEffect,
 };
 
 function planActionEffects(
@@ -786,7 +808,7 @@ function applyActionEffects(
 	cards: CardState[],
 	nextCardId: number,
 	targetId?: string,
-): { cards: CardState[]; nextCardId: number } {
+): { cards: CardState[]; nextCardId: number; dialogue?: DialogueState } {
 	const plan = planActionEffects(config, action, sourceId, assignments, cards, targetId);
 	const runtime: EffectRuntime = { config, sourceId, targetId, slotMap: plan.slotMap, cards: cards.slice(), nextCardId, removeIds: new Set<string>() };
 	for (let i = 0; i < plan.effects.length; i++) effectHandlers[plan.effects[i].kind](runtime, plan.effects[i]);
@@ -802,7 +824,7 @@ function applyActionEffects(
 			runtime.cards[i] = { ...runtime.cards[i], values };
 		}
 	}
-	return { cards: runtime.cards, nextCardId: runtime.nextCardId };
+	return { cards: runtime.cards, nextCardId: runtime.nextCardId, dialogue: runtime.dialogue };
 }
 
 function applyTagAutoEffects(
@@ -1001,6 +1023,7 @@ export function getIncomingActions(
 	state: FamineState,
 	targetId: string,
 ): FamineAction[] {
+	if (state.dialogue) return [];
 	const player = getPlayerCard(config, state);
 	let target: CardState | null = null;
 	for (let i = 0; i < state.cards.length; i++) {
@@ -1032,6 +1055,7 @@ export function applyIncomingAction(
 	targetId: string,
 	actionId: number,
 ): FamineState {
+	if (state.dialogue) return state;
 	const player = getPlayerCard(config, state);
 	let target: CardState | null = null;
 	for (let i = 0; i < state.cards.length; i++) {
@@ -1053,7 +1077,7 @@ export function applyIncomingAction(
 	})) return state;
 	const timeCost = getActionTimeCost(config, action, player, {}, state.cards);
 	const result = applyActionEffects(config, action, player.id, [], state.cards, state.nextCardId, targetId);
-	let next = appendLog({ ...state, cards: result.cards, nextCardId: result.nextCardId }, action.title);
+	let next = appendLog({ ...state, cards: result.cards, nextCardId: result.nextCardId, dialogue: result.dialogue }, action.title);
 	next = advanceMinutes(config, next, timeCost);
 	return next;
 }
@@ -1067,7 +1091,88 @@ function cloneFamineState(state: FamineState): FamineState {
 			tags: card.tags.map((tag) => ({ ...tag, values: { ...tag.values } })),
 		})),
 		logs: [...state.logs],
+		dialogue: state.dialogue ? { ...state.dialogue, slotMap: { ...state.dialogue.slotMap } } : undefined,
 	};
+}
+
+function getDialogueDefinition(config: FamineRefugeeConfig, id: number): DialogueDefinition | null {
+	return config.allDialogues.find((dialogue) => dialogue.id === id) ?? null;
+}
+
+function getDialogueNode(config: FamineRefugeeConfig, dialogueId: number, nodeId: string): DialogueNode | null {
+	const definition = getDialogueDefinition(config, dialogueId);
+	return definition?.nodes.find((node) => node.id === nodeId) ?? null;
+}
+
+function getDialogueParticipants(state: FamineState): { dialogue: DialogueState; source: CardState; target: CardState | null; slotMap: Record<string, string[]> } | null {
+	if (!state.dialogue) return null;
+	const source = getCard(state.cards, state.dialogue.sourceCardId);
+	if (!source) return null;
+	return {
+		dialogue: state.dialogue,
+		source,
+		target: state.dialogue.targetCardId ? getCard(state.cards, state.dialogue.targetCardId) : null,
+		slotMap: state.dialogue.slotMap,
+	};
+}
+
+export function getDialogueSpeakerCard(state: FamineState, speaker: TargetRef): CardState | null {
+	if (!state.dialogue) return null;
+	if (speaker.card === "sourceCard") return getCard(state.cards, state.dialogue.sourceCardId);
+	if (speaker.card === "targetCard") return state.dialogue.targetCardId ? getCard(state.cards, state.dialogue.targetCardId) : null;
+	if (speaker.card === "slot" && speaker.slot) {
+		const id = state.dialogue.slotMap[speaker.slot]?.[0];
+		return id ? getCard(state.cards, id) : null;
+	}
+	return null;
+}
+
+export function getDialogueOptions(config: FamineRefugeeConfig, state: FamineState): DialogueOption[] {
+	const participants = getDialogueParticipants(state);
+	if (!participants) return [];
+	const node = getDialogueNode(config, participants.dialogue.dialogueId, participants.dialogue.nodeId);
+	if (!node) return [];
+	const context = getConditionContext(config, node.options.flatMap((option) => option.conditions ?? []), participants.source, participants.target, null, participants.slotMap, state.cards);
+	return node.options.filter((option) => evaluateConditions(option.conditions, context));
+}
+
+export function chooseDialogueOption(config: FamineRefugeeConfig, state: FamineState, optionId: string): FamineState {
+	const participants = getDialogueParticipants(state);
+	if (!participants) return state;
+	const node = getDialogueNode(config, participants.dialogue.dialogueId, participants.dialogue.nodeId);
+	const option = node?.options.find((item) => item.id === optionId);
+	if (!option) return state;
+	const context = getConditionContext(config, option.conditions, participants.source, participants.target, null, participants.slotMap, state.cards);
+	if (!evaluateConditions(option.conditions, context)) return state;
+	const assignments: SlotAssignment[] = Object.entries(participants.slotMap).map(([id, ids]) => ({
+		slot: { id, desc: id },
+		cards: ids.map((cardId) => getCard(state.cards, cardId)).filter((card): card is CardState => Boolean(card)),
+	}));
+	const synthetic: FamineAction = {
+		id: 0,
+		verb: "dialogueOption",
+		title: option.text,
+		desc: option.text,
+		createdAt: 0,
+		slots: [],
+		effects: option.effects ?? [],
+		timeCost: 0,
+	};
+	const result = applyActionEffects(config, synthetic, participants.source.id, assignments, state.cards, state.nextCardId, participants.target?.id);
+	const nextDialogue = result.dialogue ?? (option.next ? { ...participants.dialogue, nodeId: option.next } : undefined);
+	return appendLog({ ...state, cards: result.cards, nextCardId: result.nextCardId, dialogue: nextDialogue }, option.text);
+}
+
+export function advanceDialogue(config: FamineRefugeeConfig, state: FamineState): FamineState {
+	const participants = getDialogueParticipants(state);
+	if (!participants) return state;
+	const node = getDialogueNode(config, participants.dialogue.dialogueId, participants.dialogue.nodeId);
+	if (!node) return state;
+	if (getDialogueOptions(config, state).length > 0) return state;
+	if (node.next) {
+		return { ...state, dialogue: { ...participants.dialogue, nodeId: node.next } };
+	}
+	return { ...state, dialogue: undefined };
 }
 
 export function previewAction(
@@ -1075,17 +1180,18 @@ export function previewAction(
 	state: FamineState,
 	actionId: number,
 	targetId?: string,
+	assignments: Record<string, string[]> = {},
 ): string[] {
 	const action = findAction(config, actionId);
 	if (!action) return [];
-	if ((action.slots ?? []).length > 0) return ["需要先选择卡槽目标后预览"];
+	if ((action.slots ?? []).length > 0 && Object.keys(assignments).length === 0) return ["需要先选择卡槽目标后预览"];
 	const player = getPlayerCard(config, state);
 	if (!player) return [];
 	const before = deriveCard(config, player, state.cards).values;
 	const cloned = cloneFamineState(state);
 	const next = targetId
 		? applyIncomingAction(config, cloned, targetId, actionId)
-		: applyAction(config, cloned, actionId);
+		: applyAction(config, cloned, actionId, assignments);
 	const nextPlayer = getPlayerCard(config, next);
 	if (!nextPlayer) return [];
 	const after = deriveCard(config, nextPlayer, next.cards).values;
@@ -1123,6 +1229,7 @@ export function applyAction(
 	actionId: number,
 	assignments: Record<string, string[]> = {},
 ): FamineState {
+	if (state.dialogue) return state;
 	const player = getPlayerCard(config, state);
 	if (!player) return state;
 	const action = findAction(config, actionId);
@@ -1134,7 +1241,7 @@ export function applyAction(
 
 	const timeCost = getActionTimeCost(config, action, player, assignments, state.cards);
 	const result = applyActionEffects(config, action, player.id, resolved, state.cards, state.nextCardId);
-	let next = appendLog({ ...state, cards: result.cards, nextCardId: result.nextCardId }, action.title);
+	let next = appendLog({ ...state, cards: result.cards, nextCardId: result.nextCardId, dialogue: result.dialogue }, action.title);
 	next = advanceMinutes(config, next, timeCost);
 	return next;
 }
