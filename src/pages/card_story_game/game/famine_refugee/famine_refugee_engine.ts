@@ -88,12 +88,21 @@ function createTagInstance(config: FamineRefugeeConfig, tagId: number): TagInsta
 	return { tagId, values };
 }
 
-function matchesAttribute(actual: number, check: AttributeCheck): boolean {
-	if (typeof check.gt === "number" && !(actual > check.gt)) return false;
-	if (typeof check.gte === "number" && !(actual >= check.gte)) return false;
-	if (typeof check.lt === "number" && !(actual < check.lt)) return false;
-	if (typeof check.lte === "number" && !(actual <= check.lte)) return false;
-	if (typeof check.eq === "number" && actual !== check.eq) return false;
+function matchesAttribute(
+	actual: number,
+	check: AttributeCheck,
+	values: Record<number, AttributeValue>,
+	context: ConditionContext,
+): boolean {
+	const formulaContext = {
+		resolveCard: (id: string) => getCard(context.cards ?? [], id),
+		evaluateConditions: (conditions: Condition[]) => evaluateConditions(conditions, context),
+	};
+	if (check.gt !== undefined && !(actual > evaluateFormula(check.gt, values, formulaContext))) return false;
+	if (check.gte !== undefined && !(actual >= evaluateFormula(check.gte, values, formulaContext))) return false;
+	if (check.lt !== undefined && !(actual < evaluateFormula(check.lt, values, formulaContext))) return false;
+	if (check.lte !== undefined && !(actual <= evaluateFormula(check.lte, values, formulaContext))) return false;
+	if (check.eq !== undefined && actual !== evaluateFormula(check.eq, values, formulaContext)) return false;
 	return true;
 }
 
@@ -134,13 +143,22 @@ function evaluateAttributeChecks(condition: Condition, entity: EntitySnapshot, c
 					};
 					if (!check.refListsMatch.match || evaluateConditions(check.refListsMatch.match, nextContext)) matched++;
 				}
-				const count = check.refListsMatch.count;
-				const min = check.refListsMatch.min ?? 0;
-				const max = check.refListsMatch.max ?? Number.POSITIVE_INFINITY;
-				if (typeof count === "number" ? matched !== count : matched < min || matched > max) return false;
+				const formulaContext = {
+					resolveCard: (id: string) => getCard(context.cards ?? [], id),
+					evaluateConditions: (conditions: Condition[]) => evaluateConditions(conditions, context),
+				};
+				const evaluateQuantity = (expression: typeof check.refListsMatch.count): number | undefined => {
+					if (expression === undefined) return undefined;
+					return Math.max(0, Math.floor(evaluateFormula(expression, entity.values, formulaContext)));
+				};
+				const count = evaluateQuantity(check.refListsMatch.count);
+				const min = evaluateQuantity(check.refListsMatch.min) ?? 0;
+				const max = evaluateQuantity(check.refListsMatch.max) ?? Number.POSITIVE_INFINITY;
+				if (max < min) return false;
+				if (count !== undefined ? matched !== count : matched < min || matched > max) return false;
 				continue;
 			}
-			if (typeof value !== "number" || !matchesAttribute(value, check)) return false;
+			if (typeof value !== "number" || !matchesAttribute(value, check, entity.values, context)) return false;
 		}
 	}
 
@@ -298,11 +316,31 @@ function resolveEffect(config: FamineRefugeeConfig, call: EffectCall): InlineEff
 	return call;
 }
 
-export function getSlotRange(slot: ActionSlot): { min: number; max: number } {
-	if (typeof slot.count === "number") return { min: slot.count, max: slot.count };
-	const min = slot.min ?? 1;
-	const max = slot.max ?? min;
-	return { min, max };
+export function getSlotRange(
+	config: FamineRefugeeConfig,
+	slot: ActionSlot,
+	source: CardState,
+	cards: CardState[],
+): { min: number; max: number; valid: boolean } {
+	const derived = deriveCard(config, source, cards);
+	const formulaContext = {
+		resolveCard: (id: string) => getCard(cards, id),
+		evaluateConditions: (conditions: Condition[]) => evaluateConditions(conditions, {
+			sourceCard: snapshotFromDerived(derived, source),
+			cards,
+			config,
+		}),
+	};
+	const evaluateQuantity = (expression: typeof slot.count): number | undefined => {
+		if (expression === undefined) return undefined;
+		return Math.max(0, Math.floor(evaluateFormula(expression, source.values, formulaContext)));
+	};
+	const count = evaluateQuantity(slot.count);
+	if (count !== undefined) return { min: count, max: count, valid: true };
+	const min = evaluateQuantity(slot.min) ?? 1;
+	const max = evaluateQuantity(slot.max) ?? min;
+	if (max < min) return { min, max, valid: false };
+	return { min, max, valid: true };
 }
 
 function slotMatches(config: FamineRefugeeConfig, slot: ActionSlot, card: CardState, source: EntitySnapshot): boolean {
@@ -496,8 +534,8 @@ function validateAssignments(
 	for (let i = 0; i < (action.slots ?? []).length; i++) {
 		const slot = (action.slots ?? [])[i];
 		const ids = assignments[slot.id] ?? [];
-		const range = getSlotRange(slot);
-		if (ids.length < range.min || ids.length > range.max) return null;
+		const range = getSlotRange(config, slot, source, cards);
+		if (!range.valid || ids.length < range.min || ids.length > range.max) return null;
 		const assignedCards: CardState[] = [];
 		for (let j = 0; j < ids.length; j++) {
 			if (used.has(ids[j])) return null;
@@ -799,7 +837,11 @@ function runNpcBehaviors(config: FamineRefugeeConfig, state: FamineState): Famin
 			let valid = true;
 			for (let j = 0; j < (action.slots ?? []).length; j++) {
 				const slot = (action.slots ?? [])[j];
-				const range = getSlotRange(slot);
+				const range = getSlotRange(config, slot, npc, current.cards);
+				if (!range.valid) {
+					valid = false;
+					break;
+				}
 				const eligible = getEligibleCards(config, current, action, slot.id, npc).filter((card) => !used.has(card.id));
 				if (eligible.length < range.min) {
 					valid = false;
@@ -813,15 +855,21 @@ function runNpcBehaviors(config: FamineRefugeeConfig, state: FamineState): Famin
 			const assignmentMap: Record<string, string[]> = {};
 			for (let j = 0; j < assignments.length; j++) assignmentMap[assignments[j].slot.id] = assignments[j].cards.map((card) => card.id);
 			const actionCost = getActionTimeCost(config, action, npc, assignmentMap, current.cards);
+			const interval = Math.max(1, Math.ceil(evaluateFormula(behavior.decisionInterval, npc.values, {
+				resolveCard: (id: string) => getCard(current.cards, id),
+			})));
 			const result = applyActionEffects(config, action, npc.id, assignments, current.cards, current.nextCardId);
 			const nextCards = result.cards.map((card) => card.id === npc.id
-				? { ...card, nextBehaviorTime: current.time + Math.max(behavior.decisionInterval, actionCost) }
+				? { ...card, nextBehaviorTime: current.time + Math.max(interval, actionCost) }
 				: card);
 			current = appendLog({ ...current, cards: nextCards, nextCardId: result.nextCardId }, `${template.key}：${action.title}`);
 			acted = true;
 		}
 		if (!acted) {
-			current = { ...current, cards: current.cards.map((card) => card.id === npc.id ? { ...card, nextBehaviorTime: current.time + behavior.decisionInterval } : card) };
+			const interval = Math.max(1, Math.ceil(evaluateFormula(behavior.decisionInterval, npc.values, {
+				resolveCard: (id: string) => getCard(current.cards, id),
+			})));
+			current = { ...current, cards: current.cards.map((card) => card.id === npc.id ? { ...card, nextBehaviorTime: current.time + interval } : card) };
 		}
 	}
 	return current;

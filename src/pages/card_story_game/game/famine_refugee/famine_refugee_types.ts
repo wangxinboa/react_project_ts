@@ -1,5 +1,5 @@
 import type { AttributeValue } from "../../card_story_game_types/attribute_types.ts";
-import type { Formula } from "../../card_story_game_types/formula_types.ts";
+import type { NumberExpression } from "../../card_story_game_types/formula_types.ts";
 import type {
 	ActionSlot,
 	AttributeBinding,
@@ -43,7 +43,7 @@ export interface TagInstanceState {
 
 /** 原型动作：timeCost 和 slots 是实际运行必需字段。 */
 export type FamineAction = RuleAction & {
-	timeCost: Formula;
+	timeCost: NumberExpression;
 	slots: ActionSlot[];
 	effects: EffectCall[];
 };

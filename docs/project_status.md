@@ -32,13 +32,14 @@
 
 - 属性值支持 `number / cardRef / cardRefList`，统一存放在 `CardState.values`。
 - `location / carrier / backpack` 是属性，不是 CardState 硬编码字段。
-- Condition target 是对象 `{ card, slot? }`。
+- Condition target 是对象 `{ card, slot? }`；数字比较支持静态 number 或动态 NumberExpression。
 - AttributeCheck 支持：
   - `id`：number 属性；
   - `refId` + `refExists`：cardRef；
   - `refListId` + `refListsMatch`：cardRefList。
 - `refListsMatch` 支持 `match / count / min / max`，内部使用 `referencedCard`。
-- Formula 支持 `number / attr / add / sub / mul / div / clamp / normalize / refListsAttributeCount / refListsAttributeSum`。
+- 数字表达式：静态数字直接用 number；动态 Formula 使用 `literal / numberAttributeValue / floor / abs / add / sub / mul / div / clamp / normalize / refListsAttributeCount / refListsAttributeSum`。
+- 动态数量：ActionSlot 的 count/min/max、NpcBehavior.decisionInterval、refListsMatch 的 count/min/max 支持 NumberExpression；代码层统一 floor / 非负 / max>=min / decisionInterval>=1。
 - Effect 类型已拆分：
   - `attribute_effects.ts`
   - `tag_effects.ts`
@@ -48,7 +49,7 @@
   - `item_effects.ts`
   - `effect_types.ts` 统一导出并定义 `EffectKind / InlineEffect / EffectCall`。
 - Effect target 和 Condition target 一样使用 `{ card, slot? }` 对象。
-- 默认配置 schema 版本为 40。
+- 默认配置 schema 版本为 42。
 
 ## 已完成：原型
 

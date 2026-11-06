@@ -16,8 +16,9 @@ export function validateFormula(raw: unknown, path = "formula"): FormulaValidati
 }
 
 function validateNode(raw: unknown, path: string, issues: FormulaValidationIssue[]): void {
+	if (isFiniteNumber(raw)) return;
 	if (!isPlainObject(raw)) {
-		issues.push({ path, message: "必须是对象" });
+		issues.push({ path, message: "必须是数字或对象" });
 		return;
 	}
 
@@ -28,12 +29,16 @@ function validateNode(raw: unknown, path: string, issues: FormulaValidationIssue
 	}
 
 	switch (op) {
-		case "number":
+		case "literal":
 			if (!isFiniteNumber(raw.value)) {
 				issues.push({ path: `${path}.value`, message: "必须是有限数字" });
 			}
 			return;
-		case "attr":
+		case "floor":
+		case "abs":
+			validateNode(raw.value, `${path}.value`, issues);
+			return;
+		case "numberAttributeValue":
 			if (!isAttributeId(raw.attributeId)) {
 				issues.push({ path: `${path}.attributeId`, message: "必须是正整数属性 id" });
 			}
@@ -51,15 +56,11 @@ function validateNode(raw: unknown, path: string, issues: FormulaValidationIssue
 			}
 			return;
 		}
-		case "clamp": {
-			if (!isFiniteNumber(raw.min) || !isFiniteNumber(raw.max)) {
-				issues.push({ path: `${path}.min/max`, message: "必须是有限数字" });
-			} else if (raw.min > raw.max) {
-				issues.push({ path: `${path}.min/max`, message: "min 不能大于 max" });
-			}
+		case "clamp":
 			validateNode(raw.value, `${path}.value`, issues);
+			validateNode(raw.min, `${path}.min`, issues);
+			validateNode(raw.max, `${path}.max`, issues);
 			return;
-		}
 		case "refListsAttributeSum":
 			if (!isAttributeId(raw.refAttributeId)) {
 				issues.push({ path: `${path}.refAttributeId`, message: "必须是正整数属性 id" });
@@ -77,11 +78,8 @@ function validateNode(raw: unknown, path: string, issues: FormulaValidationIssue
 			if (!isAttributeId(raw.attributeId)) {
 				issues.push({ path: `${path}.attributeId`, message: "必须是正整数属性 id" });
 			}
-			if (!isFiniteNumber(raw.min) || !isFiniteNumber(raw.max)) {
-				issues.push({ path: `${path}.min/max`, message: "必须是有限数字" });
-			} else if (raw.min >= raw.max) {
-				issues.push({ path: `${path}.min/max`, message: "min 必须小于 max" });
-			}
+			validateNode(raw.min, `${path}.min`, issues);
+			validateNode(raw.max, `${path}.max`, issues);
 			return;
 		default:
 			issues.push({ path: `${path}.op`, message: `未知操作：${op}` });

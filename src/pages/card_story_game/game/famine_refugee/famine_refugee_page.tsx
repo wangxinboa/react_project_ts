@@ -209,15 +209,16 @@ export default function FamineRefugeePage() {
 	}, [placementAction, activeSlotId]);
 
 	const canExecute = useMemo(() => {
-		if (!placementAction) return false;
+		if (!placementAction || !config || !playerView || !game) return false;
 		for (let i = 0; i < (placementAction.slots ?? []).length; i++) {
 			const slot = (placementAction.slots ?? [])[i];
-			const range = getSlotRange(slot);
+			const range = getSlotRange(config, slot, playerView.card, game.cards);
+			if (!range.valid) return false;
 			const count = (slotAssignments[slot.id] ?? []).length;
 			if (count < range.min || count > range.max) return false;
 		}
 		return true;
-	}, [placementAction, slotAssignments]);
+	}, [placementAction, slotAssignments, config, playerView, game]);
 
 	const handleActionClick = useCallback(
 		(action: FamineAction) => {
@@ -249,7 +250,8 @@ export default function FamineRefugeePage() {
 			if (!placementAction) return;
 			const slot = (placementAction.slots ?? []).find((item) => item.id === slotId);
 			if (!slot) return;
-			const range = getSlotRange(slot);
+			if (!config || !playerView || !game) return;
+			const range = getSlotRange(config, slot, playerView.card, game.cards);
 			setSlotAssignments((prev) => {
 				const current = prev[slotId] ?? [];
 				if (current.includes(cardId) || current.length >= range.max) return prev;
@@ -263,17 +265,17 @@ export default function FamineRefugeePage() {
 			});
 			setActiveSlotId(slotId);
 		},
-		[placementAction],
+		[placementAction, config, playerView, game],
 	);
 
 	const handleCardClick = useCallback(
 		(cardId: string) => {
 			if (placementAction) {
-				if (!config || !game) return;
+				if (!config || !game || !playerView) return;
 				const preferred = activeSlot;
 				if (preferred) {
 					const eligible = slotEligible[preferred.id] ?? [];
-					const range = getSlotRange(preferred);
+					const range = getSlotRange(config, preferred, playerView.card, game.cards);
 					const assigned = slotAssignments[preferred.id] ?? [];
 					for (let i = 0; i < eligible.length; i++) {
 						if (eligible[i].id === cardId && assigned.length < range.max) {
@@ -285,7 +287,7 @@ export default function FamineRefugeePage() {
 				for (let i = 0; i < (placementAction.slots ?? []).length; i++) {
 					const slot = (placementAction.slots ?? [])[i];
 					const eligible = slotEligible[slot.id] ?? [];
-					const range = getSlotRange(slot);
+					const range = getSlotRange(config, slot, playerView.card, game.cards);
 					const assigned = slotAssignments[slot.id] ?? [];
 					for (let j = 0; j < eligible.length; j++) {
 						if (eligible[j].id === cardId && assigned.length < range.max) {
@@ -539,7 +541,7 @@ export default function FamineRefugeePage() {
 							<div className={style.inspectorSectionTitle}>卡槽 · {placementAction.title}</div>
 							<div className={style.slotList}>
 								{(placementAction.slots ?? []).map((slot) => {
-									const range = getSlotRange(slot);
+									const range = getSlotRange(config, slot, playerView.card, game.cards);
 									const assigned = getSlotCards(slot);
 									const active = activeSlot?.id === slot.id;
 									return (

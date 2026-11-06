@@ -1,10 +1,11 @@
 import type { AttributeBinding } from "./attribute_types.ts";
 import type { CardType } from "./condition_types.ts";
+import type { NumberExpression } from "./formula_types.ts";
 
 /** NPC 自主行为配置；动作池复用 outgoing，按数组顺序尝试。 */
 export interface NpcBehavior {
-	/** 决策间隔（分钟） */
-	decisionInterval: number;
+	/** 决策间隔（分钟）；支持 NumberExpression，求值后至少 1 分钟 */
+	decisionInterval: NumberExpression;
 }
 
 /** 卡牌模板。模板只决定初始状态，运行时会生成独立 CardState。 */

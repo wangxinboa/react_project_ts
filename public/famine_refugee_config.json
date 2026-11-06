@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 40,
+	"schemaVersion": 42,
 	"allTags": [
 		{
 			"id": 1,
@@ -364,8 +364,14 @@
 			"valueType": "number",
 			"formula": {
 				"op": "clamp",
-				"min": 0,
-				"max": 1,
+				"min": {
+					"op": "literal",
+					"value": 0
+				},
+				"max": {
+					"op": "literal",
+					"value": 1
+				},
 				"value": {
 					"op": "add",
 					"args": [
@@ -373,13 +379,19 @@
 							"op": "mul",
 							"args": [
 								{
-									"op": "number",
+									"op": "literal",
 									"value": 0.35
 								},
 								{
 									"op": "normalize",
-									"min": 0,
-									"max": 100,
+									"min": {
+										"op": "literal",
+										"value": 0
+									},
+									"max": {
+										"op": "literal",
+										"value": 100
+									},
 									"attributeId": 3
 								}
 							]
@@ -388,20 +400,26 @@
 							"op": "mul",
 							"args": [
 								{
-									"op": "number",
+									"op": "literal",
 									"value": 0.2
 								},
 								{
 									"op": "sub",
 									"args": [
 										{
-											"op": "number",
+											"op": "literal",
 											"value": 1
 										},
 										{
 											"op": "normalize",
-											"min": 0,
-											"max": 100,
+											"min": {
+												"op": "literal",
+												"value": 0
+											},
+											"max": {
+												"op": "literal",
+												"value": 100
+											},
 											"attributeId": 4
 										}
 									]
@@ -412,13 +430,19 @@
 							"op": "mul",
 							"args": [
 								{
-									"op": "number",
+									"op": "literal",
 									"value": 0.2
 								},
 								{
 									"op": "normalize",
-									"min": 0,
-									"max": 100,
+									"min": {
+										"op": "literal",
+										"value": 0
+									},
+									"max": {
+										"op": "literal",
+										"value": 100
+									},
 									"attributeId": 2
 								}
 							]
@@ -427,13 +451,19 @@
 							"op": "mul",
 							"args": [
 								{
-									"op": "number",
+									"op": "literal",
 									"value": 0.1
 								},
 								{
 									"op": "normalize",
-									"min": 0,
-									"max": 100,
+									"min": {
+										"op": "literal",
+										"value": 0
+									},
+									"max": {
+										"op": "literal",
+										"value": 100
+									},
 									"attributeId": 1
 								}
 							]
@@ -443,12 +473,18 @@
 							"args": [
 								{
 									"op": "normalize",
-									"min": 0,
-									"max": 100,
+									"min": {
+										"op": "literal",
+										"value": 0
+									},
+									"max": {
+										"op": "literal",
+										"value": 100
+									},
 									"attributeId": 5
 								},
 								{
-									"op": "attr",
+									"op": "numberAttributeValue",
 									"attributeId": 11
 								}
 							]
@@ -458,12 +494,18 @@
 							"args": [
 								{
 									"op": "normalize",
-									"min": 0,
-									"max": 100,
+									"min": {
+										"op": "literal",
+										"value": 0
+									},
+									"max": {
+										"op": "literal",
+										"value": 100
+									},
 									"attributeId": 6
 								},
 								{
-									"op": "attr",
+									"op": "numberAttributeValue",
 									"attributeId": 12
 								}
 							]
@@ -612,7 +654,7 @@
 				"op": "add",
 				"args": [
 					{
-						"op": "attr",
+						"op": "numberAttributeValue",
 						"attributeId": 30
 					},
 					{
@@ -674,7 +716,7 @@
 				"op": "add",
 				"args": [
 					{
-						"op": "attr",
+						"op": "numberAttributeValue",
 						"attributeId": 31
 					},
 					{
@@ -1179,7 +1221,7 @@
 			"verb": "rest",
 			"desc": "恢复体力，同时降低饱食和损伤。",
 			"timeCost": {
-				"op": "number",
+				"op": "literal",
 				"value": 120
 			},
 			"conditions": [
@@ -1243,7 +1285,7 @@
 				"op": "add",
 				"args": [
 					{
-						"op": "number",
+						"op": "literal",
 						"value": 240
 					},
 					{
@@ -1253,17 +1295,17 @@
 								"op": "sub",
 								"args": [
 									{
-										"op": "number",
+										"op": "literal",
 										"value": 100
 									},
 									{
-										"op": "attr",
+										"op": "numberAttributeValue",
 										"attributeId": 2
 									}
 								]
 							},
 							{
-								"op": "number",
+								"op": "literal",
 								"value": 1.5
 							}
 						]
@@ -1326,7 +1368,7 @@
 			"verb": "wound",
 			"desc": "受到伤害，损伤上升并附加流血。",
 			"timeCost": {
-				"op": "number",
+				"op": "literal",
 				"value": 60
 			},
 			"conditions": [
@@ -1379,7 +1421,7 @@
 			"verb": "ritual",
 			"desc": "提升灵性与污染，可能引发异化。",
 			"timeCost": {
-				"op": "number",
+				"op": "literal",
 				"value": 60
 			},
 			"conditions": [
@@ -1456,11 +1498,11 @@
 				"op": "add",
 				"args": [
 					{
-						"op": "number",
+						"op": "literal",
 						"value": 60
 					},
 					{
-						"op": "number",
+						"op": "literal",
 						"value": -15,
 						"conditions": [
 							{
@@ -1590,7 +1632,7 @@
 			"verb": "metabolize",
 			"desc": "每小时结算饱食、体力与生命。",
 			"timeCost": {
-				"op": "number",
+				"op": "literal",
 				"value": 0
 			},
 			"conditions": [
@@ -1734,7 +1776,7 @@
 			"verb": "spoil",
 			"desc": "食物新鲜度每小时下降。",
 			"timeCost": {
-				"op": "number",
+				"op": "literal",
 				"value": 0
 			},
 			"effects": [
@@ -1761,7 +1803,7 @@
 			"verb": "gatherWood",
 			"desc": "收集一份木柴。",
 			"timeCost": {
-				"op": "number",
+				"op": "literal",
 				"value": 30
 			},
 			"conditions": [
@@ -1793,7 +1835,7 @@
 			"verb": "cookBread",
 			"desc": "消耗面包与木柴，制作烤面包。",
 			"timeCost": {
-				"op": "number",
+				"op": "literal",
 				"value": 30
 			},
 			"conditions": [
@@ -1883,7 +1925,7 @@
 			"title": "吃掉面包",
 			"desc": "直接吃掉这张面包，恢复饱食和体力。",
 			"timeCost": {
-				"op": "number",
+				"op": "literal",
 				"value": 60
 			},
 			"conditions": [
@@ -1936,7 +1978,7 @@
 			"title": "进入森林",
 			"desc": "沿小路进入森林。",
 			"timeCost": {
-				"op": "number",
+				"op": "literal",
 				"value": 30
 			},
 			"conditions": [
@@ -1972,7 +2014,7 @@
 			"title": "返回村庄",
 			"desc": "沿小路返回村庄。",
 			"timeCost": {
-				"op": "number",
+				"op": "literal",
 				"value": 30
 			},
 			"conditions": [
@@ -2008,7 +2050,7 @@
 			"title": "拾起",
 			"desc": "把物品放进背包。",
 			"timeCost": {
-				"op": "number",
+				"op": "literal",
 				"value": 5
 			},
 			"conditions": [
@@ -2054,7 +2096,7 @@
 			"title": "放下",
 			"desc": "把物品放到当前地点。",
 			"timeCost": {
-				"op": "number",
+				"op": "literal",
 				"value": 5
 			},
 			"conditions": [

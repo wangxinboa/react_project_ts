@@ -1,4 +1,4 @@
-import type { Formula } from "./formula_types.ts";
+import type { NumberExpression } from "./formula_types.ts";
 import type { Condition } from "./condition_types.ts";
 import type { EffectCall } from "./effect_types/effect_types.ts";
 
@@ -6,11 +6,12 @@ import type { EffectCall } from "./effect_types/effect_types.ts";
 export interface ActionSlot {
 	id: string;
 	desc: string;
-	/** 精确数量；与 min/max 互斥 */
-	count?: number;
-	min?: number;
-	max?: number;
-	/** 槽内卡牌必须满足的条件；target.card 通常为 slot */
+	/** 精确数量；支持 NumberExpression，求值后 floor 且非负；与 min/max 互斥 */
+	count?: NumberExpression;
+	min?: NumberExpression;
+	/** 动态数量上限；求值后 floor 且非负，max < min 视为无效 */
+	max?: NumberExpression;
+	/** 动态数量下限；与 count 互斥，求值后 floor 且非负 */
 	conditions?: Condition[];
 }
 
@@ -24,7 +25,7 @@ export interface RuleAction {
 	desc: string;
 	createdAt: number;
 	/** 时间计算公式；节点 conditions 不满足时该节点为 0 */
-	timeCost?: Formula;
+	timeCost?: NumberExpression;
 	/** 动作可用条件；普通动作用 sourceCard，incoming 可用 targetCard，数组内 AND */
 	conditions?: Condition[];
 	/** 命名目标槽 */

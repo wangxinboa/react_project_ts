@@ -1,6 +1,6 @@
 import type { AttributeValue, Condition } from "../card_story_game_types/index.ts";
 import { getNumberAttribute } from "../game/famine_refugee/attribute_value.ts";
-import type { Formula } from "../card_story_game_types/formula_types.ts";
+import type { NumberExpression } from "../card_story_game_types/formula_types.ts";
 
 export interface FormulaContext {
 	evaluateConditions?: (conditions: Condition[]) => boolean;
@@ -9,18 +9,23 @@ export interface FormulaContext {
 }
 
 export function evaluateFormula(
-	formula: Formula,
+	formula: NumberExpression,
 	values: Record<number, AttributeValue>,
 	context?: FormulaContext,
 ): number {
+	if (typeof formula === "number") return formula;
 	if (formula.conditions && formula.conditions.length > 0) {
 		if (!context?.evaluateConditions || !context.evaluateConditions(formula.conditions)) return 0;
 	}
 	switch (formula.op) {
-		case "number":
+		case "literal":
 			return formula.value;
-		case "attr":
+		case "numberAttributeValue":
 			return getNumberAttribute(values, formula.attributeId);
+		case "floor":
+			return Math.floor(evaluateFormula(formula.value, values, context));
+		case "abs":
+			return Math.abs(evaluateFormula(formula.value, values, context));
 		case "add": {
 			let total = 0;
 			for (let i = 0; i < formula.args.length; i++) {
@@ -68,13 +73,18 @@ export function evaluateFormula(
 			const list = values[formula.refAttributeId];
 			return Array.isArray(list) ? list.length : 0;
 		}
-		case "clamp":
-			return Math.min(formula.max, Math.max(formula.min, evaluateFormula(formula.value, values, context)));
+		case "clamp": {
+			const min = evaluateFormula(formula.min, values, context);
+			const max = evaluateFormula(formula.max, values, context);
+			return Math.min(max, Math.max(min, evaluateFormula(formula.value, values, context)));
+		}
 		case "normalize": {
-			const range = formula.max - formula.min;
+			const min = evaluateFormula(formula.min, values, context);
+			const max = evaluateFormula(formula.max, values, context);
+			const range = max - min;
 			if (range === 0) return 0;
 			const raw = getNumberAttribute(values, formula.attributeId);
-			return (raw - formula.min) / range;
+			return (raw - min) / range;
 		}
 	}
 }

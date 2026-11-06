@@ -1,22 +1,26 @@
 import type { Condition } from "./condition_types.ts";
 
 /**
- * 公式 AST 节点。
- * 所有节点都可以带 conditions；条件不满足时该节点按 0 计算。
+ * 动态数字表达式。
+ * 静态数字直接使用 number，不再使用 { op: "number" }。
  */
 export type FormulaNode =
-	| { op: "number"; value: number }
-	| { op: "attr"; attributeId: number }
+	| { op: "literal"; value: number }
+	| { op: "numberAttributeValue"; attributeId: number }
+	| { op: "floor" | "abs"; value: Formula }
 	| { op: "add" | "sub" | "mul" | "div"; args: Formula[] }
-	| { op: "clamp"; value: Formula; min: number; max: number }
-	| { op: "normalize"; attributeId: number; min: number; max: number }
+	| { op: "clamp"; value: Formula; min: Formula; max: Formula }
+	| { op: "normalize"; attributeId: number; min: Formula; max: Formula }
 	| { op: "refListsAttributeSum"; refAttributeId: number; valueAttributeId: number }
 	| { op: "refListsAttributeCount"; refAttributeId: number };
 
-/** 公式 = AST 节点 + 可选条件。 */
+/** 公式 = 动态节点 + 可选条件。 */
 export type Formula = FormulaNode & {
 	conditions?: Condition[];
 };
+
+/** 静态数字或动态公式。 */
+export type NumberExpression = number | Formula;
 
 /** 公式结构校验错误。 */
 export interface FormulaValidationIssue {

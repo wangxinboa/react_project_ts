@@ -183,23 +183,36 @@ effect target 和 effect condition target 是两件事：
 
 ## 4. FormulaNode
 
-FormulaNode 自身没有 `TargetRef` 字段。
+FormulaNode 自身没有 `TargetRef` 字段。静态数字直接用 number；只有动态计算才使用 FormulaNode。
 
 ```ts
 export type FormulaNode =
-	| { op: "number"; value: number }
-	| { op: "attr"; attributeId: number }
+	| { op: "literal"; value: number }
+	| { op: "numberAttributeValue"; attributeId: number }
+	| { op: "floor" | "abs"; value: Formula }
 	| { op: "refListsAttributeSum"; refAttributeId: number; valueAttributeId: number }
 	| { op: "refListsAttributeCount"; refAttributeId: number }
 	| ...;
 ```
 
-### 4.1 attr
+### 4.1 numberAttributeValue
 
 默认读取 sourceCard 的数字属性。
 
 ```json
-{ "op": "attr", "attributeId": 3 }
+{ "op": "numberAttributeValue", "attributeId": 3 }
+```
+
+静态数字直接写：
+
+```json
+100
+```
+
+带条件的常量使用 `literal`：
+
+```json
+{ "op": "literal", "value": -15, "conditions": [...] }
 ```
 
 ### 4.2 refListsAttributeSum / refListsAttributeCount
@@ -229,7 +242,7 @@ Formula 节点的 conditions 使用与所在环境相同的 Condition 上下文�
 
 ```json
 {
-  "op": "attr",
+  "op": "numberAttributeValue",
   "attributeId": 15,
   "conditions": [
     {

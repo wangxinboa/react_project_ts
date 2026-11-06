@@ -1,3 +1,4 @@
+import type { NumberExpression } from "./formula_types.ts";
 /**
  * 卡牌类型。
  * 只描述卡牌的结构角色，不直接决定行为。
@@ -27,26 +28,26 @@ export type AttributeCheck = {
 	/** cardRefList 属性 id */
 	refListId?: number;
 	/** 大于 */
-	gt?: number;
+	gt?: NumberExpression;
 	/** 大于等于 */
-	gte?: number;
+	gte?: NumberExpression;
 	/** 小于 */
-	lt?: number;
+	lt?: NumberExpression;
 	/** 小于等于 */
-	lte?: number;
+	lte?: NumberExpression;
 	/** 等于 */
-	eq?: number;
+	eq?: NumberExpression;
 	/** cardRef 是否存在 */
 	refExists?: boolean;
 	/** cardRefList 引用卡匹配；match 内用 referencedCard 指向当前引用卡 */
 	refListsMatch?: {
 		match?: Condition[];
 		/** 匹配数量下限；未写 count 时生效 */
-		min?: number;
+		min?: NumberExpression;
 		/** 匹配数量上限；未写 count 时生效 */
-		max?: number;
-		/** 精确匹配数量，优先于 min/max */
-		count?: number;
+		max?: NumberExpression;
+		/** 精确匹配数量；求值后 floor 且非负，优先于 min/max */
+		count?: NumberExpression;
 	};
 };
 
