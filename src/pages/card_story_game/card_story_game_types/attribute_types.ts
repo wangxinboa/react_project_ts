@@ -1,4 +1,4 @@
-import type { Formula } from "./formula_types.ts";
+import type { Formula, NumberExpression } from "./formula_types.ts";
 
 /** 属性值：number / cardRef / cardRefList。 */
 export type AttributeValue = number | string | string[];
@@ -11,10 +11,16 @@ export interface AttributeBinding {
 	value: AttributeValue;
 }
 
+export interface NumberBounds {
+	/** 硬下界，写入时不得低于 */
+	min?: NumberExpression;
+	/** 硬上界，写入时不得高于 */
+	max?: NumberExpression;
+}
+
 /** number 类型属性的专属参数。其他 valueType 以后可以有各自的参数对象。 */
 export interface NumberAttributeTypeParams {
-	min?: number;
-	max?: number;
+	bounds?: NumberBounds;
 }
 
 /** 全局属性定义，卡牌模板和标签共用。 */

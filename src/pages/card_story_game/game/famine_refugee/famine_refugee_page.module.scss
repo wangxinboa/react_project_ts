@@ -661,3 +661,22 @@
 .backpackItem:hover {
 	border-color: #c9a227;
 }
+
+.actionPreview {
+	min-width: 180px;
+	max-width: 280px;
+	padding: 7px 9px;
+	border: 1px solid #4a443b;
+	border-radius: 4px;
+	background: #15120f;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+	color: #bdb4a5;
+	font-size: 10px;
+	line-height: 1.6;
+}
+
+.actionPreviewTitle {
+	margin-bottom: 3px;
+	color: #c9a227;
+	font-size: 11px;
+}

@@ -48,6 +48,13 @@ export const editorTheme: ThemeConfig = {
 			primaryShadow: "none",
 			dangerShadow: "none",
 		},
+		Popover: {
+			colorBgElevated: "#1a1714",
+			colorText: "#d9d2c7",
+			colorTextHeading: "#e6ddcc",
+			// Popover 内部布局 token，默认 12；公开类型未暴露
+			innerPadding: 0,
+		} as NonNullable<ThemeConfig["components"]>["Popover"],
 		Menu: {
 			itemBorderRadius: 3,
 			itemHeight: 40,

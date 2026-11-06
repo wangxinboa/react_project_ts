@@ -1,5 +1,6 @@
 import { evaluateFormula } from "../../formula/formula_eval.ts";
-import type { AttributeValue, CardType, TargetRef } from "../../card_story_game_types/index.ts";
+import type { FormulaContext } from "../../formula/formula_eval.ts";
+import type { AttributeValue, CardType, NumberExpression, TargetRef } from "../../card_story_game_types/index.ts";
 import { getNumberAttribute, getNumberValues, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import type {
 	ActionSlot,
@@ -94,8 +95,8 @@ function matchesAttribute(
 	values: Record<number, AttributeValue>,
 	context: ConditionContext,
 ): boolean {
-	const formulaContext = {
-		resolveCard: (id: string) => getCard(context.cards ?? [], id),
+	const formulaContext: FormulaContext = {
+		...createFormulaContext(context.config, context.cards ?? []),
 		evaluateConditions: (conditions: Condition[]) => evaluateConditions(conditions, context),
 	};
 	if (check.gt !== undefined && !(actual > evaluateFormula(check.gt, values, formulaContext))) return false;
@@ -143,8 +144,8 @@ function evaluateAttributeChecks(condition: Condition, entity: EntitySnapshot, c
 					};
 					if (!check.refListsMatch.match || evaluateConditions(check.refListsMatch.match, nextContext)) matched++;
 				}
-				const formulaContext = {
-					resolveCard: (id: string) => getCard(context.cards ?? [], id),
+				const formulaContext: FormulaContext = {
+					...createFormulaContext(context.config, context.cards ?? []),
 					evaluateConditions: (conditions: Condition[]) => evaluateConditions(conditions, context),
 				};
 				const evaluateQuantity = (expression: typeof check.refListsMatch.count): number | undefined => {
@@ -278,9 +279,7 @@ export function deriveCard(
 	for (let i = 0; i < config.allAttributes.length; i++) {
 		const definition = config.allAttributes[i];
 		if (definition.kind === "derived" && definition.formula) {
-			values[definition.id] = evaluateFormula(definition.formula, values, {
-				resolveCard: (id) => getCard(cards, id),
-			});
+			values[definition.id] = evaluateFormula(definition.formula, values, createFormulaContext(config, cards));
 		}
 	}
 	const numericValues = getNumberValues(values);
@@ -323,8 +322,8 @@ export function getSlotRange(
 	cards: CardState[],
 ): { min: number; max: number; valid: boolean } {
 	const derived = deriveCard(config, source, cards);
-	const formulaContext = {
-		resolveCard: (id: string) => getCard(cards, id),
+	const formulaContext: FormulaContext = {
+		...createFormulaContext(config, cards),
 		evaluateConditions: (conditions: Condition[]) => evaluateConditions(conditions, {
 			sourceCard: snapshotFromDerived(derived, source),
 			cards,
@@ -444,11 +443,35 @@ export function getActionTimeCost(
 	return Number.isFinite(result) ? Math.max(0, Math.ceil(result)) : 0;
 }
 
+function resolveNumberBounds(
+	definition: { typeParams?: { bounds?: { min?: NumberExpression; max?: NumberExpression } } },
+	values: Record<number, AttributeValue>,
+	context?: FormulaContext,
+): { min?: number; max?: number } {
+	const bounds = definition.typeParams?.bounds;
+	if (!bounds) return {};
+	return {
+		min: bounds.min === undefined ? undefined : evaluateFormula(bounds.min, values, context),
+		max: bounds.max === undefined ? undefined : evaluateFormula(bounds.max, values, context),
+	};
+}
+
+function evaluateChangeNumber(
+	expression: NumberExpression | undefined,
+	values: Record<number, AttributeValue>,
+	context?: FormulaContext,
+	fallback = 0,
+): number {
+	if (expression === undefined) return fallback;
+	return evaluateFormula(expression, values, context);
+}
+
 function applyChangeAttributes(
 	config: FamineRefugeeConfig,
 	card: CardState,
-	changes: Array<{ attributeId: number; delta?: number; set?: number; conditions?: Condition[] }>,
+	changes: Array<{ attributeId: number; delta?: NumberExpression; set?: NumberExpression; conditions?: Condition[] }>,
 	evaluateChangeConditions?: (conditions: Condition[]) => boolean,
+	formulaContext?: FormulaContext,
 ): CardState {
 	const values = { ...card.values };
 	for (let i = 0; i < changes.length; i++) {
@@ -457,9 +480,12 @@ function applyChangeAttributes(
 		const definition = config.allAttributes.find((attribute) => attribute.id === change.attributeId);
 		if (!definition || definition.kind !== "base") continue;
 		const current = getNumberAttribute(values, change.attributeId);
-		let next = change.set ?? current + (change.delta ?? 0);
-		if (typeof definition.typeParams?.min === "number") next = Math.max(definition.typeParams?.min, next);
-		if (typeof definition.typeParams?.max === "number") next = Math.min(definition.typeParams?.max, next);
+		const set = change.set === undefined ? undefined : evaluateChangeNumber(change.set, values, formulaContext);
+		const delta = evaluateChangeNumber(change.delta, values, formulaContext, 0);
+		let next = set ?? current + delta;
+		const bounds = resolveNumberBounds(definition, values, formulaContext);
+		if (bounds.min !== undefined) next = Math.max(bounds.min, next);
+		if (bounds.max !== undefined) next = Math.min(bounds.max, next);
 		values[change.attributeId] = next;
 	}
 	return { ...card, values };
@@ -470,8 +496,9 @@ function applyCardEffect(
 	card: CardState,
 	effect: InlineEffect,
 	evaluateChangeConditions?: (conditions: Condition[]) => boolean,
+	formulaContext?: FormulaContext,
 ): CardState {
-	if (effect.kind === "changeAttributes") return applyChangeAttributes(config, card, effect.changes, evaluateChangeConditions);
+	if (effect.kind === "changeAttributes") return applyChangeAttributes(config, card, effect.changes, evaluateChangeConditions, formulaContext);
 	if (effect.kind === "addTag") {
 		for (let i = 0; i < card.tags.length; i++) {
 			if (card.tags[i].tagId === effect.tagId) return card;
@@ -514,6 +541,19 @@ function replaceCard(cards: CardState[], card: CardState): CardState[] {
 function getCard(cards: CardState[], id: string): CardState | null {
 	for (let i = 0; i < cards.length; i++) if (cards[i].id === id) return cards[i];
 	return null;
+}
+
+function createFormulaContext(config: FamineRefugeeConfig | undefined, cards: CardState[]): FormulaContext {
+	const context: FormulaContext = {
+		resolveCard: (id) => getCard(cards, id),
+	};
+	context.getAttributeBound = (attributeId, boundary, values) => {
+		const definition = config?.allAttributes.find((attribute) => attribute.id === attributeId);
+		const expression = definition?.typeParams?.bounds?.[boundary];
+		if (expression === undefined) return undefined;
+		return evaluateFormula(expression, values, context);
+	};
+	return context;
 }
 
 interface SlotAssignment {
@@ -607,6 +647,12 @@ function applyTargetedEffect(runtime: EffectRuntime, effect: InlineEffect): void
 		const updated = applyCardEffect(runtime.config, card, effect, (conditions) => {
 			const changeContext = getConditionContext(runtime.config, conditions, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, card, runtime.slotMap, runtime.cards);
 			return evaluateConditions(conditions, changeContext);
+		}, {
+			...createFormulaContext(runtime.config, runtime.cards),
+			evaluateConditions: (conditions) => {
+				const changeContext = getConditionContext(runtime.config, conditions, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, card, runtime.slotMap, runtime.cards);
+				return evaluateConditions(conditions, changeContext);
+			},
 		});
 		runtime.cards = replaceCard(runtime.cards, updated);
 	}
@@ -698,6 +744,40 @@ const effectHandlers: Record<InlineEffect["kind"], EffectHandler> = {
 	moveItemCard: applyMoveItemEffect,
 };
 
+function planActionEffects(
+	config: FamineRefugeeConfig,
+	action: FamineAction,
+	sourceId: string,
+	assignments: SlotAssignment[],
+	cards: CardState[],
+	targetId?: string,
+): { effects: InlineEffect[]; slotMap: Record<string, string[]> } {
+	const slotMap: Record<string, string[]> = {};
+	for (let i = 0; i < assignments.length; i++) slotMap[assignments[i].slot.id] = assignments[i].cards.map((card) => card.id);
+	const source = getCard(cards, sourceId);
+	const target = targetId ? getCard(cards, targetId) : null;
+	if (!source) return { effects: [], slotMap };
+	const effects: InlineEffect[] = [];
+	for (let i = 0; i < (action.effects ?? []).length; i++) {
+		const effect = resolveEffect(config, (action.effects ?? [])[i]);
+		if (!effect) continue;
+		const context = getConditionContext(config, effect.conditions, source, target, null, slotMap, cards);
+		if (!evaluateConditions(effect.conditions, context)) continue;
+		let planned: InlineEffect = { ...effect, conditions: [] };
+		if (effect.kind === "changeAttributes") {
+			const changes = effect.changes.filter((change) => {
+				if (!change.conditions) return true;
+				const changeContext = getConditionContext(config, change.conditions, source, target, source, slotMap, cards);
+				return evaluateConditions(change.conditions, changeContext);
+			});
+			if (changes.length === 0) continue;
+			planned = { ...effect, changes: changes.map((change) => ({ ...change, conditions: undefined })), conditions: [] };
+		}
+		effects.push(planned);
+	}
+	return { effects, slotMap };
+}
+
 function applyActionEffects(
 	config: FamineRefugeeConfig,
 	action: FamineAction,
@@ -707,14 +787,9 @@ function applyActionEffects(
 	nextCardId: number,
 	targetId?: string,
 ): { cards: CardState[]; nextCardId: number } {
-	const slotMap: Record<string, string[]> = {};
-	for (let i = 0; i < assignments.length; i++) slotMap[assignments[i].slot.id] = assignments[i].cards.map((card) => card.id);
-	const runtime: EffectRuntime = { config, sourceId, targetId, slotMap, cards: cards.slice(), nextCardId, removeIds: new Set<string>() };
-	for (let i = 0; i < (action.effects ?? []).length; i++) {
-		const effect = resolveEffect(config, (action.effects ?? [])[i]);
-		if (!effect) continue;
-		effectHandlers[effect.kind](runtime, effect);
-	}
+	const plan = planActionEffects(config, action, sourceId, assignments, cards, targetId);
+	const runtime: EffectRuntime = { config, sourceId, targetId, slotMap: plan.slotMap, cards: cards.slice(), nextCardId, removeIds: new Set<string>() };
+	for (let i = 0; i < plan.effects.length; i++) effectHandlers[plan.effects[i].kind](runtime, plan.effects[i]);
 	if (runtime.removeIds.size > 0) {
 		runtime.cards = runtime.cards.filter((card) => !runtime.removeIds.has(card.id));
 		for (let i = 0; i < runtime.cards.length; i++) {
@@ -746,7 +821,9 @@ function applyTagAutoEffects(
 		if (!evaluateConditions(effect.conditions, { sourceTag: tagSnapshot, host: hostSnapshot })) continue;
 		const tagCondition = (conditions: Condition[]): boolean => evaluateConditions(conditions, { sourceTag: tagSnapshot, host: snapshotFromDerived(deriveCard(config, currentHost)) });
 		if (effect.kind === "changeAttributes" && effect.target?.card === "host") {
-			currentHost = applyChangeAttributes(config, currentHost, effect.changes, tagCondition);
+			currentHost = applyChangeAttributes(config, currentHost, effect.changes, tagCondition, {
+				evaluateConditions: tagCondition,
+			});
 			continue;
 		}
 		if (effect.kind === "changeAttributes" && (effect.target?.card === "sourceTag" || !effect.target)) {
@@ -757,9 +834,12 @@ function applyTagAutoEffects(
 				const definition = config.allAttributes.find((attribute) => attribute.id === change.attributeId);
 				if (!definition) continue;
 				const current = getNumberAttribute(values, change.attributeId);
-				let next = change.set ?? current + (change.delta ?? 0);
-				if (typeof definition.typeParams?.min === "number") next = Math.max(definition.typeParams?.min, next);
-				if (typeof definition.typeParams?.max === "number") next = Math.min(definition.typeParams?.max, next);
+				const set = change.set === undefined ? undefined : evaluateChangeNumber(change.set, values, { evaluateConditions: tagCondition });
+				const delta = evaluateChangeNumber(change.delta, values, { evaluateConditions: tagCondition }, 0);
+				let next = set ?? current + delta;
+				const bounds = resolveNumberBounds(definition, values, { evaluateConditions: tagCondition });
+				if (bounds.min !== undefined) next = Math.max(bounds.min, next);
+				if (bounds.max !== undefined) next = Math.min(bounds.max, next);
 				values[change.attributeId] = next;
 			}
 			currentTag = { ...currentTag, values };
@@ -855,9 +935,7 @@ function runNpcBehaviors(config: FamineRefugeeConfig, state: FamineState): Famin
 			const assignmentMap: Record<string, string[]> = {};
 			for (let j = 0; j < assignments.length; j++) assignmentMap[assignments[j].slot.id] = assignments[j].cards.map((card) => card.id);
 			const actionCost = getActionTimeCost(config, action, npc, assignmentMap, current.cards);
-			const interval = Math.max(1, Math.ceil(evaluateFormula(behavior.decisionInterval, npc.values, {
-				resolveCard: (id: string) => getCard(current.cards, id),
-			})));
+			const interval = Math.max(1, Math.ceil(evaluateFormula(behavior.decisionInterval, npc.values, createFormulaContext(config, current.cards))));
 			const result = applyActionEffects(config, action, npc.id, assignments, current.cards, current.nextCardId);
 			const nextCards = result.cards.map((card) => card.id === npc.id
 				? { ...card, nextBehaviorTime: current.time + Math.max(interval, actionCost) }
@@ -866,9 +944,7 @@ function runNpcBehaviors(config: FamineRefugeeConfig, state: FamineState): Famin
 			acted = true;
 		}
 		if (!acted) {
-			const interval = Math.max(1, Math.ceil(evaluateFormula(behavior.decisionInterval, npc.values, {
-				resolveCard: (id: string) => getCard(current.cards, id),
-			})));
+			const interval = Math.max(1, Math.ceil(evaluateFormula(behavior.decisionInterval, npc.values, createFormulaContext(config, current.cards))));
 			current = { ...current, cards: current.cards.map((card) => card.id === npc.id ? { ...card, nextBehaviorTime: current.time + interval } : card) };
 		}
 	}
@@ -980,6 +1056,65 @@ export function applyIncomingAction(
 	let next = appendLog({ ...state, cards: result.cards, nextCardId: result.nextCardId }, action.title);
 	next = advanceMinutes(config, next, timeCost);
 	return next;
+}
+
+function cloneFamineState(state: FamineState): FamineState {
+	return {
+		...state,
+		cards: state.cards.map((card) => ({
+			...card,
+			values: Object.fromEntries(Object.entries(card.values).map(([key, value]) => [key, Array.isArray(value) ? [...value] : value])),
+			tags: card.tags.map((tag) => ({ ...tag, values: { ...tag.values } })),
+		})),
+		logs: [...state.logs],
+	};
+}
+
+export function previewAction(
+	config: FamineRefugeeConfig,
+	state: FamineState,
+	actionId: number,
+	targetId?: string,
+): string[] {
+	const action = findAction(config, actionId);
+	if (!action) return [];
+	if ((action.slots ?? []).length > 0) return ["需要先选择卡槽目标后预览"];
+	const player = getPlayerCard(config, state);
+	if (!player) return [];
+	const before = deriveCard(config, player, state.cards).values;
+	const cloned = cloneFamineState(state);
+	const next = targetId
+		? applyIncomingAction(config, cloned, targetId, actionId)
+		: applyAction(config, cloned, actionId);
+	const nextPlayer = getPlayerCard(config, next);
+	if (!nextPlayer) return [];
+	const after = deriveCard(config, nextPlayer, next.cards).values;
+	const lines: string[] = [];
+	for (let i = 0; i < config.allAttributes.length; i++) {
+		const definition = config.allAttributes[i];
+		if (definition.visible === false) continue;
+		const oldValue = before[definition.id] ?? 0;
+		const newValue = after[definition.id] ?? 0;
+		if (Math.abs(oldValue - newValue) < 0.001) continue;
+		const format = definition.id === config.primaryDerivedAttributeId
+			? (value: number) => `${Math.round(value * 100)}%`
+			: (value: number) => `${Math.round(value * 100) / 100}`;
+		lines.push(`${definition.label}: ${format(oldValue)} → ${format(newValue)}`);
+	}
+	const oldBag = getStringListAttribute(player.values, getAttributeId(config, "backpack"));
+	const newBag = getStringListAttribute(nextPlayer.values, getAttributeId(config, "backpack"));
+	const added = newBag.filter((id) => !oldBag.includes(id));
+	const removed = oldBag.filter((id) => !newBag.includes(id));
+	for (let i = 0; i < added.length; i++) {
+		const card = getCard(next.cards, added[i]);
+		if (card) lines.push(`背包获得: ${getTemplate(config, card.templateId).key}`);
+	}
+	for (let i = 0; i < removed.length; i++) {
+		const card = getCard(state.cards, removed[i]);
+		if (card) lines.push(`背包失去: ${getTemplate(config, card.templateId).key}`);
+	}
+	if (next.time > state.time) lines.push(`时间 +${next.time - state.time} 分钟`);
+	return lines.length > 0 ? lines : ["无可见变化"];
 }
 
 export function applyAction(

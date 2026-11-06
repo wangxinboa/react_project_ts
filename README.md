@@ -55,7 +55,7 @@ public/
 
 - [工程约定](docs/development_conventions.md)：目录分层、命名、状态、校验、样式和 IO 边界
 - [项目现状与进度](docs/project_status.md)：当前定位、已完成、待做和技术债
-- [TargetRef 上下文说明](src/pages/card_story_game/card_story_game_types/target_ref_contexts.md)：Condition / Effect / Formula 中 target 的指向
+- [JSON 规范文档](src/pages/card_story_game/card_story_game_types/docs/card_story_game_types.md)：属性、条件、公式、效果、动作执行规范
 - [游戏设计笔记](src/pages/card_story_game/card_story_game.md)：玩法与机制的设计草稿
 
 ## 当前进度

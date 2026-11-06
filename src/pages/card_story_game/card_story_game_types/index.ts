@@ -1,7 +1,7 @@
 export { CardType, ConditionTarget } from "./condition_types.ts";
 export type { AttributeCheck, Condition, TargetRef } from "./condition_types.ts";
 export type { Formula, FormulaNode, FormulaValidationIssue, NumberExpression } from "./formula_types.ts";
-export type { AttributeBinding, AttributeDefinition, AttributeValue, AttributeValueType, NumberAttributeTypeParams } from "./attribute_types.ts";
+export type { AttributeBinding, AttributeDefinition, AttributeValue, AttributeValueType, NumberAttributeTypeParams, NumberBounds } from "./attribute_types.ts";
 export type {
 	AddCardDestination,
 	AddCardEffect,

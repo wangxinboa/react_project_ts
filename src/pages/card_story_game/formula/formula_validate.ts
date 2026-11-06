@@ -38,6 +38,14 @@ function validateNode(raw: unknown, path: string, issues: FormulaValidationIssue
 		case "abs":
 			validateNode(raw.value, `${path}.value`, issues);
 			return;
+		case "numberAttributeBound":
+			if (!isAttributeId(raw.attributeId)) {
+				issues.push({ path: `${path}.attributeId`, message: "必须是正整数属性 id" });
+			}
+			if (raw.boundary !== "min" && raw.boundary !== "max") {
+				issues.push({ path: `${path}.boundary`, message: "必须是 min 或 max" });
+			}
+			return;
 		case "numberAttributeValue":
 			if (!isAttributeId(raw.attributeId)) {
 				issues.push({ path: `${path}.attributeId`, message: "必须是正整数属性 id" });

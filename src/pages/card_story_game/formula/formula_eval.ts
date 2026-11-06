@@ -6,6 +6,8 @@ export interface FormulaContext {
 	evaluateConditions?: (conditions: Condition[]) => boolean;
 	/** 通过 cardRef / cardRefList 中的 id 查找卡牌 */
 	resolveCard?: (id: string) => { values: Record<number, AttributeValue> } | null;
+	/** 解析属性硬边界 */
+	getAttributeBound?: (attributeId: number, boundary: "min" | "max", values: Record<number, AttributeValue>) => number | undefined;
 }
 
 export function evaluateFormula(
@@ -22,6 +24,8 @@ export function evaluateFormula(
 			return formula.value;
 		case "numberAttributeValue":
 			return getNumberAttribute(values, formula.attributeId);
+		case "numberAttributeBound":
+			return context?.getAttributeBound?.(formula.attributeId, formula.boundary, values) ?? 0;
 		case "floor":
 			return Math.floor(evaluateFormula(formula.value, values, context));
 		case "abs":

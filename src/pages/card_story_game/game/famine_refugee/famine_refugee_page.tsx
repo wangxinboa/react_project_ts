@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ConfigProvider, Popover } from "antd";
+import { editorTheme } from "../../editor/editor_theme.ts";
 import type { DragEvent } from "react";
 
 import { serviceGetFamineRefugeeConfig } from "../../../../services/famine_refugee.ts";
@@ -15,6 +17,7 @@ import {
 	getVisibleActions,
 	getVisibleCards,
 	applyIncomingAction,
+	previewAction,
 } from "./famine_refugee_engine.ts";
 import type {
 	ActionSlot,
@@ -34,7 +37,8 @@ function getTagLabel(tags: FamineTag[], id: number): string {
 }
 
 function getAttributeLabel(config: FamineRefugeeConfig, id: number): string {
-	for (let i = 0; i < config.allAttributes.length; i++) if (config.allAttributes[i].id === id) return config.allAttributes[i].label;
+	for (let i = 0; i < config.allAttributes.length; i++)
+		if (config.allAttributes[i].id === id) return config.allAttributes[i].label;
 	return `#${id}`;
 }
 
@@ -47,7 +51,9 @@ function isAttributeVisible(config: FamineRefugeeConfig, id: number): boolean {
 
 function getAttributeMax(config: FamineRefugeeConfig, id: number): number | null {
 	for (let i = 0; i < config.allAttributes.length; i++) {
-		if (config.allAttributes[i].id === id) return config.allAttributes[i].typeParams?.max ?? null;
+		if (config.allAttributes[i].id !== id) continue;
+		const max = config.allAttributes[i].typeParams?.bounds?.max;
+		return typeof max === "number" ? max : null;
 	}
 	return null;
 }
@@ -87,6 +93,8 @@ export default function FamineRefugeePage() {
 	const [slotAssignments, setSlotAssignments] = useState<Record<string, string[]>>({});
 	const [activeSlotId, setActiveSlotId] = useState("");
 	const [loadError, setLoadError] = useState("");
+	const [previewTitle, setPreviewTitle] = useState("");
+	const [previewLines, setPreviewLines] = useState<string[]>([]);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -111,7 +119,8 @@ export default function FamineRefugeePage() {
 	const cardViews = useMemo<CardView[]>(() => {
 		if (!config || !game) return [];
 		const views: CardView[] = [];
-		for (let i = 0; i < game.cards.length; i++) views.push({ card: game.cards[i], derived: deriveCard(config, game.cards[i], game.cards) });
+		for (let i = 0; i < game.cards.length; i++)
+			views.push({ card: game.cards[i], derived: deriveCard(config, game.cards[i], game.cards) });
 		return views;
 	}, [config, game]);
 
@@ -130,7 +139,7 @@ export default function FamineRefugeePage() {
 	const playerView = useMemo(() => {
 		if (!config || !game) return null;
 		const player = getPlayerCard(config, game);
-		return player ? cardViews.find((view) => view.card.id === player.id) ?? null : null;
+		return player ? (cardViews.find((view) => view.card.id === player.id) ?? null) : null;
 	}, [config, game, cardViews]);
 
 	const selectedView = useMemo(() => {
@@ -245,6 +254,20 @@ export default function FamineRefugeePage() {
 		[config, selectedCardId],
 	);
 
+	const handlePreview = useCallback(
+		(action: FamineAction, targetId?: string) => {
+			if (!config || !game) return;
+			setPreviewTitle(action.title);
+			setPreviewLines(previewAction(config, game, action.id, targetId));
+		},
+		[config, game],
+	);
+
+	const clearPreview = useCallback(() => {
+		setPreviewTitle("");
+		setPreviewLines([]);
+	}, []);
+
 	const addToSlot = useCallback(
 		(slotId: string, cardId: string) => {
 			if (!placementAction) return;
@@ -300,7 +323,7 @@ export default function FamineRefugeePage() {
 			}
 			setSelectedCardId(cardId);
 		},
-		[activeSlot, addToSlot, config, game, placementAction, slotAssignments, slotEligible],
+		[activeSlot, addToSlot, config, game, placementAction, playerView, slotAssignments, slotEligible],
 	);
 
 	const handleDrop = useCallback(
@@ -422,249 +445,328 @@ export default function FamineRefugeePage() {
 	};
 
 	return (
-		<div className={style.gamePage}>
-			<header className={style.tableHeader}>
-				<button
-					type="button"
-					className={`${style.playerAvatar} ${isPlayerSelected ? style.playerAvatarActive : ""}`}
-					onClick={() => handleSelectCard(config.saveData.playerCardId)}
-				>
-					<span className={style.avatarPortrait}>{playerView.derived.template.key.slice(0, 1)}</span>
-				</button>
-				<div className={style.topAttributes}>
-					{(playerView.derived.template.attributes ?? [])
-						.filter((binding) => isAttributeVisible(config, binding.id))
-						.map((binding) => (
-							<div key={binding.id} className={style.topAttribute}>
-								<span>{getAttributeLabel(config, binding.id)}</span>
-								<strong>
-									{Math.round(playerView.derived.values[binding.id] ?? 0)}
-									{getAttributeMax(config, binding.id) !== null ? ` / ${getAttributeMax(config, binding.id)}` : ""}
-								</strong>
-							</div>
-						))}
-					<div className={style.topAttribute}>
-						<span>负重</span>
-						<strong>{backpackWeight} / {Math.round(playerView.derived.values[14] ?? 0)}</strong>
-					</div>
-					<div className={style.topAttribute}>
-						<span>背包</span>
-						<strong>{backpackIds.length} / {Math.round(playerView.derived.values[34] ?? 0)}</strong>
-					</div>
-					<div className={style.topAttribute}>
-						<span>状态</span>
-						<strong>{bodyState}%</strong>
-					</div>
-				</div>
-				<div className={style.headerActions}>
-					<span className={style.locationName}>{currentLocationName}</span>
-					<span className={style.clock}>{formatClock(game.time)}</span>
-					<button type="button" className={style.resetButton} onClick={handleReset}>重置</button>
-				</div>
-			</header>
-
-			<div className={style.tableLayout}>
-				<section className={style.cardGrid} aria-label="场景卡牌">
-					{gridViews.map((view) => {
-						const eligible = placementAction !== null && isEligible(view.card.id);
-						const dimmed = placementAction !== null && !eligible;
-						return (
-							<button
-								key={view.card.id}
-								type="button"
-								className={`${style.cardTile} ${selectedCardId === view.card.id ? style.cardTileSelected : ""} ${eligible ? style.cardTileEligible : ""} ${dimmed ? style.cardTileDimmed : ""}`}
-								onClick={() => handleCardClick(view.card.id)}
-								draggable={eligible}
-								onDragStart={(event) => handleDragStart(event, view.card.id)}
-							>
-								<div className={style.cardTileTop}>
-									<span className={style.cardTileName}>{view.derived.template.key}</span>
+		<ConfigProvider theme={editorTheme}>
+			<div className={style.gamePage}>
+				<header className={style.tableHeader}>
+					<button
+						type="button"
+						className={`${style.playerAvatar} ${isPlayerSelected ? style.playerAvatarActive : ""}`}
+						onClick={() => handleSelectCard(config.saveData.playerCardId)}
+					>
+						<span className={style.avatarPortrait}>{playerView.derived.template.key.slice(0, 1)}</span>
+					</button>
+					<div className={style.topAttributes}>
+						{(playerView.derived.template.attributes ?? [])
+							.filter((binding) => isAttributeVisible(config, binding.id))
+							.map((binding) => (
+								<div key={binding.id} className={style.topAttribute}>
+									<span>{getAttributeLabel(config, binding.id)}</span>
+									<strong>
+										{Math.round(playerView.derived.values[binding.id] ?? 0)}
+										{getAttributeMax(config, binding.id) !== null ? ` / ${getAttributeMax(config, binding.id)}` : ""}
+									</strong>
 								</div>
-								<div className={style.cardTileDesc}>{view.derived.template.desc}</div>
-								<div className={style.cardTileTags}>
-									{view.derived.tagIds.length === 0 ? (
-										<span className={style.cardTileEmpty}>无标签</span>
-									) : (
-										view.derived.tagIds.map((tagId) => (
-											<span key={tagId} className={style.cardTileTag}>{getTagLabel(config.allTags, tagId)}</span>
-										))
-									)}
-								</div>
-								{eligible ? <span className={style.cardTileHint}>放入 {activeSlot?.desc ?? "卡槽"}</span> : null}
-							</button>
-						);
-					})}
-				</section>
-
-				<aside className={style.inspector}>
-					<div className={style.inspectorHeader}>
-						<div>
-							<div className={style.inspectorName}>{selectedView.derived.template.key}</div>
-							<div className={style.inspectorDesc}>{selectedView.derived.template.desc}</div>
+							))}
+						<div className={style.topAttribute}>
+							<span>负重</span>
+							<strong>
+								{backpackWeight} / {Math.round(playerView.derived.values[14] ?? 0)}
+							</strong>
 						</div>
-						{isPlayerSelected ? <div className={style.inspectorBodyState}>{bodyState}%</div> : null}
+						<div className={style.topAttribute}>
+							<span>背包</span>
+							<strong>
+								{backpackIds.length} / {Math.round(playerView.derived.values[34] ?? 0)}
+							</strong>
+						</div>
+						<div className={style.topAttribute}>
+							<span>状态</span>
+							<strong>{bodyState}%</strong>
+						</div>
 					</div>
-
-					<div className={style.tags}>
-						{selectedView.derived.tagIds.length === 0 ? (
-							<span className={style.emptyTag}>暂无异常</span>
-						) : (
-							selectedView.derived.tagIds.map((tagId) => (
-								<span key={tagId} className={style.tag}>{getTagLabel(config.allTags, tagId)}</span>
-							))
-						)}
+					<div className={style.headerActions}>
+						<span className={style.locationName}>{currentLocationName}</span>
+						<span className={style.clock}>{formatClock(game.time)}</span>
+						<button type="button" className={style.resetButton} onClick={handleReset}>
+							重置
+						</button>
 					</div>
+				</header>
 
-					{!isPlayerSelected ? <div className={style.attributeList}>
-						{(selectedView.derived.template.attributes ?? []).filter((binding) => isAttributeVisible(config, binding.id)).length === 0 ? (
-							<div className={style.emptyAttributes}>这张卡没有数值属性。</div>
-						) : (
-							(selectedView.derived.template.attributes ?? []).filter((binding) => isAttributeVisible(config, binding.id)).map((binding) => {
-								const value = selectedView.derived.values[binding.id] ?? 0;
-								return (
-									<div key={binding.id} className={style.attributeRow}>
-										<div className={style.attributeHeader}>
-											<span>{getAttributeLabel(config, binding.id)}</span>
-											<span>{Math.round(value)}</span>
-										</div>
-										<div className={style.bar}>
-											<div className={style.barFill} style={{ width: `${value}%` }} />
-										</div>
+				<div className={style.tableLayout}>
+					<section className={style.cardGrid} aria-label="场景卡牌">
+						{gridViews.map((view) => {
+							const eligible = placementAction !== null && isEligible(view.card.id);
+							const dimmed = placementAction !== null && !eligible;
+							return (
+								<button
+									key={view.card.id}
+									type="button"
+									className={`${style.cardTile} ${selectedCardId === view.card.id ? style.cardTileSelected : ""} ${eligible ? style.cardTileEligible : ""} ${dimmed ? style.cardTileDimmed : ""}`}
+									onClick={() => handleCardClick(view.card.id)}
+									draggable={eligible}
+									onDragStart={(event) => handleDragStart(event, view.card.id)}
+								>
+									<div className={style.cardTileTop}>
+										<span className={style.cardTileName}>{view.derived.template.key}</span>
 									</div>
-								);
-							})
-						)}
-					</div> : null}
+									<div className={style.cardTileDesc}>{view.derived.template.desc}</div>
+									<div className={style.cardTileTags}>
+										{view.derived.tagIds.length === 0 ? (
+											<span className={style.cardTileEmpty}>无标签</span>
+										) : (
+											view.derived.tagIds.map((tagId) => (
+												<span key={tagId} className={style.cardTileTag}>
+													{getTagLabel(config.allTags, tagId)}
+												</span>
+											))
+										)}
+									</div>
+									{eligible ? <span className={style.cardTileHint}>放入 {activeSlot?.desc ?? "卡槽"}</span> : null}
+								</button>
+							);
+						})}
+					</section>
 
-					{placementAction ? (
-						<div className={style.targetPanel}>
-							<div className={style.inspectorSectionTitle}>卡槽 · {placementAction.title}</div>
-							<div className={style.slotList}>
-								{(placementAction.slots ?? []).map((slot) => {
-									const range = getSlotRange(config, slot, playerView.card, game.cards);
-									const assigned = getSlotCards(slot);
-									const active = activeSlot?.id === slot.id;
-									return (
-										<div
-											key={slot.id}
-											className={`${style.slotCard} ${active ? style.slotCardActive : ""}`}
-											onClick={() => setActiveSlotId(slot.id)}
-										>
-											<div className={style.slotHeader}>
-												<span className={style.slotTitle}>{slot.desc}</span>
-												<span className={style.slotCount}>{assigned.length}/{range.max === Number.POSITIVE_INFINITY ? "∞" : range.max}</span>
-											</div>
-											<div className={style.slotDropZone} onDragOver={handleDragOver} onDrop={(event) => handleDrop(event, slot.id)}>
-												{assigned.length === 0 ? (
-													<span className={style.slotEmpty}>拖入卡牌</span>
-												) : (
-													assigned.map((view) => (
-														<button
-															key={view.card.id}
-															type="button"
-															className={style.targetSlot}
-															onClick={(event) => {
-																event.stopPropagation();
-																handleRemoveFromSlot(slot.id, view.card.id);
-															}}
-														>
-															{view.derived.template.key} ×
-														</button>
-													))
-												)}
-											</div>
-										</div>
-									);
-								})}
+					<aside className={style.inspector}>
+						<div className={style.inspectorHeader}>
+							<div>
+								<div className={style.inspectorName}>{selectedView.derived.template.key}</div>
+								<div className={style.inspectorDesc}>{selectedView.derived.template.desc}</div>
 							</div>
-							<div className={style.targetHint}>
-								{canExecute
-									? `卡槽已满足 · ${formatDuration(getActionTimeCost(config, placementAction, playerView.card, slotAssignments, game.cards))}`
-									: "把符合条件的卡放入对应卡槽"}
-							</div>
-							<div className={style.targetActions}>
-								<button type="button" className={style.cancelPlacement} onClick={handleCancelPlacement}>取消</button>
-								{canExecute ? (
-									<button type="button" className={style.executePlacement} onClick={handleExecute}>
-										执行 {placementAction.title}
-									</button>
-								) : null}
-							</div>
+							{isPlayerSelected ? <div className={style.inspectorBodyState}>{bodyState}%</div> : null}
 						</div>
-					) : isPlayerSelected ? (
-						<>
-							<div className={style.inspectorSectionTitle}>背包</div>
-							<div className={style.backpackList}>
-								{backpackIds.length === 0 ? (
-									<span className={style.emptyTag}>背包为空</span>
+
+						<div className={style.tags}>
+							{selectedView.derived.tagIds.length === 0 ? (
+								<span className={style.emptyTag}>暂无异常</span>
+							) : (
+								selectedView.derived.tagIds.map((tagId) => (
+									<span key={tagId} className={style.tag}>
+										{getTagLabel(config.allTags, tagId)}
+									</span>
+								))
+							)}
+						</div>
+
+						{!isPlayerSelected ? (
+							<div className={style.attributeList}>
+								{(selectedView.derived.template.attributes ?? []).filter((binding) =>
+									isAttributeVisible(config, binding.id),
+								).length === 0 ? (
+									<div className={style.emptyAttributes}>这张卡没有数值属性。</div>
 								) : (
-									backpackIds.map((itemId) => {
-										const item = cardViews.find((view) => view.card.id === itemId);
-										if (!item) return null;
-										return (
-											<button key={itemId} type="button" className={style.backpackItem} onClick={() => setSelectedCardId(itemId)}>
-												{item.derived.template.key} · {getNumberAttribute(item.card.values, 13)}
-											</button>
-										);
-									})
+									(selectedView.derived.template.attributes ?? [])
+										.filter((binding) => isAttributeVisible(config, binding.id))
+										.map((binding) => {
+											const value = selectedView.derived.values[binding.id] ?? 0;
+											return (
+												<div key={binding.id} className={style.attributeRow}>
+													<div className={style.attributeHeader}>
+														<span>{getAttributeLabel(config, binding.id)}</span>
+														<span>{Math.round(value)}</span>
+													</div>
+													<div className={style.bar}>
+														<div className={style.barFill} style={{ width: `${value}%` }} />
+													</div>
+												</div>
+											);
+										})
 								)}
 							</div>
-							<div className={style.inspectorSectionTitle}>玩家行动</div>
-							<div className={style.actions}>
-								{visibleActions.map((action) => (
-									<button
-										key={action.id}
-										type="button"
-										className={style.actionButton}
-										onClick={() => handleActionClick(action)}
-										disabled={isDead}
-									>
-										<span>{action.title}</span>
-										<small>{action.verb} · {formatDuration(getActionTimeCost(config, action, playerView.card, {}, game.cards))}</small>
-									</button>
-								))}
-								{visibleActions.length === 0 && !isDead ? <div className={style.emptyActions}>当前没有满足条件的动作。</div> : null}
-							</div>
-							{isDead ? <div className={style.deadHint}>你已经倒下了。重置后再试一次。</div> : null}
-						</>
-					) : (
-						<>
-							<div className={style.inspectorSectionTitle}>「{selectedView.derived.template.key}」的 incoming</div>
-							{incomingActions.length === 0 ? (
-								<div className={style.emptyActions}>当前没有可用的 incoming 动作。</div>
-							) : (
-								<div className={style.actions}>
-									{incomingActions.map((action) => (
-										<button
-											key={action.id}
-											type="button"
-											className={style.actionButton}
-											onClick={() => handleIncomingAction(action.id)}
-											disabled={isDead}
-										>
-											<span>{action.title}</span>
-											<small>玩家 → {selectedView.derived.template.key} · {formatDuration(getActionTimeCost(config, action, playerView.card, {}, game.cards))}</small>
-										</button>
-									))}
+						) : null}
+
+						{placementAction ? (
+							<div className={style.targetPanel}>
+								<div className={style.inspectorSectionTitle}>卡槽 · {placementAction.title}</div>
+								<div className={style.slotList}>
+									{(placementAction.slots ?? []).map((slot) => {
+										const range = getSlotRange(config, slot, playerView.card, game.cards);
+										const assigned = getSlotCards(slot);
+										const active = activeSlot?.id === slot.id;
+										return (
+											<div
+												key={slot.id}
+												className={`${style.slotCard} ${active ? style.slotCardActive : ""}`}
+												onClick={() => setActiveSlotId(slot.id)}
+											>
+												<div className={style.slotHeader}>
+													<span className={style.slotTitle}>{slot.desc}</span>
+													<span className={style.slotCount}>
+														{assigned.length}/{range.max === Number.POSITIVE_INFINITY ? "∞" : range.max}
+													</span>
+												</div>
+												<div
+													className={style.slotDropZone}
+													onDragOver={handleDragOver}
+													onDrop={(event) => handleDrop(event, slot.id)}
+												>
+													{assigned.length === 0 ? (
+														<span className={style.slotEmpty}>拖入卡牌</span>
+													) : (
+														assigned.map((view) => (
+															<button
+																key={view.card.id}
+																type="button"
+																className={style.targetSlot}
+																onClick={(event) => {
+																	event.stopPropagation();
+																	handleRemoveFromSlot(slot.id, view.card.id);
+																}}
+															>
+																{view.derived.template.key} ×
+															</button>
+														))
+													)}
+												</div>
+											</div>
+										);
+									})}
 								</div>
-							)}
-						</>
-					)}
-				</aside>
-			</div>
-
-			<section className={style.logPanel}>
-				<div className={style.inspectorSectionTitle}>经历</div>
-				<div className={style.logList}>
-					{game.logs.slice().reverse().map((log, index) => (
-						<div key={`${log}-${index}`} className={style.logItem}>{log}</div>
-					))}
+								<div className={style.targetHint}>
+									{canExecute
+										? `卡槽已满足 · ${formatDuration(getActionTimeCost(config, placementAction, playerView.card, slotAssignments, game.cards))}`
+										: "把符合条件的卡放入对应卡槽"}
+								</div>
+								<div className={style.targetActions}>
+									<button type="button" className={style.cancelPlacement} onClick={handleCancelPlacement}>
+										取消
+									</button>
+									{canExecute ? (
+										<button type="button" className={style.executePlacement} onClick={handleExecute}>
+											执行 {placementAction.title}
+										</button>
+									) : null}
+								</div>
+							</div>
+						) : isPlayerSelected ? (
+							<>
+								<div className={style.inspectorSectionTitle}>背包</div>
+								<div className={style.backpackList}>
+									{backpackIds.length === 0 ? (
+										<span className={style.emptyTag}>背包为空</span>
+									) : (
+										backpackIds.map((itemId) => {
+											const item = cardViews.find((view) => view.card.id === itemId);
+											if (!item) return null;
+											return (
+												<button
+													key={itemId}
+													type="button"
+													className={style.backpackItem}
+													onClick={() => setSelectedCardId(itemId)}
+												>
+													{item.derived.template.key} · {getNumberAttribute(item.card.values, 13)}
+												</button>
+											);
+										})
+									)}
+								</div>
+								<div className={style.inspectorSectionTitle}>玩家行动</div>
+								<div className={style.actions}>
+									{visibleActions.map((action) => (
+										<Popover
+											key={action.id}
+											trigger="hover"
+											placement="left"
+												onOpenChange={(open) => {
+												if (open) handlePreview(action);
+												else clearPreview();
+											}}
+											content={
+												<div className={style.actionPreview}>
+													<div className={style.actionPreviewTitle}>{previewTitle}</div>
+													{previewLines.map((line, index) => (
+														<div key={`${line}-${index}`}>{line}</div>
+													))}
+												</div>
+											}
+										>
+											<button
+												type="button"
+												className={style.actionButton}
+												onClick={() => handleActionClick(action)}
+												disabled={isDead}
+											>
+												<span>{action.title}</span>
+												<small>
+													{action.verb} ·{" "}
+													{formatDuration(getActionTimeCost(config, action, playerView.card, {}, game.cards))}
+												</small>
+											</button>
+										</Popover>
+									))}
+									{visibleActions.length === 0 && !isDead ? (
+										<div className={style.emptyActions}>当前没有满足条件的动作。</div>
+									) : null}
+								</div>
+								{isDead ? <div className={style.deadHint}>你已经倒下了。重置后再试一次。</div> : null}
+							</>
+						) : (
+							<>
+								<div className={style.inspectorSectionTitle}>「{selectedView.derived.template.key}」的 incoming</div>
+								{incomingActions.length === 0 ? (
+									<div className={style.emptyActions}>当前没有可用的 incoming 动作。</div>
+								) : (
+									<div className={style.actions}>
+										{incomingActions.map((action) => (
+											<Popover
+												key={action.id}
+												trigger="hover"
+												placement="left"
+												onOpenChange={(open) => {
+													if (open) handlePreview(action, selectedView.card.id);
+													else clearPreview();
+												}}
+												content={
+													<div className={style.actionPreview}>
+														<div className={style.actionPreviewTitle}>{previewTitle}</div>
+														{previewLines.map((line, index) => (
+															<div key={`${line}-${index}`}>{line}</div>
+														))}
+													</div>
+												}
+											>
+												<button
+													type="button"
+													className={style.actionButton}
+													onClick={() => handleIncomingAction(action.id)}
+													disabled={isDead}
+												>
+													<span>{action.title}</span>
+													<small>
+														玩家 → {selectedView.derived.template.key} ·{" "}
+														{formatDuration(getActionTimeCost(config, action, playerView.card, {}, game.cards))}
+													</small>
+												</button>
+											</Popover>
+										))}
+									</div>
+								)}
+							</>
+						)}
+					</aside>
 				</div>
-			</section>
 
-			<footer className={style.footer}>
-				每个动作按命名卡槽放置目标；卡槽之间不能复用同一张卡。修改 `public/famine_refugee_config.json` 后刷新页面调整配置。
-			</footer>
-		</div>
+				<section className={style.logPanel}>
+					<div className={style.inspectorSectionTitle}>经历</div>
+					<div className={style.logList}>
+						{game.logs
+							.slice()
+							.reverse()
+							.map((log, index) => (
+								<div key={`${log}-${index}`} className={style.logItem}>
+									{log}
+								</div>
+							))}
+					</div>
+				</section>
+
+				<footer className={style.footer}>
+					每个动作按命名卡槽放置目标；卡槽之间不能复用同一张卡。修改 `public/famine_refugee_config.json`
+					后刷新页面调整配置。
+				</footer>
+			</div>
+		</ConfigProvider>
 	);
 }

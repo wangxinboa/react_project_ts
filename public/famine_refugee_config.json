@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 42,
+	"schemaVersion": 49,
 	"allTags": [
 		{
 			"id": 1,
@@ -291,8 +291,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": 0,
-				"max": 100
+				"bounds": {
+					"min": 0,
+					"max": 100
+				}
 			}
 		},
 		{
@@ -303,8 +305,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": 0,
-				"max": 100
+				"bounds": {
+					"min": 0,
+					"max": 100
+				}
 			}
 		},
 		{
@@ -315,8 +319,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": 0,
-				"max": 100
+				"bounds": {
+					"min": 0,
+					"max": 100
+				}
 			}
 		},
 		{
@@ -327,8 +333,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": 0,
-				"max": 100
+				"bounds": {
+					"min": 0,
+					"max": 100
+				}
 			}
 		},
 		{
@@ -339,8 +347,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": 0,
-				"max": 100
+				"bounds": {
+					"min": 0,
+					"max": 100
+				}
 			}
 		},
 		{
@@ -351,8 +361,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": 0,
-				"max": 100
+				"bounds": {
+					"min": 0,
+					"max": 100
+				}
 			}
 		},
 		{
@@ -522,8 +534,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": 0,
-				"max": 100
+				"bounds": {
+					"min": 0,
+					"max": 100
+				}
 			}
 		},
 		{
@@ -534,8 +548,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": 0,
-				"max": 100
+				"bounds": {
+					"min": 0,
+					"max": 100
+				}
 			}
 		},
 		{
@@ -546,8 +562,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": 0,
-				"max": 5
+				"bounds": {
+					"min": 0,
+					"max": 5
+				}
 			}
 		},
 		{
@@ -558,8 +576,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": -5,
-				"max": 5
+				"bounds": {
+					"min": -5,
+					"max": 5
+				}
 			},
 			"visible": false
 		},
@@ -571,8 +591,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": -5,
-				"max": 5
+				"bounds": {
+					"min": -5,
+					"max": 5
+				}
 			},
 			"visible": false
 		},
@@ -611,8 +633,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": 0,
-				"max": 500
+				"bounds": {
+					"min": 0,
+					"max": 500
+				}
 			},
 			"visible": false
 		},
@@ -624,8 +648,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": 0,
-				"max": 500
+				"bounds": {
+					"min": 0,
+					"max": 500
+				}
 			},
 			"visible": false
 		},
@@ -673,8 +699,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": 0,
-				"max": 100
+				"bounds": {
+					"min": 0,
+					"max": 100
+				}
 			},
 			"visible": false
 		},
@@ -686,8 +714,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": 0,
-				"max": 50
+				"bounds": {
+					"min": 0,
+					"max": 50
+				}
 			},
 			"visible": false
 		},
@@ -699,8 +729,10 @@
 			"kind": "base",
 			"valueType": "number",
 			"typeParams": {
-				"min": 0,
-				"max": 50
+				"bounds": {
+					"min": 0,
+					"max": 50
+				}
 			},
 			"visible": false
 		},

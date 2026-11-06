@@ -7,6 +7,7 @@ import type { Condition } from "./condition_types.ts";
 export type FormulaNode =
 	| { op: "literal"; value: number }
 	| { op: "numberAttributeValue"; attributeId: number }
+	| { op: "numberAttributeBound"; attributeId: number; boundary: "min" | "max" }
 	| { op: "floor" | "abs"; value: Formula }
 	| { op: "add" | "sub" | "mul" | "div"; args: Formula[] }
 	| { op: "clamp"; value: Formula; min: Formula; max: Formula }
