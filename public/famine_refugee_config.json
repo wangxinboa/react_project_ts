@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 51,
+	"schemaVersion": 53,
 	"allTags": [
 		{
 			"id": 1,
@@ -14,13 +14,13 @@
 							"lte": 20
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					],
 					"target": {
 						"card": "host"
-					}
+					},
+					"isAnyTemplate": [
+						1,
+						2
+					]
 				}
 			]
 		},
@@ -37,13 +37,13 @@
 							"lte": 20
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					],
 					"target": {
 						"card": "host"
-					}
+					},
+					"isAnyTemplate": [
+						1,
+						2
+					]
 				}
 			]
 		},
@@ -60,13 +60,13 @@
 							"lte": 30
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					],
 					"target": {
 						"card": "host"
-					}
+					},
+					"isAnyTemplate": [
+						1,
+						2
+					]
 				}
 			]
 		},
@@ -83,13 +83,13 @@
 							"gte": 50
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					],
 					"target": {
 						"card": "host"
-					}
+					},
+					"isAnyTemplate": [
+						1,
+						2
+					]
 				}
 			]
 		},
@@ -106,13 +106,13 @@
 							"gte": 50
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					],
 					"target": {
 						"card": "host"
-					}
+					},
+					"isAnyTemplate": [
+						1,
+						2
+					]
 				}
 			]
 		},
@@ -129,13 +129,13 @@
 							"gte": 50
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					],
 					"target": {
 						"card": "host"
-					}
+					},
+					"isAnyTemplate": [
+						1,
+						2
+					]
 				}
 			]
 		},
@@ -152,13 +152,13 @@
 							"gte": 60
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					],
 					"target": {
 						"card": "host"
-					}
+					},
+					"isAnyTemplate": [
+						1,
+						2
+					]
 				}
 			]
 		},
@@ -187,13 +187,13 @@
 							"lte": 0.35
 						}
 					],
-					"hasAnyTemplate": [
-						1,
-						2
-					],
 					"target": {
 						"card": "host"
-					}
+					},
+					"isAnyTemplate": [
+						1,
+						2
+					]
 				}
 			]
 		},
@@ -758,6 +758,38 @@
 					}
 				]
 			}
+		},
+		{
+			"id": 60,
+			"key": "trust",
+			"label": "信任",
+			"desc": "信任",
+			"scope": "relationship",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"bounds": {
+					"min": -100,
+					"max": 100
+				}
+			},
+			"visible": true
+		},
+		{
+			"id": 61,
+			"key": "fear",
+			"label": "恐惧",
+			"desc": "恐惧",
+			"scope": "relationship",
+			"kind": "base",
+			"valueType": "number",
+			"typeParams": {
+				"bounds": {
+					"min": 0,
+					"max": 100
+				}
+			},
+			"visible": true
 		}
 	],
 	"cardTemplates": [
@@ -2183,7 +2215,7 @@
 					"target": {
 						"card": "targetCard"
 					},
-					"hasCardType": "person"
+					"isCardType": "person"
 				},
 				{
 					"target": {
@@ -2241,7 +2273,45 @@
 						{
 							"id": "ask_plan",
 							"text": "你打算去哪里？",
-							"next": "answer_plan"
+							"next": "answer_plan",
+							"effects": [
+								{
+									"id": 9101,
+									"kind": "changeRelationshipAttributes",
+									"relationship": {
+										"source": {
+											"card": "sourceCard"
+										},
+										"target": {
+											"card": "targetCard"
+										}
+									},
+									"changes": [
+										{
+											"attributeId": 60,
+											"delta": 5
+										}
+									]
+								},
+								{
+									"id": 9102,
+									"kind": "changeRelationshipAttributes",
+									"relationship": {
+										"source": {
+											"card": "targetCard"
+										},
+										"target": {
+											"card": "sourceCard"
+										}
+									},
+									"changes": [
+										{
+											"attributeId": 60,
+											"delta": 3
+										}
+									]
+								}
+							]
 						}
 					]
 				},

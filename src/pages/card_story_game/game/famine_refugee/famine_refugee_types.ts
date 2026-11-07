@@ -89,11 +89,17 @@ export interface FamineRefugeeConfig {
 	tick: FamineTick;
 }
 
+export interface RelationshipState {
+	values: Record<number, number>;
+}
+
 export interface CardState {
 	id: string;
 	templateId: number;
 	values: Record<number, AttributeValue>;
 	nextBehaviorTime?: number;
+	/** targetCardId -> 关系属性值 */
+	relationships?: Record<string, RelationshipState>;
 	tags: TagInstanceState[];
 }
 

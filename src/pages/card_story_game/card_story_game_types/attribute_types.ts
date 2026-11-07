@@ -29,6 +29,8 @@ export interface AttributeDefinition {
 	key: string;
 	label?: string;
 	desc: string;
+	/** 默认 card；relationship 表示关系边属性 */
+	scope?: "card" | "relationship";
 	kind: "base" | "derived";
 	valueType: AttributeValueType;
 	/** number 类型专属参数，例如范围 */

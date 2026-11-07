@@ -65,6 +65,26 @@ interface TargetRef {
 - 对话状态保存 sourceCardId / targetCardId / slotMap。
 - 详细触发方式见项目状态与配置案例。
 
+## 关系
+
+- 关系是有向边：`sourceCard → targetCard`。
+- 关系值挂在 sourceCard 的 `relationships` 映射上：
+
+```ts
+interface RelationshipState {
+	values: Record<number, number>;
+}
+
+interface CardState {
+	relationships?: Record<string, RelationshipState>;
+}
+```
+
+- 关系属性使用 `AttributeDefinition.scope = "relationship"`；默认 `scope` 为 `card`。
+- AttributeCheck 支持 `relationshipId + relationship` 检查关系属性。
+- `changeRelationshipAttributes` 修改有向关系值。
+- 关系懒创建，缺失时按 0 计算。
+
 ## NPC
 
 - `CardTemplate.behavior.decisionInterval` 控制决策间隔。

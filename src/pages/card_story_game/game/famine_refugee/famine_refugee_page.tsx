@@ -751,6 +751,15 @@ export default function FamineRefugeePage() {
 							</>
 						) : (
 							<>
+								{selectedView.derived.template.cardType === "person" ? (
+									<div className={style.relationshipBlock}>
+										<div className={style.inspectorSectionTitle}>对玩家的态度</div>
+										<div className={style.relationshipValues}>
+											<span>信任 {getNumberAttribute(selectedView.card.relationships?.[playerView.card.id]?.values ?? {}, 60)}</span>
+											<span>恐惧 {getNumberAttribute(selectedView.card.relationships?.[playerView.card.id]?.values ?? {}, 61)}</span>
+										</div>
+									</div>
+								) : null}
 								<div className={style.inspectorSectionTitle}>「{selectedView.derived.template.key}」的 incoming</div>
 								{incomingActions.length === 0 ? (
 									<div className={style.emptyActions}>当前没有可用的 incoming 动作。</div>

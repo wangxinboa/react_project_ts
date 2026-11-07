@@ -1,5 +1,5 @@
 import type { Condition, TargetRef } from "../condition_types.ts";
-import type { ChangeAttributesEffect } from "./attribute_effects.ts";
+import type { ChangeAttributesEffect, ChangeRelationshipAttributesEffect } from "./attribute_effects.ts";
 import type { AddTagEffect, RemoveTagEffect } from "./tag_effects.ts";
 import type { ChangeTemplateEffect } from "./template_effects.ts";
 import type { AddCardEffect, RemoveCardEffect } from "./card_effects.ts";
@@ -10,6 +10,7 @@ import type { StartDialogueEffect } from "./dialogue_effects.ts";
 export type {
 	ChangeAttributeChange,
 	ChangeAttributesEffect,
+	ChangeRelationshipAttributesEffect,
 } from "./attribute_effects.ts";
 export type { AddTagEffect, RemoveTagEffect } from "./tag_effects.ts";
 export type { ChangeTemplateEffect } from "./template_effects.ts";
@@ -32,7 +33,8 @@ export type EffectKind =
 	| RemoveCardEffect
 	| ChangeLocationEffect
 	| MoveItemCardEffect
-	| StartDialogueEffect;
+	| StartDialogueEffect
+	| ChangeRelationshipAttributesEffect;
 
 /** Effect 作用对象；与 Condition target 使用同一套 TargetRef。 */
 export type EffectTarget = TargetRef;

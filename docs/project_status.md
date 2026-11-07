@@ -42,6 +42,7 @@
 - `moveItemCard`：在背包、地点、目标背包之间移动物品，并校验容量。
 - `addCard`：默认进入 sourceCard 背包，`to` 可指定地点，不处理容量。
 - NPC：`behavior.decisionInterval` 控制决策，动作池复用 `outgoing`。
+- 关系：`CardState.relationships[targetId].values` 保存有向关系；关系属性 `scope: "relationship"`；支持关系条件与 `changeRelationshipAttributes`。
 - 对话：`allDialogues` + `startDialogue` + 全屏遮罩底部对话条；玩家选中 NPC 的「交谈」incoming 触发，节点支持 speaker / conditions / effects / next；对话期间暂停玩家动作和 NPC 行为。
 - 日志：记录玩家和 NPC 行为。
 - UI：顶部玩家属性/地点/时间，中央 grid，右侧检查面板，底部日志。

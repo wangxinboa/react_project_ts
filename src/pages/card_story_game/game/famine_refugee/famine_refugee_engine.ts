@@ -124,6 +124,19 @@ function evaluateAttributeChecks(condition: Condition, entity: EntitySnapshot, c
 	if (condition.attributes) {
 		for (let i = 0; i < condition.attributes.length; i++) {
 			const check = condition.attributes[i];
+			if (check.relationshipId !== undefined) {
+				if (!check.relationship || check.id !== undefined || check.refId !== undefined || check.refListId !== undefined) return false;
+				const sourceEntity = resolveTargetEntity(check.relationship.source, context);
+				const targetEntity = resolveTargetEntity(check.relationship.target, context);
+				if (!sourceEntity?.cardId || !targetEntity?.cardId) return false;
+				const source = getCard(context.cards ?? [], sourceEntity.cardId);
+				if (!source) return false;
+				const relationship = source.relationships?.[targetEntity.cardId];
+				const relationshipValues = relationship?.values ?? {};
+				if (!matchesAttribute(relationshipValues[check.relationshipId] ?? 0, check, relationshipValues, context)) return false;
+				continue;
+			}
+			if (check.relationship) return false;
 			const ids = [check.id, check.refId, check.refListId].filter((id): id is number => typeof id === "number");
 			if (ids.length !== 1) return false;
 			const attributeId = ids[0];
@@ -200,13 +213,12 @@ function evaluateTagChecks(condition: Condition, entity: EntitySnapshot): boolea
 }
 
 function evaluateDefinitionChecks(condition: Condition, entity: EntitySnapshot): boolean {
-	if (condition.hasCardType && entity.cardType !== condition.hasCardType) return false;
-	if (condition.hasAnyCardType && condition.hasAnyCardType.length > 0 && (!entity.cardType || !condition.hasAnyCardType.includes(entity.cardType))) return false;
-	if (typeof condition.hasTemplate === "number" && entity.templateId !== condition.hasTemplate) return false;
-	if (condition.hasAnyTemplate && condition.hasAnyTemplate.length > 0) {
-		if (typeof entity.templateId !== "number" || !condition.hasAnyTemplate.includes(entity.templateId)) return false;
+	if (condition.isCardType && entity.cardType !== condition.isCardType) return false;
+	if (condition.isAnyCardType && condition.isAnyCardType.length > 0 && (!entity.cardType || !condition.isAnyCardType.includes(entity.cardType))) return false;
+	if (typeof condition.isTemplate === "number" && entity.templateId !== condition.isTemplate) return false;
+	if (condition.isAnyTemplate && condition.isAnyTemplate.length > 0) {
+		if (typeof entity.templateId !== "number" || !condition.isAnyTemplate.includes(entity.templateId)) return false;
 	}
-	if (typeof condition.onlyHasTemplate === "number" && entity.templateId !== condition.onlyHasTemplate) return false;
 	return true;
 }
 
@@ -754,6 +766,54 @@ function applyStartDialogueEffect(runtime: EffectRuntime, effect: InlineEffect):
 	};
 }
 
+function resolveRuntimeCardId(runtime: EffectRuntime, target: TargetRef): string | undefined {
+	if (target.card === "sourceCard") return runtime.sourceId;
+	if (target.card === "targetCard") return runtime.targetId;
+	if (target.card === "slot" && target.slot) return runtime.slotMap[target.slot]?.[0];
+	return undefined;
+}
+
+function applyChangeRelationshipEffect(runtime: EffectRuntime, effect: InlineEffect): void {
+	if (effect.kind !== "changeRelationshipAttributes") return;
+	const sourceId = resolveRuntimeCardId(runtime, effect.relationship.source);
+	const targetId = resolveRuntimeCardId(runtime, effect.relationship.target);
+	if (!sourceId || !targetId) return;
+	const source = getCard(runtime.cards, sourceId);
+	if (!source) return;
+	const current = source.relationships?.[targetId] ?? { values: {} };
+	const values = { ...current.values };
+	const formulaContext: FormulaContext = {
+		...createFormulaContext(runtime.config, runtime.cards),
+		evaluateConditions: (conditions) => evaluateConditions(conditions, {
+			sourceCard: snapshotFromDerived(deriveCard(runtime.config, source, runtime.cards), source),
+			targetCard: runtime.targetId ? snapshotFromDerived(deriveCard(runtime.config, getCard(runtime.cards, runtime.targetId) ?? source, runtime.cards)) : undefined,
+			slot: undefined,
+			cards: runtime.cards,
+			config: runtime.config,
+		}),
+	};
+	for (let i = 0; i < effect.changes.length; i++) {
+		const change = effect.changes[i];
+		if (change.conditions) {
+			const context = getConditionContext(runtime.config, change.conditions, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, source, runtime.slotMap, runtime.cards);
+			if (!evaluateConditions(change.conditions, context)) continue;
+		}
+		const definition = runtime.config.allAttributes.find((attribute) => attribute.id === change.attributeId);
+		if (!definition || definition.scope !== "relationship") continue;
+		const currentValue = getNumberAttribute(values, change.attributeId);
+		const set = change.set === undefined ? undefined : evaluateFormula(change.set, values, formulaContext);
+		const delta = change.delta === undefined ? 0 : evaluateFormula(change.delta, values, formulaContext);
+		let next = set ?? currentValue + delta;
+		const bounds = resolveNumberBounds(definition, values, formulaContext);
+		if (bounds.min !== undefined) next = Math.max(bounds.min, next);
+		if (bounds.max !== undefined) next = Math.min(bounds.max, next);
+		values[change.attributeId] = next;
+	}
+	const relationships = { ...(source.relationships ?? {}) };
+	relationships[targetId] = { ...current, values };
+	runtime.cards = replaceCard(runtime.cards, { ...source, relationships });
+}
+
 const effectHandlers: Record<InlineEffect["kind"], EffectHandler> = {
 	changeAttributes: applyTargetedEffect,
 	addTag: applyTargetedEffect,
@@ -764,6 +824,7 @@ const effectHandlers: Record<InlineEffect["kind"], EffectHandler> = {
 	removeCard: applyRemoveCardEffect,
 	moveItemCard: applyMoveItemEffect,
 	startDialogue: applyStartDialogueEffect,
+	changeRelationshipAttributes: applyChangeRelationshipEffect,
 };
 
 function planActionEffects(

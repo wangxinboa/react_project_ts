@@ -20,9 +20,18 @@ export type CardType = (typeof CardType)[keyof typeof CardType];
  * 单个属性的比较条件。
  * 属性条件以数组形式组合，数组内默认全部满足（AND）。
  */
+export interface RelationshipRef {
+	source: TargetRef;
+	target: TargetRef;
+}
+
 export type AttributeCheck = {
 	/** number 属性 id */
 	id?: number;
+	/** 关系属性 id；必须和 relationship 一起使用 */
+	relationshipId?: number;
+	/** 关系边 source → target */
+	relationship?: RelationshipRef;
 	/** cardRef 属性 id */
 	refId?: number;
 	/** cardRefList 属性 id */
@@ -73,15 +82,13 @@ export interface Condition {
 	/** 标签集合必须完全等于该标签集合 */
 	onlyHasTags?: number[];
 	/** 模板必须等于该 id */
-	hasTemplate?: number;
+	isTemplate?: number;
 	/** 模板必须属于该 id 集合 */
-	hasAnyTemplate?: number[];
-	/** 模板必须完全等于该 id；与 hasTemplate 等价，保留给严格语义 */
-	onlyHasTemplate?: number;
+	isAnyTemplate?: number[];
 	/** 卡牌类型必须等于该类型 */
-	hasCardType?: CardType;
+	isCardType?: CardType;
 	/** 卡牌类型必须属于该集合 */
-	hasAnyCardType?: CardType[];
+	isAnyCardType?: CardType[];
 }
 
 /**

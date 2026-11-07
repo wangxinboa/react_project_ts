@@ -69,7 +69,7 @@ host       = 无
 ```json
 {
   "target": { "card": "slot", "slot": "food" },
-  "hasCardType": "item"
+  "isCardType": "item"
 }
 ```
 

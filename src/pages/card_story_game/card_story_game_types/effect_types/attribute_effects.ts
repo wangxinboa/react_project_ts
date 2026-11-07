@@ -1,4 +1,4 @@
-import type { Condition } from "../condition_types.ts";
+import type { Condition, RelationshipRef } from "../condition_types.ts";
 import type { NumberExpression } from "../formula_types.ts";
 
 /** 单个属性的增量或覆盖。 */
@@ -13,5 +13,12 @@ export interface ChangeAttributeChange {
 /** 批量修改属性。 */
 export type ChangeAttributesEffect = {
 	kind: "changeAttributes";
+	changes: ChangeAttributeChange[];
+};
+
+/** 修改 sourceCard → targetCard 的关系属性。 */
+export type ChangeRelationshipAttributesEffect = {
+	kind: "changeRelationshipAttributes";
+	relationship: RelationshipRef;
 	changes: ChangeAttributeChange[];
 };
