@@ -1,5 +1,7 @@
-import type { Condition, TargetRef } from "../condition_types.ts";
+import type { ConditionExpression, TargetRef } from "../condition_types.ts";
 import type { ChangeAttributesEffect, ChangeRelationshipAttributesEffect } from "./attribute_effects.ts";
+import type { CreateAgreementEffect } from "./agreement_effects.ts";
+export type { CreateAgreementEffect } from "./agreement_effects.ts";
 import type { AddTagEffect, RemoveTagEffect } from "./tag_effects.ts";
 import type { ChangeTemplateEffect } from "./template_effects.ts";
 import type { AddCardEffect, RemoveCardEffect } from "./card_effects.ts";
@@ -14,11 +16,7 @@ export type {
 } from "./attribute_effects.ts";
 export type { AddTagEffect, RemoveTagEffect } from "./tag_effects.ts";
 export type { ChangeTemplateEffect } from "./template_effects.ts";
-export type {
-	AddCardDestination,
-	AddCardEffect,
-	RemoveCardEffect,
-} from "./card_effects.ts";
+export type { AddCardDestination, AddCardEffect, RemoveCardEffect } from "./card_effects.ts";
 export type { ChangeLocationEffect } from "./location_effects.ts";
 export type { MoveItemCardEffect, MoveItemDestination } from "./item_effects.ts";
 export type { StartDialogueEffect } from "./dialogue_effects.ts";
@@ -34,7 +32,8 @@ export type EffectKind =
 	| ChangeLocationEffect
 	| MoveItemCardEffect
 	| StartDialogueEffect
-	| ChangeRelationshipAttributesEffect;
+	| ChangeRelationshipAttributesEffect
+	| CreateAgreementEffect;
 
 /** Effect 作用对象；与 Condition target 使用同一套 TargetRef。 */
 export type EffectTarget = TargetRef;
@@ -50,7 +49,7 @@ export type InlineEffect = EffectKind & {
 	/** 作用对象；普通动作缺省 sourceCard，tag auto 缺省 sourceTag */
 	target?: EffectTarget;
 	/** 效果自身条件，数组内 AND */
-	conditions?: Condition[];
+	condition?: ConditionExpression;
 };
 
 /** 全局 allEffects 中的可复用效果。 */

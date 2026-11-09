@@ -1,9 +1,9 @@
-import type { AttributeValue, Condition } from "../card_story_game_types/index.ts";
+import type { AttributeValue, ConditionExpression } from "../card_story_game_types/index.ts";
 import { getNumberAttribute } from "../game/famine_refugee/attribute_value.ts";
 import type { NumberExpression } from "../card_story_game_types/formula_types.ts";
 
 export interface FormulaContext {
-	evaluateConditions?: (conditions: Condition[]) => boolean;
+	evaluateConditions?: (conditions: ConditionExpression[]) => boolean;
 	/** 通过 cardRef / cardRefList 中的 id 查找卡牌 */
 	resolveCard?: (id: string) => { values: Record<number, AttributeValue> } | null;
 	/** 解析属性硬边界 */
@@ -16,8 +16,8 @@ export function evaluateFormula(
 	context?: FormulaContext,
 ): number {
 	if (typeof formula === "number") return formula;
-	if (formula.conditions && formula.conditions.length > 0) {
-		if (!context?.evaluateConditions || !context.evaluateConditions(formula.conditions)) return 0;
+	if (formula.condition) {
+		if (!context?.evaluateConditions || !context.evaluateConditions([formula.condition])) return 0;
 	}
 	switch (formula.op) {
 		case "literal":

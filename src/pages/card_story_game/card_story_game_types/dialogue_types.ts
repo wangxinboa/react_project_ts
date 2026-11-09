@@ -1,5 +1,11 @@
-import type { Condition, TargetRef } from "./condition_types.ts";
+import type { ConditionExpression, TargetRef } from "./condition_types.ts";
 import type { EffectCall } from "./effect_types/effect_types.ts";
+
+/** 对话入口：按顺序选择第一个满足条件的节点。 */
+export interface DialogueEntry {
+	nodeId: string;
+	condition?: ConditionExpression;
+}
 
 /** 对话定义。 */
 export interface DialogueDefinition {
@@ -7,6 +13,8 @@ export interface DialogueDefinition {
 	key: string;
 	title: string;
 	nodes: DialogueNode[];
+	/** 按顺序选择第一个满足条件的入口；不写则使用 nodes[0] */
+	entries?: DialogueEntry[];
 }
 
 /** 对话节点。 */
@@ -24,7 +32,7 @@ export interface DialogueNode {
 export interface DialogueOption {
 	id: string;
 	text: string;
-	conditions?: Condition[];
+	condition?: ConditionExpression;
 	effects?: EffectCall[];
 	/** 下一个节点；不写表示结束对话 */
 	next?: string;

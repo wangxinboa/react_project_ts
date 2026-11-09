@@ -1,5 +1,5 @@
 import type { NumberExpression } from "./formula_types.ts";
-import type { Condition } from "./condition_types.ts";
+import type { ConditionExpression } from "./condition_types.ts";
 import type { EffectCall } from "./effect_types/effect_types.ts";
 
 /** 动作的命名卡槽。每个槽位独立放置，槽位之间不复用同一张卡。 */
@@ -12,7 +12,7 @@ export interface ActionSlot {
 	/** 动态数量上限；求值后 floor 且非负，max < min 视为无效 */
 	max?: NumberExpression;
 	/** 动态数量下限；与 count 互斥，求值后 floor 且非负 */
-	conditions?: Condition[];
+	condition?: ConditionExpression;
 }
 
 /** 动作定义；source 是发起者，incoming 的 target 是当前选中卡。 */
@@ -24,10 +24,10 @@ export interface RuleAction {
 	/** 详细描述 */
 	desc: string;
 	createdAt: number;
-	/** 时间计算公式；节点 conditions 不满足时该节点为 0 */
+	/** 时间计算公式；节点 condition 不满足时该节点为 0 */
 	timeCost?: NumberExpression;
 	/** 动作可用条件；普通动作用 sourceCard，incoming 可用 targetCard，数组内 AND */
-	conditions?: Condition[];
+	condition?: ConditionExpression;
 	/** 命名目标槽 */
 	slots?: ActionSlot[];
 	/** 执行效果，按顺序应用 */

@@ -1,4 +1,4 @@
-import type { Condition } from "./condition_types.ts";
+import type { ConditionExpression } from "./condition_types.ts";
 
 /**
  * 动态数字表达式。
@@ -17,7 +17,7 @@ export type FormulaNode =
 
 /** 公式 = 动态节点 + 可选条件。 */
 export type Formula = FormulaNode & {
-	conditions?: Condition[];
+	condition?: ConditionExpression;
 };
 
 /** 静态数字或动态公式。 */

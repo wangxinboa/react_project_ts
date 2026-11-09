@@ -1,4 +1,4 @@
-import type { Condition, RelationshipRef } from "../condition_types.ts";
+import type { ConditionExpression, RelationshipRef } from "../condition_types.ts";
 import type { NumberExpression } from "../formula_types.ts";
 
 /** 单个属性的增量或覆盖。 */
@@ -7,7 +7,7 @@ export interface ChangeAttributeChange {
 	delta?: NumberExpression;
 	set?: NumberExpression;
 	/** 单条属性修改的条件；不满足时跳过这条修改 */
-	conditions?: Condition[];
+	condition?: ConditionExpression;
 }
 
 /** 批量修改属性。 */

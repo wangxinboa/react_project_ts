@@ -17,8 +17,8 @@ Action 是原子操作。
 
 以下条件全部使用 action 开始前的卡牌状态：
 
-- `effect.conditions`
-- `changeAttributes.changes[].conditions`
+- `effect.condition`
+- `changeAttributes.changes[].condition`
 
 后续 effect 不能看到前面 effect 修改后的属性值。
 
@@ -30,12 +30,10 @@ Action 是原子操作。
   },
   {
     "kind": "changeAttributes",
-    "conditions": [
-      {
-        "target": { "card": "sourceCard" },
-        "attributes": [{ "id": 1, "lt": 40 }]
-      }
-    ],
+    "condition": {
+      "target": { "card": "sourceCard" },
+      "attributes": [{ "id": 1, "lt": 40 }]
+    },
     "changes": [{ "attributeId": 5, "delta": -2 }]
   }
 ]

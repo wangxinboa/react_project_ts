@@ -59,11 +59,24 @@ interface TargetRef {
 
 - `allDialogues` 定义 `DialogueDefinition`。
 - `DialogueNode` 使用 `speaker: TargetRef`。
-- `DialogueOption` 支持 conditions / effects / next。
+- `DialogueOption` 支持 condition / effects / next。
 - `DialogueNode.next` 用于无可见选项时点击空白继续；没有 next 则结束对话。
+- `DialogueDefinition.entries` 按条件选择入口节点。
+- Condition 保持单卡判定：`hasAgreement` 检查卡牌持有的共识定义，`dialogue` 检查卡牌的全局对话历史。
+- 双人判定由两个 Condition 的 AND 表达。
+- 条件字段统一为 `condition: ConditionExpression`；支持 `and / or / not`，组合子条件使用 `items`。
 - `startDialogue` effect 启动对话；玩家 incoming 默认使用 targetCard，NPC outgoing 可用 slot。
 - 对话状态保存 sourceCardId / targetCardId / slotMap。
 - 详细触发方式见项目状态与配置案例。
+
+## 共识
+
+- `AgreementDefinition` 第一版只有 `kind: "promise"`。
+- 当前定义不包含 parties / terms / 时间限制。
+- `FamineState.agreements` 是全局权威 map。
+- `CardState.agreementIds` 是参与卡上的索引。
+- `createAgreement` 从动作 source/target 创建双方已知、已接受的承诺。
+- 不存 active/completed/failed 状态。
 
 ## 关系
 

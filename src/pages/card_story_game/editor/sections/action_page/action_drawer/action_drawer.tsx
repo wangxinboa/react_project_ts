@@ -1,7 +1,7 @@
 import { Button, Drawer, Form, Input } from "antd";
 import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 
-import type { Condition, EffectCall, RuleAction } from "../../../../card_story_game_types/index.ts";
+import type { ConditionExpression, EffectCall, RuleAction } from "../../../../card_story_game_types/index.ts";
 import { FormMode } from "../../../../../../utils/form_mode.ts";
 import { parseJsonArray } from "../../../../../../utils/json.ts";
 
@@ -14,7 +14,7 @@ interface ActionFormValues {
 	title: string;
 	desc: string;
 	targets: string;
-	conditions: string;
+	condition: string;
 	effects: string;
 }
 
@@ -23,7 +23,7 @@ interface ActionFormResult {
 	title: string;
 	desc: string;
 	targets: unknown[];
-	conditions: Condition[];
+	condition?: ConditionExpression;
 	effects: EffectCall[];
 }
 
@@ -44,7 +44,7 @@ function toFormValues(action: RuleAction | null): ActionFormValues {
 		title: action?.title ?? "",
 		desc: action?.desc ?? "",
 		targets: JSON.stringify(action?.targets ?? [], null, 2),
-		conditions: JSON.stringify(action?.conditions ?? [], null, 2),
+		condition: JSON.stringify(action?.condition ?? null, null, 2),
 		effects: JSON.stringify(action?.effects ?? [], null, 2),
 	};
 }
@@ -65,9 +65,14 @@ const ActionDrawer = forwardRef<ActionDrawerHandle, ActionDrawerProps>(function 
 		try {
 			const values = await form.validateFields();
 			const targets = parseJsonArray(values.targets);
-			const conditions = parseJsonArray(values.conditions) as Condition[] | null;
+			let condition: ConditionExpression | undefined;
+			try {
+				condition = values.condition.trim() ? (JSON.parse(values.condition) as ConditionExpression) : undefined;
+			} catch {
+				return;
+			}
 			const effects = parseJsonArray(values.effects) as EffectCall[] | null;
-			if (targets === null || conditions === null || effects === null) {
+			if (targets === null || effects === null) {
 				return;
 			}
 
@@ -76,7 +81,7 @@ const ActionDrawer = forwardRef<ActionDrawerHandle, ActionDrawerProps>(function 
 				title: values.title.trim(),
 				desc: values.desc.trim(),
 				targets,
-				conditions,
+				condition,
 				effects,
 			};
 
@@ -147,7 +152,9 @@ const ActionDrawer = forwardRef<ActionDrawerHandle, ActionDrawerProps>(function 
 				</Form.Item>
 
 				<JsonArrayField label="targets" name="targets" tooltip="动作作用的目标，先直接编辑 JSON 数组" />
-				<JsonArrayField label="conditions" name="conditions" tooltip="执行条件，先直接编辑 JSON 数组" />
+				<Form.Item label="condition" name="condition" tooltip="条件表达式，先直接编辑 JSON 对象">
+					<Input.TextArea rows={8} aria-label="动作条件" />
+				</Form.Item>
 				<JsonArrayField label="effects" name="effects" tooltip="执行效果，先直接编辑 JSON 数组" />
 			</Form>
 		</Drawer>

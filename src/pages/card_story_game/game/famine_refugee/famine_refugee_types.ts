@@ -7,6 +7,7 @@ import type {
 	CardTemplate,
 	Condition,
 	EffectCall,
+	AgreementDefinition,
 	DialogueDefinition,
 	EffectDefinition,
 	RuleAction,
@@ -21,7 +22,11 @@ export type {
 	AttributeBinding,
 	AttributeCheck,
 	Condition,
+	ConditionExpression,
+	ConditionGroup,
+	ConditionNot,
 	EffectCall,
+	AgreementDefinition,
 	DialogueDefinition,
 	EffectDefinition,
 	InlineEffect,
@@ -80,6 +85,7 @@ export interface FamineRefugeeConfig {
 	allAttributes: FamineAttributeDefinition[];
 	allEffects?: EffectDefinition[];
 	allDialogues: DialogueDefinition[];
+	allAgreements: AgreementDefinition[];
 	allActions: FamineAction[];
 	cardTemplates: FamineTemplate[];
 	saveData: SaveData;
@@ -100,7 +106,25 @@ export interface CardState {
 	nextBehaviorTime?: number;
 	/** targetCardId -> 关系属性值 */
 	relationships?: Record<string, RelationshipState>;
+	/** 已知/参与的共识 id */
+	agreementIds?: string[];
 	tags: TagInstanceState[];
+}
+
+export interface DialogueHistoryEntry {
+	dialogueId: number;
+	initiatorId: string;
+	participantIds: string[];
+	count: number;
+}
+
+export interface AgreementState {
+	id: string;
+	definitionId: number;
+	participants: string[];
+	proposerId: string;
+	knownBy: string[];
+	acceptedBy: string[];
 }
 
 export interface DialogueState {
@@ -114,8 +138,11 @@ export interface DialogueState {
 export interface FamineState {
 	time: number;
 	nextCardId: number;
+	nextAgreementId: number;
 	cards: CardState[];
 	logs: string[];
+	agreements: Record<string, AgreementState>;
+	dialogueHistory: DialogueHistoryEntry[];
 	dialogue?: DialogueState;
 }
 

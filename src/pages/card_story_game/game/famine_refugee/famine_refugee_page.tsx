@@ -150,6 +150,14 @@ export default function FamineRefugeePage() {
 		return cardViews.find((view) => view.card.id === selectedCardId) ?? playerView;
 	}, [cardViews, selectedCardId, playerView]);
 
+	const sharedAgreements = useMemo(() => {
+		if (!config || !game || !playerView || !selectedView || selectedView.card.id === playerView.card.id) return [];
+		return Object.values(game.agreements)
+			.filter((agreement) => agreement.participants.includes(playerView.card.id) && agreement.participants.includes(selectedView.card.id))
+			.map((agreement) => config.allAgreements.find((definition) => definition.id === agreement.definitionId))
+			.filter((definition): definition is NonNullable<typeof definition> => Boolean(definition));
+	}, [config, game, playerView, selectedView]);
+
 	const backpackViews = useMemo(() => {
 		if (!playerView) return [];
 		const ids = getStringListAttribute(playerView.card.values, 22);
@@ -758,6 +766,14 @@ export default function FamineRefugeePage() {
 											<span>信任 {getNumberAttribute(selectedView.card.relationships?.[playerView.card.id]?.values ?? {}, 60)}</span>
 											<span>恐惧 {getNumberAttribute(selectedView.card.relationships?.[playerView.card.id]?.values ?? {}, 61)}</span>
 										</div>
+										{sharedAgreements.length > 0 ? (
+											<div className={style.agreementList}>
+												<div className={style.agreementLabel}>共同约定</div>
+												{sharedAgreements.map((agreement) => (
+													<div key={agreement.id} className={style.agreementItem}>{agreement.title}</div>
+												))}
+											</div>
+										) : null}
 									</div>
 								) : null}
 								<div className={style.inspectorSectionTitle}>「{selectedView.derived.template.key}」的 incoming</div>

@@ -1,17 +1,17 @@
 import type { AttributeBinding } from "./attribute_types.ts";
-import type { Condition } from "./condition_types.ts";
+import type { ConditionExpression } from "./condition_types.ts";
 import type { EffectCall } from "./effect_types/effect_types.ts";
 
 /**
  * state：可附着、可增删、可带自身属性的状态标签；
- * derived：每次 derive 根据 conditions 计算出的只读标签。
+ * derived：每次 derive 根据 condition 计算出的只读标签。
  */
 export type TagKind = "state" | "derived";
 
 /** state 标签的每小时自动效果。 */
 export interface TagAuto {
 	/** 判断 sourceTag（标签自身）和 host（宿主卡）的条件 */
-	conditions: Condition[];
+	condition?: ConditionExpression;
 	/** 作用到 source / host 的效果列表 */
 	effects: EffectCall[];
 }
@@ -25,7 +25,7 @@ export interface TagItem {
 	createdAt?: number;
 	kind?: TagKind;
 	/** derived 标签的判定条件 */
-	conditions?: Condition[];
+	condition?: ConditionExpression;
 	/** state 标签自身的属性绑定 */
 	attributes?: AttributeBinding[];
 	/** state 标签每小时执行的自定义效果 */

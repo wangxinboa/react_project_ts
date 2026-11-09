@@ -39,10 +39,10 @@ export interface TargetRef {
 
 Condition 可以出现在：
 
-- `RuleAction.conditions`
-- `ActionSlot.conditions`
-- `InlineEffect.conditions`
-- `Formula.conditions`
+- `RuleAction.condition`
+- `ActionSlot.condition`
+- `InlineEffect.condition`
+- `Formula.condition`
 - Tag 规则 / Tag auto 的条件
 
 Condition 本身没有默认 target，必须显式写 `target`。
@@ -96,7 +96,7 @@ incoming 的 slots 主要作为附加条件，不改变 targetCard 的一对一�
 
 ### 2.3 卡槽条件
 
-`ActionSlot.conditions` 中：
+`ActionSlot.condition` 中：
 
 ```text
 sourceCard = 动作发起者
@@ -124,7 +124,7 @@ export type EffectTarget = TargetRef;
 export type InlineEffect = EffectKind & {
 	id: number;
 	target?: EffectTarget;
-	conditions?: Condition[];
+	condition?: ConditionExpression;
 };
 ```
 
@@ -163,9 +163,9 @@ incoming 动作修改当前目标：
 }
 ```
 
-### 3.3 effect.conditions 的上下文
+### 3.3 effect.condition 的上下文
 
-effect 的 `conditions` 与 effect 使用同一套环境：
+effect 的 `condition` 与 effect 使用同一套环境：
 
 ```text
 sourceCard = 动作执行者
@@ -177,7 +177,7 @@ host/sourceTag = Tag auto 环境
 effect target 和 effect condition target 是两件事：
 
 - `target` 决定效果作用谁；
-- `conditions[].target` 决定条件判断谁。
+- `condition.target` 决定条件判断谁；组合条件继续使用 group 内的 `items`。
 
 ---
 
@@ -213,7 +213,7 @@ export type FormulaNode =
 带条件的常量使用 `literal`：
 
 ```json
-{ "op": "literal", "value": -15, "conditions": [...] }
+{ "op": "literal", "value": -15, "condition": {...} }
 ```
 
 ### 4.2 refListsAttributeSum / refListsAttributeCount
@@ -237,19 +237,18 @@ export type FormulaNode =
 
 公式不会自动进入引用卡环境。需要判断引用卡自身属性时，使用 Condition 的 `refListsMatch`。
 
-### 4.3 Formula 的 conditions
+### 4.3 Formula 的 condition
 
-Formula 节点的 conditions 使用与所在环境相同的 Condition 上下文：
+Formula 节点的 condition 使用与所在环境相同的 Condition 上下文：
 
 ```json
 {
   "op": "numberAttributeValue",
   "attributeId": 15,
-  "conditions": [
-    {
-      "target": { "card": "sourceCard" },
-      "attributes": [{ "id": 3, "gt": 0 }]
-    }
+  "condition": {
+    "target": { "card": "sourceCard" },
+    "attributes": [{ "id": 3, "gt": 0 }]
+  }
   ]
 }
 ```
@@ -321,9 +320,9 @@ Tag 环境没有普通动作的 `sourceCard` / `slot` / `targetCard`。
 | incoming 动作条件 | 执行者 | 无 | 响应目标 | 无 | 额外卡槽 | 仅 refListsMatch |
 | 卡槽条件 | 发起者 | 无 | incoming 时可有 | 无 | 当前候选卡 | 仅 refListsMatch |
 | 动作 effect target | 发起者 | 无 | incoming 目标 | 无 | 卡槽卡 | 无 |
-| 动作 effect conditions | 发起者 | 无 | incoming 目标 | 无 | 条件卡槽 | 仅 refListsMatch |
+| 动作 effect condition | 发起者 | 无 | incoming 目标 | 无 | 条件卡槽 | 仅 refListsMatch |
 | Formula attr / ref 操作 | 默认读取 sourceCard | 无 | 无 | 无 | 无 | 无 |
-| Formula conditions | 同所在环境 | 无 | 同所在环境 | 无 | 同所在环境 | 仅 refListsMatch |
+| Formula condition | 同所在环境 | 无 | 同所在环境 | 无 | 同所在环境 | 仅 refListsMatch |
 | Tag 条件 / auto | 无 | 标签实例 | 无 | 宿主卡 | 无 | 仅 refListsMatch |
 
 ---
