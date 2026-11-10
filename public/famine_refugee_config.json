@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 58,
+	"schemaVersion": 63,
 	"allTags": [
 		{
 			"id": 1,
@@ -2181,6 +2181,44 @@
 			"title": "与流民交谈",
 			"nodes": [
 				{
+					"id": "promise_confirmed",
+					"speaker": {
+						"card": "targetCard"
+					},
+					"text": "谢谢你遵守约定。",
+					"options": [
+						{
+							"id": "confirmed_end",
+							"text": "应该的。"
+						}
+					]
+				},
+				{
+					"id": "promise_overdue",
+					"speaker": {
+						"card": "targetCard"
+					},
+					"text": "时间到了。你答应我的东西呢？",
+					"options": [
+						{
+							"id": "overdue_ack",
+							"text": "我还在找。"
+						},
+						{
+							"id": "overdue_kept",
+							"text": "找到了，给你。",
+							"effects": [
+								{
+									"id": 9301,
+									"kind": "resolveAgreement",
+									"definitionId": 1,
+									"result": "kept"
+								}
+							]
+						}
+					]
+				},
+				{
 					"id": "after_promise",
 					"speaker": {
 						"card": "targetCard"
@@ -2301,53 +2339,73 @@
 			],
 			"entries": [
 				{
+					"nodeId": "promise_confirmed",
+					"condition": {
+						"target": {
+							"card": "sourceCard"
+						},
+						"agreement": {
+							"definitionId": 1,
+							"confirmation": "confirmed",
+							"includesTargets": [
+								{
+									"card": "targetCard"
+								}
+							]
+						}
+					}
+				},
+				{
+					"nodeId": "promise_overdue",
+					"condition": {
+						"target": {
+							"card": "sourceCard"
+						},
+						"agreement": {
+							"definitionId": 1,
+							"confirmation": "unconfirmed",
+							"time": "overdue",
+							"includesTargets": [
+								{
+									"card": "targetCard"
+								}
+							]
+						}
+					}
+				},
+				{
 					"nodeId": "after_promise",
 					"condition": {
-						"kind": "and",
-						"items": [
-							{
-								"target": {
-									"card": "sourceCard"
-								},
-								"hasAgreement": 1
-							},
-							{
-								"target": {
+						"target": {
+							"card": "sourceCard"
+						},
+						"agreement": {
+							"definitionId": 1,
+							"includesTargets": [
+								{
 									"card": "targetCard"
-								},
-								"hasAgreement": 1
-							}
-						]
+								}
+							]
+						}
 					}
 				},
 				{
 					"nodeId": "repeat_talk",
 					"condition": {
-						"kind": "and",
-						"items": [
-							{
-								"target": {
-									"card": "sourceCard"
-								},
-								"dialogue": {
-									"dialogueId": 1,
-									"count": {
-										"gte": 1
-									}
-								}
+						"target": {
+							"card": "sourceCard"
+						},
+						"dialogue": {
+							"dialogueId": 1,
+							"count": {
+								"gte": 1
 							},
-							{
-								"target": {
+							"includesTargets": [
+								{
 									"card": "targetCard"
-								},
-								"dialogue": {
-									"dialogueId": 1,
-									"count": {
-										"gte": 1
-									}
 								}
-							}
-						]
+							]
+						}
 					}
 				},
 				{
@@ -2362,7 +2420,8 @@
 			"key": "find_food",
 			"kind": "promise",
 			"title": "找点吃的",
-			"desc": "对方希望你能找到食物。"
+			"desc": "对方希望你能找到食物。",
+			"waitTime": 60
 		}
 	]
 }

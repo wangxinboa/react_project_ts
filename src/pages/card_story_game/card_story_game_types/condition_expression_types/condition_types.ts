@@ -2,6 +2,7 @@ import type { CardType } from "./card_type.ts";
 import type { TargetRef } from "./target_ref.ts";
 import type { AttributeCheck } from "./attribute_check_types.ts";
 import type { DialogueCheck } from "./dialogue_check_types.ts";
+import type { AgreementCheck } from "./agreement_check_types.ts";
 
 /**
  * 条件判断对象。
@@ -15,8 +16,6 @@ export interface Condition {
 	desc?: string;
 	/** 属性条件列表 */
 	attributes?: AttributeCheck[];
-	/** 该卡是否持有某共识定义 */
-	hasAgreement?: number;
 	/** 该卡的对话经历 */
 	dialogue?: DialogueCheck;
 	/** 必须拥有该标签 */
@@ -37,4 +36,6 @@ export interface Condition {
 	isCardType?: CardType;
 	/** 卡牌类型必须属于该集合 */
 	isAnyCardType?: CardType[];
+	/** 共识判定 */
+	agreement?: AgreementCheck;
 }

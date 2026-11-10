@@ -1,6 +1,7 @@
 import { evaluateFormula } from "../../formula/formula_eval.ts";
 import type { FormulaContext } from "../../formula/formula_eval.ts";
 import type { AttributeValue, CardType, NumberExpression, TargetRef } from "../../card_story_game_types/index.ts";
+import { AgreementConfirmation, AgreementTimeRelation } from "../../card_story_game_types/index.ts";
 import { getNumberAttribute, getNumberValues, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import type {
 	ActionSlot,
@@ -50,6 +51,7 @@ interface ConditionContext {
 	config?: FamineRefugeeConfig;
 	agreements?: Record<string, AgreementState>;
 	dialogueHistory?: DialogueHistoryEntry[];
+	time?: number;
 }
 
 function snapshotFromDerived(derived: CardDerived, card?: CardState): EntitySnapshot {
@@ -127,26 +129,46 @@ function resolveTargetEntity(target: TargetRef, context: ConditionContext): Enti
 	return context.slot;
 }
 
-function evaluateAgreementDefinitionCheck(condition: Condition, entity: EntitySnapshot, context: ConditionContext): boolean {
-	if (condition.hasAgreement === undefined) return true;
+function evaluateAgreementCheck(condition: Condition, entity: EntitySnapshot, context: ConditionContext): boolean {
+	const check = condition.agreement;
+	if (!check) return true;
 	if (!entity.cardId) return false;
 	const card = getCard(context.cards ?? [], entity.cardId);
 	if (!card) return false;
 	const owned = new Set(card.agreementIds ?? []);
-	return Object.values(context.agreements ?? {}).some((agreement) =>
-		agreement.definitionId === condition.hasAgreement && owned.has(agreement.id),
-	);
+	const now = context.time ?? 0;
+	const includedTargetIds = (check.includesTargets ?? [])
+		.map((target) => resolveTargetEntity(target, context)?.cardId)
+		.filter((id): id is string => Boolean(id));
+	if ((check.includesTargets ?? []).length !== includedTargetIds.length) return false;
+	return Object.values(context.agreements ?? {}).some((agreement) => {
+		if (agreement.definitionId !== check.definitionId || !owned.has(agreement.id)) return false;
+		if (includedTargetIds.length > 0 && !includedTargetIds.every((id) => agreement.participants.includes(id))) return false;
+		if (check.confirmation === AgreementConfirmation.CONFIRMED && agreement.resolution === undefined) return false;
+		if (check.confirmation === AgreementConfirmation.UNCONFIRMED && agreement.resolution !== undefined) return false;
+		if (check.time === AgreementTimeRelation.OVERDUE && !(agreement.deadline !== undefined && now >= agreement.deadline)) return false;
+		if (check.time === AgreementTimeRelation.NOT_OVERDUE && !(agreement.deadline !== undefined && now < agreement.deadline)) return false;
+		if (check.result !== undefined && agreement.resolution?.result !== check.result) return false;
+		return true;
+	});
 }
 
 function evaluateDialogueCheck(condition: Condition, entity: EntitySnapshot, context: ConditionContext): boolean {
 	const check = condition.dialogue;
 	if (!check) return true;
 	if (!entity.cardId) return false;
+	const includedTargetIds = (check.includesTargets ?? [])
+		.map((target) => resolveTargetEntity(target, context)?.cardId)
+		.filter((id): id is string => Boolean(id));
+	if ((check.includesTargets ?? []).length !== includedTargetIds.length) return false;
 	let count = 0;
 	const history = context.dialogueHistory ?? [];
 	for (let i = 0; i < history.length; i++) {
 		const entry = history[i];
-		if (entry.dialogueId === check.dialogueId && entry.participantIds.includes(entity.cardId)) count += entry.count;
+		if (entry.dialogueId !== check.dialogueId) continue;
+		if (!entry.participantIds.includes(entity.cardId)) continue;
+		if (includedTargetIds.length > 0 && !includedTargetIds.every((id) => entry.participantIds.includes(id))) continue;
+		count += entry.count;
 	}
 	if (check.triggered !== undefined && (count > 0) !== check.triggered) return false;
 	if (check.count) {
@@ -272,7 +294,7 @@ function evaluateCondition(condition: Condition, context: ConditionContext): boo
 	return evaluateAttributeChecks(condition, entity, context)
 		&& evaluateTagChecks(condition, entity)
 		&& evaluateDefinitionChecks(condition, entity)
-		&& evaluateAgreementDefinitionCheck(condition, entity, context)
+		&& evaluateAgreementCheck(condition, entity, context)
 		&& evaluateDialogueCheck(condition, entity, context);
 }
 
@@ -712,6 +734,7 @@ function getConditionContext(
 	cards: CardState[],
 	agreements: Record<string, AgreementState> = {},
 	dialogueHistory: DialogueHistoryEntry[] = [],
+	time = 0,
 ): ConditionContext {
 	const sourceSnapshot = snapshotFromDerived(deriveCard(config, source, cards), source);
 	const slotId = getConditionSlotId(conditions);
@@ -724,6 +747,7 @@ function getConditionContext(
 		config,
 		agreements,
 		dialogueHistory,
+		time,
 	};
 }
 
@@ -739,6 +763,7 @@ interface EffectRuntime {
 	agreements: Record<string, AgreementState>;
 	dialogueHistory: DialogueHistoryEntry[];
 	nextAgreementId: number;
+	time: number;
 }
 
 type EffectHandler = (runtime: EffectRuntime, effect: InlineEffect) => void;
@@ -757,15 +782,15 @@ function applyTargetedEffect(runtime: EffectRuntime, effect: InlineEffect): void
 	for (let i = 0; i < targetIds.length; i++) {
 		const card = getCard(runtime.cards, targetIds[i]);
 		if (!card) continue;
-		const context = getConditionContext(runtime.config, effect.condition, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, card, runtime.slotMap, runtime.cards);
+		const context = getConditionContext(runtime.config, effect.condition, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, card, runtime.slotMap, runtime.cards, {}, [], runtime.time);
 		if (!evaluateConditions(effect.condition, context)) continue;
 		const updated = applyCardEffect(runtime.config, card, effect, (conditions) => {
-			const changeContext = getConditionContext(runtime.config, conditions, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, card, runtime.slotMap, runtime.cards);
+			const changeContext = getConditionContext(runtime.config, conditions, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, card, runtime.slotMap, runtime.cards, {}, [], runtime.time);
 			return evaluateConditions(conditions, changeContext);
 		}, {
 			...createFormulaContext(runtime.config, runtime.cards),
 			evaluateConditions: (conditions) => {
-				const changeContext = getConditionContext(runtime.config, conditions, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, card, runtime.slotMap, runtime.cards);
+				const changeContext = getConditionContext(runtime.config, conditions, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, card, runtime.slotMap, runtime.cards, {}, [], runtime.time);
 				return evaluateConditions(conditions, changeContext);
 			},
 		});
@@ -777,7 +802,7 @@ function applyCreateCardEffect(runtime: EffectRuntime, effect: InlineEffect): vo
 	if (effect.kind !== "addCard") return;
 	const source = getCard(runtime.cards, runtime.sourceId);
 	if (!source) return;
-	const context = getConditionContext(runtime.config, effect.condition, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, null, runtime.slotMap, runtime.cards);
+	const context = getConditionContext(runtime.config, effect.condition, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, null, runtime.slotMap, runtime.cards, {}, [], runtime.time);
 	if (!evaluateConditions(effect.condition, context)) return;
 	const id = `card_${runtime.nextCardId}`;
 	runtime.nextCardId += 1;
@@ -861,7 +886,7 @@ function applyStartDialogueEffect(runtime: EffectRuntime, effect: InlineEffect):
 	for (let i = 0; i < (dialogue.entries ?? []).length; i++) {
 		const entry = dialogue.entries?.[i];
 		if (!entry || !source || !target) continue;
-		const context = getConditionContext(runtime.config, entry.condition, source, target, null, runtime.slotMap, runtime.cards, runtime.agreements, runtime.dialogueHistory);
+		const context = getConditionContext(runtime.config, entry.condition, source, target, null, runtime.slotMap, runtime.cards, runtime.agreements, runtime.dialogueHistory, runtime.time);
 		if (evaluateConditions(entry.condition, context)) {
 			nodeId = entry.nodeId;
 			break;
@@ -917,7 +942,7 @@ function applyChangeRelationshipEffect(runtime: EffectRuntime, effect: InlineEff
 	for (let i = 0; i < effect.changes.length; i++) {
 		const change = effect.changes[i];
 		if (change.condition) {
-			const context = getConditionContext(runtime.config, change.condition, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, source, runtime.slotMap, runtime.cards);
+			const context = getConditionContext(runtime.config, change.condition, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, source, runtime.slotMap, runtime.cards, {}, [], runtime.time);
 			if (!evaluateConditions(change.condition, context)) continue;
 		}
 		const definition = runtime.config.allAttributes.find((attribute) => attribute.id === change.attributeId);
@@ -942,6 +967,10 @@ function applyCreateAgreementEffect(runtime: EffectRuntime, effect: InlineEffect
 	if (!definition) return;
 	const id = `agreement_${runtime.nextAgreementId}`;
 	runtime.nextAgreementId += 1;
+	const source = getCard(runtime.cards, runtime.sourceId);
+	const duration = definition.waitTime !== undefined && source
+		? evaluateFormula(definition.waitTime, source.values, createFormulaContext(runtime.config, runtime.cards))
+		: undefined;
 	runtime.agreements[id] = {
 		id,
 		definitionId: definition.id,
@@ -949,11 +978,29 @@ function applyCreateAgreementEffect(runtime: EffectRuntime, effect: InlineEffect
 		proposerId: runtime.sourceId,
 		knownBy: [runtime.sourceId, runtime.targetId],
 		acceptedBy: [runtime.sourceId, runtime.targetId],
+		createdAt: runtime.time,
+		deadline: duration === undefined ? undefined : runtime.time + Math.max(0, duration),
 	};
 	runtime.cards = runtime.cards.map((card) => {
 		if (card.id !== runtime.sourceId && card.id !== runtime.targetId) return card;
 		return { ...card, agreementIds: [...(card.agreementIds ?? []), id] };
 	});
+}
+
+function applyResolveAgreementEffect(runtime: EffectRuntime, effect: InlineEffect): void {
+	if (effect.kind !== "resolveAgreement" || !runtime.targetId) return;
+	const agreement = Object.values(runtime.agreements).find((item) =>
+		item.definitionId === effect.definitionId &&
+		item.participants.includes(runtime.sourceId) &&
+		item.participants.includes(runtime.targetId ?? "") &&
+		item.resolution === undefined,
+	);
+	if (!agreement) return;
+	agreement.resolution = {
+		result: effect.result,
+		at: runtime.time,
+		confirmedBy: [runtime.sourceId, runtime.targetId].filter((id): id is string => Boolean(id)),
+	};
 }
 
 const effectHandlers: Record<InlineEffect["kind"], EffectHandler> = {
@@ -968,6 +1015,7 @@ const effectHandlers: Record<InlineEffect["kind"], EffectHandler> = {
 	startDialogue: applyStartDialogueEffect,
 	changeRelationshipAttributes: applyChangeRelationshipEffect,
 	createAgreement: applyCreateAgreementEffect,
+	resolveAgreement: applyResolveAgreementEffect,
 };
 
 function planActionEffects(
@@ -1015,9 +1063,10 @@ function applyActionEffects(
 	agreements: Record<string, AgreementState> = {},
 	dialogueHistory: DialogueHistoryEntry[] = [],
 	nextAgreementId = 1,
+	time = 0,
 ): { cards: CardState[]; nextCardId: number; dialogue?: DialogueState; agreements?: Record<string, AgreementState>; dialogueHistory?: DialogueHistoryEntry[]; nextAgreementId?: number } {
 	const plan = planActionEffects(config, action, sourceId, assignments, cards, targetId);
-	const runtime: EffectRuntime = { config, sourceId, targetId, slotMap: plan.slotMap, cards: cards.slice(), nextCardId, removeIds: new Set<string>(), agreements: { ...agreements }, dialogueHistory: dialogueHistory.map((entry) => ({ ...entry, participantIds: [...entry.participantIds] })), nextAgreementId };
+	const runtime: EffectRuntime = { config, sourceId, targetId, slotMap: plan.slotMap, cards: cards.slice(), nextCardId, removeIds: new Set<string>(), agreements: { ...agreements }, dialogueHistory: dialogueHistory.map((entry) => ({ ...entry, participantIds: [...entry.participantIds] })), nextAgreementId, time };
 	for (let i = 0; i < plan.effects.length; i++) effectHandlers[plan.effects[i].kind](runtime, plan.effects[i]);
 	if (runtime.removeIds.size > 0) {
 		runtime.cards = runtime.cards.filter((card) => !runtime.removeIds.has(card.id));
@@ -1283,7 +1332,7 @@ export function applyIncomingAction(
 		config,
 	})) return state;
 	const timeCost = getActionTimeCost(config, action, player, {}, state.cards);
-	const result = applyActionEffects(config, action, player.id, [], state.cards, state.nextCardId, targetId, state.agreements, state.dialogueHistory, state.nextAgreementId);
+	const result = applyActionEffects(config, action, player.id, [], state.cards, state.nextCardId, targetId, state.agreements, state.dialogueHistory, state.nextAgreementId, state.time);
 	let next = appendLog({ ...state, cards: result.cards, nextCardId: result.nextCardId, dialogue: result.dialogue, agreements: result.agreements ?? state.agreements, dialogueHistory: result.dialogueHistory ?? state.dialogueHistory, nextAgreementId: result.nextAgreementId ?? state.nextAgreementId }, action.title);
 	next = advanceMinutes(config, next, timeCost);
 	return next;
@@ -1341,7 +1390,7 @@ export function getDialogueOptions(config: FamineRefugeeConfig, state: FamineSta
 	if (!participants) return [];
 	const node = getDialogueNode(config, participants.dialogue.dialogueId, participants.dialogue.nodeId);
 	if (!node) return [];
-	const context = getConditionContext(config, node.options.flatMap((option) => option.condition ?? []), participants.source, participants.target, null, participants.slotMap, state.cards, state.agreements, state.dialogueHistory);
+	const context = getConditionContext(config, node.options.flatMap((option) => option.condition ?? []), participants.source, participants.target, null, participants.slotMap, state.cards, state.agreements, state.dialogueHistory, state.time);
 	return node.options.filter((option) => evaluateConditions(option.condition, context));
 }
 
@@ -1351,7 +1400,7 @@ export function chooseDialogueOption(config: FamineRefugeeConfig, state: FamineS
 	const node = getDialogueNode(config, participants.dialogue.dialogueId, participants.dialogue.nodeId);
 	const option = node?.options.find((item) => item.id === optionId);
 	if (!option) return state;
-	const context = getConditionContext(config, option.condition, participants.source, participants.target, null, participants.slotMap, state.cards, state.agreements, state.dialogueHistory);
+	const context = getConditionContext(config, option.condition, participants.source, participants.target, null, participants.slotMap, state.cards, state.agreements, state.dialogueHistory, state.time);
 	if (!evaluateConditions(option.condition, context)) return state;
 	const assignments: SlotAssignment[] = Object.entries(participants.slotMap).map(([id, ids]) => ({
 		slot: { id, desc: id },
@@ -1367,7 +1416,7 @@ export function chooseDialogueOption(config: FamineRefugeeConfig, state: FamineS
 		effects: option.effects ?? [],
 		timeCost: 0,
 	};
-	const result = applyActionEffects(config, synthetic, participants.source.id, assignments, state.cards, state.nextCardId, participants.target?.id, state.agreements, state.dialogueHistory, state.nextAgreementId);
+	const result = applyActionEffects(config, synthetic, participants.source.id, assignments, state.cards, state.nextCardId, participants.target?.id, state.agreements, state.dialogueHistory, state.nextAgreementId, state.time);
 	const nextDialogue = result.dialogue ?? (option.next ? { ...participants.dialogue, nodeId: option.next } : undefined);
 	return appendLog({ ...state, cards: result.cards, nextCardId: result.nextCardId, dialogue: nextDialogue, agreements: result.agreements ?? state.agreements, dialogueHistory: result.dialogueHistory ?? state.dialogueHistory, nextAgreementId: result.nextAgreementId ?? state.nextAgreementId }, option.text);
 }
@@ -1449,7 +1498,7 @@ export function applyAction(
 	if (!resolved) return state;
 
 	const timeCost = getActionTimeCost(config, action, player, assignments, state.cards);
-	const result = applyActionEffects(config, action, player.id, resolved, state.cards, state.nextCardId, undefined, state.agreements, state.dialogueHistory, state.nextAgreementId);
+	const result = applyActionEffects(config, action, player.id, resolved, state.cards, state.nextCardId, undefined, state.agreements, state.dialogueHistory, state.nextAgreementId, state.time);
 	let next = appendLog({ ...state, cards: result.cards, nextCardId: result.nextCardId, dialogue: result.dialogue, agreements: result.agreements ?? state.agreements, dialogueHistory: result.dialogueHistory ?? state.dialogueHistory, nextAgreementId: result.nextAgreementId ?? state.nextAgreementId }, action.title);
 	next = advanceMinutes(config, next, timeCost);
 	return next;

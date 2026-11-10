@@ -10,7 +10,7 @@ export const ConditionTarget = {
 	HOST: "host",
 	/** 动作命名卡槽中的卡；TargetRef.slot 指定卡槽 id */
 	SLOT: "slot",
-	/** refListsMatch.match 中当前遍历到的引用卡 */
+	/** refListsMatch.condition 中当前遍历到的引用卡 */
 	REFERENCED_CARD: "referencedCard",
 } as const;
 

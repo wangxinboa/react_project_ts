@@ -40,6 +40,8 @@
   ```
 
   校验外部字符串时，用基于对象的类型守卫（如 `isEditorPageKey`），不要另写一份字面量列表。枚举对象和守卫放在独立的非组件模块，不要从组件文件导出常量或函数，避免 Fast Refresh 的 `only-export-components` 规则。
+
+  同一语义的联合类型跨文件只定义一次。例如承诺结果 `"kept" | "broken"` 同时用于 `AgreementCheck`、`AgreementResolution`、`ResolveAgreementEffect` 时，应共用 `AgreementResult`，不要在字段里各写一份字面量。
 - 通用表单的新建 / 编辑模式统一用 `src/utils/form_mode.ts` 的 `FormMode`，不要在组件里重复 `"create" | "edit"`。
 
 ## 数据与状态

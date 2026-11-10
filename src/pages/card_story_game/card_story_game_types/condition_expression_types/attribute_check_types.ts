@@ -1,6 +1,12 @@
 import type { NumberExpression } from "../formula_types.ts";
-import type { RelationshipRef } from "./relationship_types.ts";
+import type { TargetRef } from "./target_ref.ts";
 import type { ConditionExpression } from "./condition_expression_types.ts";
+
+/** 有向关系边：source → target。 */
+export interface RelationshipRef {
+	source: TargetRef;
+	target: TargetRef;
+}
 
 /** 单个属性的比较条件。 */
 export type AttributeCheck = {

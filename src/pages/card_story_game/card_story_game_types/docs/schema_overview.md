@@ -76,6 +76,11 @@ interface TargetRef {
 - `FamineState.agreements` 是全局权威 map。
 - `CardState.agreementIds` 是参与卡上的索引。
 - `createAgreement` 从动作 source/target 创建双方已知、已接受的承诺。
+- `AgreementDefinition.waitTime` 是分钟时长，创建时用发起卡属性求值；运行时写入 `createdAt` / `deadline`。
+- `resolveAgreement` 由双方对话确认后写入 `resolution`；时间到达不会自动失败。
+- Condition 使用 `agreement: AgreementCheck` 判定共识。
+- `AgreementCheck.includesTargets` 限定共识实例必须包含的参与者；`confirmation` / `time` / `result` 分别判定确认、时间和结果。
+- `DialogueCheck.includesTargets` 先过滤共同经历，再判断 triggered / count。
 - 不存 active/completed/failed 状态。
 
 ## 关系

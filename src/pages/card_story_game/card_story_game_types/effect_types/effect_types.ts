@@ -1,7 +1,7 @@
 import type { ConditionExpression, TargetRef } from "../condition_types.ts";
 import type { ChangeAttributesEffect, ChangeRelationshipAttributesEffect } from "./attribute_effects.ts";
-import type { CreateAgreementEffect } from "./agreement_effects.ts";
-export type { CreateAgreementEffect } from "./agreement_effects.ts";
+import type { CreateAgreementEffect, ResolveAgreementEffect } from "./agreement_effects.ts";
+export type { CreateAgreementEffect, ResolveAgreementEffect } from "./agreement_effects.ts";
 import type { AddTagEffect, RemoveTagEffect } from "./tag_effects.ts";
 import type { ChangeTemplateEffect } from "./template_effects.ts";
 import type { AddCardEffect, RemoveCardEffect } from "./card_effects.ts";
@@ -33,7 +33,8 @@ export type EffectKind =
 	| MoveItemCardEffect
 	| StartDialogueEffect
 	| ChangeRelationshipAttributesEffect
-	| CreateAgreementEffect;
+	| CreateAgreementEffect
+	| ResolveAgreementEffect;
 
 /** Effect 作用对象；与 Condition target 使用同一套 TargetRef。 */
 export type EffectTarget = TargetRef;
