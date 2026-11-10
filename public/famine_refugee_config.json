@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 63,
+	"schemaVersion": 64,
 	"allTags": [
 		{
 			"id": 1,
@@ -2351,6 +2351,19 @@
 								{
 									"card": "targetCard"
 								}
+							]
+						},
+						"dialogue": {
+							"dialogueId": 1,
+							"includesTargets": [
+								{
+									"card": "targetCard"
+								}
+							],
+							"endedAtNodeId": "promise_overdue",
+							"experiencedNodeId": "promise_overdue",
+							"chosenOptionIds": [
+								"overdue_kept"
 							]
 						}
 					}

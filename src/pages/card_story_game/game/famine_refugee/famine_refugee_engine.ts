@@ -162,6 +162,9 @@ function evaluateDialogueCheck(condition: Condition, entity: EntitySnapshot, con
 		.filter((id): id is string => Boolean(id));
 	if ((check.includesTargets ?? []).length !== includedTargetIds.length) return false;
 	let count = 0;
+	const visitedNodeIds = new Set<string>();
+	const chosenOptionIds = new Set<string>();
+	const endedAtNodeIds = new Set<string>();
 	const history = context.dialogueHistory ?? [];
 	for (let i = 0; i < history.length; i++) {
 		const entry = history[i];
@@ -169,6 +172,9 @@ function evaluateDialogueCheck(condition: Condition, entity: EntitySnapshot, con
 		if (!entry.participantIds.includes(entity.cardId)) continue;
 		if (includedTargetIds.length > 0 && !includedTargetIds.every((id) => entry.participantIds.includes(id))) continue;
 		count += entry.count;
+		for (let j = 0; j < entry.visitedNodeIds.length; j++) visitedNodeIds.add(entry.visitedNodeIds[j]);
+		for (let j = 0; j < entry.chosenOptionIds.length; j++) chosenOptionIds.add(entry.chosenOptionIds[j]);
+		if (entry.endedAtNodeId) endedAtNodeIds.add(entry.endedAtNodeId);
 	}
 	if (check.triggered !== undefined && (count > 0) !== check.triggered) return false;
 	if (check.count) {
@@ -183,6 +189,11 @@ function evaluateDialogueCheck(condition: Condition, entity: EntitySnapshot, con
 		if (check.count.lte !== undefined && !(actual <= evaluateFormula(check.count.lte, entity.values, formulaContext))) return false;
 		if (check.count.eq !== undefined && actual !== evaluateFormula(check.count.eq, entity.values, formulaContext)) return false;
 	}
+	if (check.experiencedNodeId !== undefined && !visitedNodeIds.has(check.experiencedNodeId)) return false;
+	if (check.experiencedNodeIds && !check.experiencedNodeIds.every((id) => visitedNodeIds.has(id))) return false;
+	if (check.chosenOptionId !== undefined && !chosenOptionIds.has(check.chosenOptionId)) return false;
+	if (check.chosenOptionIds && !check.chosenOptionIds.every((id) => chosenOptionIds.has(id))) return false;
+	if (check.endedAtNodeId !== undefined && !endedAtNodeIds.has(check.endedAtNodeId)) return false;
 	return true;
 }
 
@@ -901,8 +912,19 @@ function applyStartDialogueEffect(runtime: EffectRuntime, effect: InlineEffect):
 			entry.participantIds.length === participantIds.length &&
 			entry.participantIds.every((id) => participantIds.includes(id)),
 		);
-		if (existing) existing.count += 1;
-		else runtime.dialogueHistory.push({ dialogueId: dialogue.id, initiatorId: runtime.sourceId, participantIds, count: 1 });
+		if (existing) {
+			existing.count += 1;
+			if (!existing.visitedNodeIds.includes(nodeId)) existing.visitedNodeIds.push(nodeId);
+		} else {
+			runtime.dialogueHistory.push({
+				dialogueId: dialogue.id,
+				initiatorId: runtime.sourceId,
+				participantIds,
+				count: 1,
+				visitedNodeIds: [nodeId],
+				chosenOptionIds: [],
+			});
+		}
 	}
 	runtime.dialogue = {
 		dialogueId: dialogue.id,
@@ -1066,7 +1088,7 @@ function applyActionEffects(
 	time = 0,
 ): { cards: CardState[]; nextCardId: number; dialogue?: DialogueState; agreements?: Record<string, AgreementState>; dialogueHistory?: DialogueHistoryEntry[]; nextAgreementId?: number } {
 	const plan = planActionEffects(config, action, sourceId, assignments, cards, targetId);
-	const runtime: EffectRuntime = { config, sourceId, targetId, slotMap: plan.slotMap, cards: cards.slice(), nextCardId, removeIds: new Set<string>(), agreements: { ...agreements }, dialogueHistory: dialogueHistory.map((entry) => ({ ...entry, participantIds: [...entry.participantIds] })), nextAgreementId, time };
+	const runtime: EffectRuntime = { config, sourceId, targetId, slotMap: plan.slotMap, cards: cards.slice(), nextCardId, removeIds: new Set<string>(), agreements: { ...agreements }, dialogueHistory: dialogueHistory.map((entry) => ({ ...entry, participantIds: [...entry.participantIds], visitedNodeIds: [...entry.visitedNodeIds], chosenOptionIds: [...entry.chosenOptionIds] })), nextAgreementId, time };
 	for (let i = 0; i < plan.effects.length; i++) effectHandlers[plan.effects[i].kind](runtime, plan.effects[i]);
 	if (runtime.removeIds.size > 0) {
 		runtime.cards = runtime.cards.filter((card) => !runtime.removeIds.has(card.id));
@@ -1348,7 +1370,7 @@ function cloneFamineState(state: FamineState): FamineState {
 		})),
 		logs: [...state.logs],
 		agreements: Object.fromEntries(Object.entries(state.agreements).map(([id, agreement]) => [id, { ...agreement, participants: [...agreement.participants], knownBy: [...agreement.knownBy], acceptedBy: [...agreement.acceptedBy] }])),
-		dialogueHistory: state.dialogueHistory.map((entry) => ({ ...entry, participantIds: [...entry.participantIds] })),
+		dialogueHistory: state.dialogueHistory.map((entry) => ({ ...entry, participantIds: [...entry.participantIds], visitedNodeIds: [...entry.visitedNodeIds], chosenOptionIds: [...entry.chosenOptionIds] })),
 		dialogue: state.dialogue ? { ...state.dialogue, slotMap: { ...state.dialogue.slotMap } } : undefined,
 	};
 }
@@ -1394,6 +1416,32 @@ export function getDialogueOptions(config: FamineRefugeeConfig, state: FamineSta
 	return node.options.filter((option) => evaluateConditions(option.condition, context));
 }
 
+function updateDialogueHistory(
+	history: DialogueHistoryEntry[],
+	dialogue: DialogueState,
+	nodeId: string | undefined,
+	optionId: string | undefined,
+	endedAtNodeId: string | undefined,
+): DialogueHistoryEntry[] {
+	const next = history.map((entry) => ({
+		...entry,
+		participantIds: [...entry.participantIds],
+		visitedNodeIds: [...entry.visitedNodeIds],
+		chosenOptionIds: [...entry.chosenOptionIds],
+	}));
+	const entry = next.find((item) =>
+		item.dialogueId === dialogue.dialogueId &&
+		item.initiatorId === dialogue.sourceCardId &&
+		item.participantIds.includes(dialogue.sourceCardId) &&
+		(dialogue.targetCardId ? item.participantIds.includes(dialogue.targetCardId) : true),
+	);
+	if (!entry) return next;
+	if (nodeId && !entry.visitedNodeIds.includes(nodeId)) entry.visitedNodeIds.push(nodeId);
+	if (optionId && !entry.chosenOptionIds.includes(optionId)) entry.chosenOptionIds.push(optionId);
+	if (endedAtNodeId) entry.endedAtNodeId = endedAtNodeId;
+	return next;
+}
+
 export function chooseDialogueOption(config: FamineRefugeeConfig, state: FamineState, optionId: string): FamineState {
 	const participants = getDialogueParticipants(state);
 	if (!participants) return state;
@@ -1418,7 +1466,14 @@ export function chooseDialogueOption(config: FamineRefugeeConfig, state: FamineS
 	};
 	const result = applyActionEffects(config, synthetic, participants.source.id, assignments, state.cards, state.nextCardId, participants.target?.id, state.agreements, state.dialogueHistory, state.nextAgreementId, state.time);
 	const nextDialogue = result.dialogue ?? (option.next ? { ...participants.dialogue, nodeId: option.next } : undefined);
-	return appendLog({ ...state, cards: result.cards, nextCardId: result.nextCardId, dialogue: nextDialogue, agreements: result.agreements ?? state.agreements, dialogueHistory: result.dialogueHistory ?? state.dialogueHistory, nextAgreementId: result.nextAgreementId ?? state.nextAgreementId }, option.text);
+	const dialogueHistory = updateDialogueHistory(
+		result.dialogueHistory ?? state.dialogueHistory,
+		participants.dialogue,
+		option.next,
+		option.id,
+		option.next ? undefined : participants.dialogue.nodeId,
+	);
+	return appendLog({ ...state, cards: result.cards, nextCardId: result.nextCardId, dialogue: nextDialogue, agreements: result.agreements ?? state.agreements, dialogueHistory, nextAgreementId: result.nextAgreementId ?? state.nextAgreementId }, option.text);
 }
 
 export function advanceDialogue(config: FamineRefugeeConfig, state: FamineState): FamineState {
@@ -1428,9 +1483,17 @@ export function advanceDialogue(config: FamineRefugeeConfig, state: FamineState)
 	if (!node) return state;
 	if (getDialogueOptions(config, state).length > 0) return state;
 	if (node.next) {
-		return { ...state, dialogue: { ...participants.dialogue, nodeId: node.next } };
+		return {
+			...state,
+			dialogueHistory: updateDialogueHistory(state.dialogueHistory, participants.dialogue, node.next, undefined, undefined),
+			dialogue: { ...participants.dialogue, nodeId: node.next },
+		};
 	}
-	return { ...state, dialogue: undefined };
+	return {
+		...state,
+		dialogueHistory: updateDialogueHistory(state.dialogueHistory, participants.dialogue, undefined, undefined, participants.dialogue.nodeId),
+		dialogue: undefined,
+	};
 }
 
 export function previewAction(

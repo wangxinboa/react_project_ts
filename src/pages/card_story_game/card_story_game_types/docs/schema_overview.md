@@ -81,6 +81,9 @@ interface TargetRef {
 - Condition 使用 `agreement: AgreementCheck` 判定共识。
 - `AgreementCheck.includesTargets` 限定共识实例必须包含的参与者；`confirmation` / `time` / `result` 分别判定确认、时间和结果。
 - `DialogueCheck.includesTargets` 先过滤共同经历，再判断 triggered / count。
+- `DialogueCheck` 支持 `experiencedNodeId(s)`、`chosenOptionId(s)`、`endedAtNodeId`；数组语义为全部满足。
+- 对话历史记录 `visitedNodeIds`、`chosenOptionIds`、`endedAtNodeId`。
+- 数值比较的 `gt/gte/lt/lte/eq` 抽离为 `BaseNumberCheck`，供 AttributeCheck / DialogueCountCheck 复用。
 - 不存 active/completed/failed 状态。
 
 ## 关系

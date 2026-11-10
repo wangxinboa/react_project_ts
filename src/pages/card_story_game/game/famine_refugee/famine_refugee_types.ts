@@ -117,6 +117,9 @@ export interface DialogueHistoryEntry {
 	initiatorId: string;
 	participantIds: string[];
 	count: number;
+	visitedNodeIds: string[];
+	chosenOptionIds: string[];
+	endedAtNodeId?: string;
 }
 
 export interface AgreementResolution {
