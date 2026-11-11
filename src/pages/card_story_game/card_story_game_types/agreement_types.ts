@@ -31,6 +31,12 @@ export const AgreementResult = {
 
 export type AgreementResult = (typeof AgreementResult)[keyof typeof AgreementResult];
 
+/** 共识中的位置定义。 */
+export interface AgreementPositionDefinition {
+	key: string;
+	label: string;
+}
+
 /** 共识定义：只描述共识内容，不绑定参与卡。 */
 export interface AgreementDefinition {
 	id: number;
@@ -40,4 +46,6 @@ export interface AgreementDefinition {
 	desc: string;
 	/** 等待时长，单位分钟；创建时求值 */
 	waitTime?: NumberExpression;
+	/** 共识中的位置 */
+	positions?: AgreementPositionDefinition[];
 }

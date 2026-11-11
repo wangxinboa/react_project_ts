@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 64,
+	"schemaVersion": 68,
 	"allTags": [
 		{
 			"id": 1,
@@ -2304,7 +2304,19 @@
 								{
 									"id": 9201,
 									"kind": "createAgreement",
-									"definitionId": 1
+									"definitionId": 1,
+									"positions": {
+										"provider": [
+											{
+												"card": "sourceCard"
+											}
+										],
+										"receiver": [
+											{
+												"card": "targetCard"
+											}
+										]
+									}
 								}
 							]
 						}
@@ -2351,7 +2363,8 @@
 								{
 									"card": "targetCard"
 								}
-							]
+							],
+							"hasPosition": "provider"
 						},
 						"dialogue": {
 							"dialogueId": 1,
@@ -2382,7 +2395,8 @@
 								{
 									"card": "targetCard"
 								}
-							]
+							],
+							"hasPosition": "provider"
 						}
 					}
 				},
@@ -2398,7 +2412,8 @@
 								{
 									"card": "targetCard"
 								}
-							]
+							],
+							"hasPosition": "provider"
 						}
 					}
 				},
@@ -2418,6 +2433,9 @@
 									"card": "targetCard"
 								}
 							]
+						},
+						"worldTime": {
+							"gte": 0
 						}
 					}
 				},
@@ -2434,7 +2452,17 @@
 			"kind": "promise",
 			"title": "找点吃的",
 			"desc": "对方希望你能找到食物。",
-			"waitTime": 60
+			"waitTime": 60,
+			"positions": [
+				{
+					"key": "provider",
+					"label": "提供食物的人"
+				},
+				{
+					"key": "receiver",
+					"label": "接收食物的人"
+				}
+			]
 		}
 	]
 }

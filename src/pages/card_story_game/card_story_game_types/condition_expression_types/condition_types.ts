@@ -3,6 +3,7 @@ import type { TargetRef } from "./target_ref.ts";
 import type { AttributeCheck } from "./attribute_check_types.ts";
 import type { DialogueCheck } from "./dialogue_check_types.ts";
 import type { AgreementCheck } from "./agreement_check_types.ts";
+import type { BaseNumberCheck } from "./base_number_check_types.ts";
 
 /**
  * 条件判断对象。
@@ -10,10 +11,12 @@ import type { AgreementCheck } from "./agreement_check_types.ts";
  * Condition 只做单卡判定；双人判定由两个 Condition 组合。
  */
 export interface Condition {
-	/** 判断对象 */
-	target: TargetRef;
 	/** 给编辑者看的条件说明，不参与运行时判断 */
 	desc?: string;
+	/** 世界时间判定，单位分钟 */
+	worldTime?: BaseNumberCheck;
+	/** 卡牌判定对象；纯 worldTime 条件可为空 */
+	target?: TargetRef;
 	/** 属性条件列表 */
 	attributes?: AttributeCheck[];
 	/** 该卡的对话经历 */

@@ -135,6 +135,7 @@ export interface AgreementState {
 	proposerId: string;
 	knownBy: string[];
 	acceptedBy: string[];
+	positions: Record<string, string[]>;
 	createdAt: number;
 	deadline?: number;
 	resolution?: AgreementResolution;

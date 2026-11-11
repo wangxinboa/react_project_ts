@@ -71,3 +71,12 @@ effect C 执行
 ## Tag auto
 
 Tag auto 不属于 Action，执行时机另行定义。
+
+## moveItemCard 事务
+
+同一动作内的所有 `moveItemCard` 会先统一模拟预检：
+
+- 任一移动失败，整个动作不执行任何物品移动；
+- 接收方也会校验 `carrySlots` 和 `carryCapacity`；
+- source / target 使用同一套规则，不区分玩家或 NPC；
+- 预检通过后按 effect 顺序执行。

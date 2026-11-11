@@ -17,4 +17,10 @@ export interface AgreementCheck {
 
 	/** 双方确认的结果 */
 	result?: AgreementResult;
+
+	/** 该卡在该共识中具备该位置 */
+	hasPosition?: string;
+
+	/** 该卡在该共识中同时具备这些位置，全部满足 */
+	hasPositions?: string[];
 }

@@ -65,6 +65,8 @@ interface TargetRef {
 - Condition 保持单卡判定：`hasAgreement` 检查卡牌持有的共识定义，`dialogue` 检查卡牌的全局对话历史。
 - 双人判定由两个 Condition 的 AND 表达。
 - 条件字段统一为 `condition: ConditionExpression`；支持 `and / or / not`，组合子条件使用 `items`。
+- `Condition`、`ConditionGroup`、`ConditionNot` 都支持 `desc`，仅给编辑者阅读，不参与运行时判断。
+- `Condition.worldTime` 使用 `BaseNumberCheck` 判断世界时间（分钟）；`target` 可省略，但不能在没有 target 时写卡牌判定字段。
 - `startDialogue` effect 启动对话；玩家 incoming 默认使用 targetCard，NPC outgoing 可用 slot。
 - 对话状态保存 sourceCardId / targetCardId / slotMap。
 - 详细触发方式见项目状态与配置案例。
@@ -77,6 +79,9 @@ interface TargetRef {
 - `CardState.agreementIds` 是参与卡上的索引。
 - `createAgreement` 从动作 source/target 创建双方已知、已接受的承诺。
 - `AgreementDefinition.waitTime` 是分钟时长，创建时用发起卡属性求值；运行时写入 `createdAt` / `deadline`。
+- `AgreementDefinition.positions` 定义共识位置；`AgreementState.positions` 保存 position → cardIds。
+- `createAgreement.positions` 使用 `Record<string, TargetRef[]>`，同一位置可分配多张卡。
+- `AgreementCheck.hasPosition(s)` 判断卡牌在共识实例中的位置；`includesTargets` 定位具体实例。
 - `resolveAgreement` 由双方对话确认后写入 `resolution`；时间到达不会自动失败。
 - Condition 使用 `agreement: AgreementCheck` 判定共识。
 - `AgreementCheck.includesTargets` 限定共识实例必须包含的参与者；`confirmation` / `time` / `result` 分别判定确认、时间和结果。

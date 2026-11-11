@@ -1,12 +1,11 @@
 import { evaluateFormula } from "../../formula/formula_eval.ts";
 import type { FormulaContext } from "../../formula/formula_eval.ts";
-import type { AttributeValue, CardType, NumberExpression, TargetRef } from "../../card_story_game_types/index.ts";
+import type { AttributeValue, BaseNumberCheck, CardType, MoveItemDestination, NumberExpression, TargetRef } from "../../card_story_game_types/index.ts";
 import { AgreementConfirmation, AgreementTimeRelation } from "../../card_story_game_types/index.ts";
 import { getNumberAttribute, getNumberValues, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import type {
 	ActionSlot,
 	AgreementState,
-	AttributeCheck,
 	CardDerived,
 	CardState,
 	DialogueDefinition,
@@ -104,12 +103,12 @@ function createTagInstance(config: FamineRefugeeConfig, tagId: number): TagInsta
 
 function matchesAttribute(
 	actual: number,
-	check: AttributeCheck,
+	check: BaseNumberCheck,
 	values: Record<number, AttributeValue>,
 	context: ConditionContext,
 ): boolean {
 	const formulaContext: FormulaContext = {
-		...createFormulaContext(context.config, context.cards ?? []),
+		...(context.config ? createFormulaContext(context.config, context.cards ?? []) : {}),
 		evaluateConditions: (conditions: ConditionExpression | ConditionExpression[]) => evaluateConditions(conditions, context),
 	};
 	if (check.gt !== undefined && !(actual > evaluateFormula(check.gt, values, formulaContext))) return false;
@@ -133,7 +132,8 @@ function evaluateAgreementCheck(condition: Condition, entity: EntitySnapshot, co
 	const check = condition.agreement;
 	if (!check) return true;
 	if (!entity.cardId) return false;
-	const card = getCard(context.cards ?? [], entity.cardId);
+	const cardId = entity.cardId;
+	const card = getCard(context.cards ?? [], cardId);
 	if (!card) return false;
 	const owned = new Set(card.agreementIds ?? []);
 	const now = context.time ?? 0;
@@ -149,6 +149,8 @@ function evaluateAgreementCheck(condition: Condition, entity: EntitySnapshot, co
 		if (check.time === AgreementTimeRelation.OVERDUE && !(agreement.deadline !== undefined && now >= agreement.deadline)) return false;
 		if (check.time === AgreementTimeRelation.NOT_OVERDUE && !(agreement.deadline !== undefined && now < agreement.deadline)) return false;
 		if (check.result !== undefined && agreement.resolution?.result !== check.result) return false;
+		if (check.hasPosition !== undefined && !(agreement.positions[check.hasPosition] ?? []).includes(cardId)) return false;
+		if (check.hasPositions && !check.hasPositions.every((position) => (agreement.positions[position] ?? []).includes(cardId))) return false;
 		return true;
 	});
 }
@@ -299,14 +301,36 @@ function evaluateDefinitionChecks(condition: Condition, entity: EntitySnapshot):
 	return true;
 }
 
+function hasCardCondition(condition: Condition): boolean {
+	return condition.attributes !== undefined
+		|| condition.hasTag !== undefined
+		|| condition.hasTags !== undefined
+		|| condition.hasAnyTag !== undefined
+		|| condition.onlyHasTag !== undefined
+		|| condition.onlyHasTags !== undefined
+		|| condition.isTemplate !== undefined
+		|| condition.isAnyTemplate !== undefined
+		|| condition.isCardType !== undefined
+		|| condition.isAnyCardType !== undefined
+		|| condition.agreement !== undefined
+		|| condition.dialogue !== undefined;
+}
+
 function evaluateCondition(condition: Condition, context: ConditionContext): boolean {
-	const entity = resolveTargetEntity(condition.target, context);
-	if (!entity) return false;
-	return evaluateAttributeChecks(condition, entity, context)
-		&& evaluateTagChecks(condition, entity)
-		&& evaluateDefinitionChecks(condition, entity)
-		&& evaluateAgreementCheck(condition, entity, context)
-		&& evaluateDialogueCheck(condition, entity, context);
+	if (!condition.target) {
+		if (hasCardCondition(condition)) return false;
+	} else {
+		const entity = resolveTargetEntity(condition.target, context);
+		if (!entity) return false;
+		if (condition.worldTime !== undefined && !matchesAttribute(context.time ?? 0, condition.worldTime, {}, context)) return false;
+		return evaluateAttributeChecks(condition, entity, context)
+			&& evaluateTagChecks(condition, entity)
+			&& evaluateDefinitionChecks(condition, entity)
+			&& evaluateAgreementCheck(condition, entity, context)
+			&& evaluateDialogueCheck(condition, entity, context);
+	}
+	if (condition.worldTime !== undefined && !matchesAttribute(context.time ?? 0, condition.worldTime, {}, context)) return false;
+	return true;
 }
 
 function isConditionGroup(expression: ConditionExpression): expression is ConditionGroup {
@@ -515,21 +539,21 @@ export function getEligibleCards(
 	return cards;
 }
 
-function getVisibleActionsFromSource(config: FamineRefugeeConfig, source: CardState, cards: CardState[]): FamineAction[] {
+function getVisibleActionsFromSource(config: FamineRefugeeConfig, source: CardState, cards: CardState[], time = 0): FamineAction[] {
 	const derived = deriveCard(config, source, cards);
 	const sourceSnapshot = snapshotFromDerived(derived, source);
 	const actions: FamineAction[] = [];
 	for (let i = 0; i < (derived.template.outgoing ?? []).length; i++) {
 		const action = findAction(config, (derived.template.outgoing ?? [])[i]);
 		if (!action) continue;
-		if (evaluateConditions(action.condition, { sourceCard: sourceSnapshot, cards, config })) actions.push(action);
+		if (evaluateConditions(action.condition, { sourceCard: sourceSnapshot, cards, config, time })) actions.push(action);
 	}
 	return actions;
 }
 
 export function getVisibleActions(config: FamineRefugeeConfig, state: FamineState): FamineAction[] {
 	const player = getPlayerCard(config, state);
-	return player ? getVisibleActionsFromSource(config, player, state.cards) : [];
+	return player ? getVisibleActionsFromSource(config, player, state.cards, state.time) : [];
 }
 
 function getConditionSlotId(conditions: ConditionExpression | ConditionExpression[] | undefined): string | null {
@@ -547,7 +571,7 @@ function getConditionSlotId(conditions: ConditionExpression | ConditionExpressio
 			if (nested) return nested;
 			continue;
 		}
-		if (condition.target.card === "slot" && condition.target.slot) return condition.target.slot;
+		if (condition.target && condition.target.card === "slot" && condition.target.slot) return condition.target.slot;
 	}
 	return null;
 }
@@ -829,52 +853,104 @@ function applyCreateCardEffect(runtime: EffectRuntime, effect: InlineEffect): vo
 	runtime.cards = [...runtime.cards.map((card) => (card.id === source.id ? { ...card, values: ownerValues } : card)), created];
 }
 
+function simulateMoveItemCard(
+	config: FamineRefugeeConfig,
+	cards: CardState[],
+	itemId: string,
+	to: MoveItemDestination,
+	source: CardState,
+	target: CardState | null,
+): CardState[] | null {
+	const item = getCard(cards, itemId);
+	if (!item) return null;
+	const backpackId = getAttributeId(config, "backpack");
+	const carrierId = getAttributeId(config, "carrier");
+	const locationId = getAttributeId(config, "location");
+	const weightId = getAttributeId(config, "weight");
+	const capacityId = getAttributeId(config, "carryCapacity");
+	const slotsId = getAttributeId(config, "carrySlots");
+
+	let updated = cards.map((card) => {
+		const backpack = getStringListAttribute(card.values, backpackId);
+		if (!backpack.includes(itemId)) return card;
+		const values = { ...card.values };
+		values[backpackId] = backpack.filter((id) => id !== itemId);
+		return { ...card, values };
+	});
+	const values = { ...item.values };
+	if (to === "sourceBackpack" || to === "targetBackpack") {
+		const carrier = to === "sourceBackpack" ? source : target;
+		if (!carrier) return null;
+		const current = getCard(updated, carrier.id);
+		if (!current) return null;
+		const backpack = getStringListAttribute(current.values, backpackId);
+		const derived = deriveCard(config, current, updated);
+		const slots = getNumberAttribute(derived.values, slotsId);
+		let weight = getNumberAttribute(item.values, weightId);
+		for (let i = 0; i < backpack.length; i++) {
+			const carried = getCard(updated, backpack[i]);
+			if (carried) weight += getNumberAttribute(carried.values, weightId);
+		}
+		if (backpack.length + 1 > slots) return null;
+		if (weight > getNumberAttribute(derived.values, capacityId)) return null;
+		values[carrierId] = carrier.id;
+		values[locationId] = "";
+		updated = updated.map((card) => {
+			if (card.id !== carrier.id) return card;
+			const own = { ...card.values };
+			own[backpackId] = [...getStringListAttribute(card.values, backpackId), itemId];
+			return { ...card, values: own };
+		});
+	} else {
+		const place = to === "sourceLocation" ? source : target;
+		values[carrierId] = "";
+		values[locationId] = place ? (getStringAttribute(place.values, locationId) ?? "") : "";
+	}
+	return updated.map((card) => (card.id === itemId ? { ...card, values } : card));
+}
+
+function getMoveItemIds(effect: InlineEffect, slotMap: Record<string, string[]>, targetId?: string): string[] {
+	if (effect.kind !== "moveItemCard") return [];
+	return effect.target?.card === "slot" && effect.target.slot
+		? slotMap[effect.target.slot] ?? []
+		: targetId ? [targetId] : [];
+}
+
+function validateMoveItemEffects(
+	config: FamineRefugeeConfig,
+	effects: InlineEffect[],
+	slotMap: Record<string, string[]>,
+	sourceId: string,
+	targetId: string | undefined,
+	cards: CardState[],
+): boolean {
+	const source = getCard(cards, sourceId);
+	if (!source) return false;
+	const target = targetId ? getCard(cards, targetId) : null;
+	let simulated = cards;
+	for (let i = 0; i < effects.length; i++) {
+		const effect = effects[i];
+		if (effect.kind !== "moveItemCard") continue;
+		const itemIds = getMoveItemIds(effect, slotMap, targetId);
+		for (let j = 0; j < itemIds.length; j++) {
+			const next = simulateMoveItemCard(config, simulated, itemIds[j], effect.to, source, target);
+			if (!next) return false;
+			simulated = next;
+		}
+	}
+	return true;
+}
+
 function applyMoveItemEffect(runtime: EffectRuntime, effect: InlineEffect): void {
 	if (effect.kind !== "moveItemCard") return;
-	const itemIds = effect.target?.card === "slot" && effect.target.slot ? runtime.slotMap[effect.target.slot] ?? [] : runtime.targetId ? [runtime.targetId] : [];
 	const source = getCard(runtime.cards, runtime.sourceId);
 	if (!source) return;
-	const sourceLocation = getStringAttribute(source.values, getAttributeId(runtime.config, "location")) ?? "";
-	const sourceBackpack = getStringListAttribute(source.values, getAttributeId(runtime.config, "backpack"));
-	const capacity = getNumberAttribute(deriveCard(runtime.config, source, runtime.cards).values, getAttributeId(runtime.config, "carryCapacity"));
-	const slots = getNumberAttribute(deriveCard(runtime.config, source, runtime.cards).values, getAttributeId(runtime.config, "carrySlots"));
-	let carriedWeight = 0;
-	for (let i = 0; i < sourceBackpack.length; i++) {
-		const carried = getCard(runtime.cards, sourceBackpack[i]);
-		if (carried) carriedWeight += getNumberAttribute(carried.values, getAttributeId(runtime.config, "weight"));
-	}
+	const target = runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null;
+	const itemIds = getMoveItemIds(effect, runtime.slotMap, runtime.targetId);
 	for (let i = 0; i < itemIds.length; i++) {
-		const item = getCard(runtime.cards, itemIds[i]);
-		if (!item) continue;
-		let updatedCards = runtime.cards.map((card) => {
-			const backpack = getStringListAttribute(card.values, getAttributeId(runtime.config, "backpack"));
-			if (!backpack.includes(item.id)) return card;
-			const values = { ...card.values };
-			values[getAttributeId(runtime.config, "backpack")] = backpack.filter((id) => id !== item.id);
-			return { ...card, values };
-		});
-		const values = { ...item.values };
-		if (effect.to === "sourceBackpack" || effect.to === "targetBackpack") {
-			const carrier = effect.to === "sourceBackpack" ? source : runtime.targetId ? getCard(updatedCards, runtime.targetId) : null;
-			if (!carrier) continue;
-			if (carrier.id === source.id) {
-				if (sourceBackpack.length + 1 > slots) continue;
-				if (carriedWeight + getNumberAttribute(item.values, getAttributeId(runtime.config, "weight")) > capacity) continue;
-			}
-			values[getAttributeId(runtime.config, "carrier")] = carrier.id;
-			values[getAttributeId(runtime.config, "location")] = "";
-			updatedCards = updatedCards.map((card) => {
-				if (card.id !== carrier.id) return card;
-				const own = { ...card.values };
-				own[getAttributeId(runtime.config, "backpack")] = [...getStringListAttribute(card.values, getAttributeId(runtime.config, "backpack")), item.id];
-				return { ...card, values: own };
-			});
-		} else {
-			values[getAttributeId(runtime.config, "carrier")] = "";
-			values[getAttributeId(runtime.config, "location")] = effect.to === "sourceLocation" ? sourceLocation : "";
-		}
-		updatedCards = updatedCards.map((card) => (card.id === item.id ? { ...card, values } : card));
-		runtime.cards = updatedCards;
+		const next = simulateMoveItemCard(runtime.config, runtime.cards, itemIds[i], effect.to, source, target);
+		if (!next) return;
+		runtime.cards = next;
 	}
 }
 
@@ -987,6 +1063,22 @@ function applyCreateAgreementEffect(runtime: EffectRuntime, effect: InlineEffect
 	if (effect.kind !== "createAgreement" || !runtime.targetId) return;
 	const definition = runtime.config.allAgreements.find((agreement) => agreement.id === effect.definitionId);
 	if (!definition) return;
+	const participants = [runtime.sourceId, runtime.targetId];
+	const existing = Object.values(runtime.agreements).find((agreement) =>
+		agreement.definitionId === definition.id &&
+		agreement.participants.length === participants.length &&
+		agreement.participants.every((id) => participants.includes(id)),
+	);
+	if (existing) return;
+	const positions: Record<string, string[]> = {};
+	if (effect.positions) {
+		const keys = Object.keys(effect.positions);
+		for (let i = 0; i < keys.length; i++) {
+			positions[keys[i]] = effect.positions[keys[i]]
+				.map((target) => resolveRuntimeCardId(runtime, target))
+				.filter((id): id is string => id !== undefined && participants.includes(id));
+		}
+	}
 	const id = `agreement_${runtime.nextAgreementId}`;
 	runtime.nextAgreementId += 1;
 	const source = getCard(runtime.cards, runtime.sourceId);
@@ -996,7 +1088,8 @@ function applyCreateAgreementEffect(runtime: EffectRuntime, effect: InlineEffect
 	runtime.agreements[id] = {
 		id,
 		definitionId: definition.id,
-		participants: [runtime.sourceId, runtime.targetId],
+		participants,
+		positions,
 		proposerId: runtime.sourceId,
 		knownBy: [runtime.sourceId, runtime.targetId],
 		acceptedBy: [runtime.sourceId, runtime.targetId],
@@ -1088,6 +1181,9 @@ function applyActionEffects(
 	time = 0,
 ): { cards: CardState[]; nextCardId: number; dialogue?: DialogueState; agreements?: Record<string, AgreementState>; dialogueHistory?: DialogueHistoryEntry[]; nextAgreementId?: number } {
 	const plan = planActionEffects(config, action, sourceId, assignments, cards, targetId);
+	if (!validateMoveItemEffects(config, plan.effects, plan.slotMap, sourceId, targetId, cards)) {
+		return { cards, nextCardId };
+	}
 	const runtime: EffectRuntime = { config, sourceId, targetId, slotMap: plan.slotMap, cards: cards.slice(), nextCardId, removeIds: new Set<string>(), agreements: { ...agreements }, dialogueHistory: dialogueHistory.map((entry) => ({ ...entry, participantIds: [...entry.participantIds], visitedNodeIds: [...entry.visitedNodeIds], chosenOptionIds: [...entry.chosenOptionIds] })), nextAgreementId, time };
 	for (let i = 0; i < plan.effects.length; i++) effectHandlers[plan.effects[i].kind](runtime, plan.effects[i]);
 	if (runtime.removeIds.size > 0) {
@@ -1211,7 +1307,7 @@ function runNpcBehaviors(config: FamineRefugeeConfig, state: FamineState): Famin
 			const action = findAction(config, (template.outgoing ?? [])[i]);
 			if (!action) continue;
 			const sourceSnapshot = snapshotFromDerived(deriveCard(config, npc, current.cards), npc);
-			if (!evaluateConditions(action.condition, { sourceCard: sourceSnapshot, cards: current.cards, config })) continue;
+			if (!evaluateConditions(action.condition, { sourceCard: sourceSnapshot, cards: current.cards, config, time: current.time })) continue;
 			const assignments: SlotAssignment[] = [];
 			const used = new Set<string>();
 			let valid = true;
@@ -1322,6 +1418,7 @@ export function getIncomingActions(
 			targetCard: snapshotFromDerived(targetDerived, target),
 			cards: state.cards,
 			config,
+			time: state.time,
 		})) actions.push(action);
 	}
 	return actions;
@@ -1352,6 +1449,7 @@ export function applyIncomingAction(
 		targetCard: snapshotFromDerived(targetDerived, target),
 		cards: state.cards,
 		config,
+		time: state.time,
 	})) return state;
 	const timeCost = getActionTimeCost(config, action, player, {}, state.cards);
 	const result = applyActionEffects(config, action, player.id, [], state.cards, state.nextCardId, targetId, state.agreements, state.dialogueHistory, state.nextAgreementId, state.time);
@@ -1556,7 +1654,7 @@ export function applyAction(
 	const action = findAction(config, actionId);
 	if (!action) return state;
 	const sourceDerived = deriveCard(config, player, state.cards);
-	if (!evaluateConditions(action.condition, { sourceCard: snapshotFromDerived(sourceDerived, player), cards: state.cards, config })) return state;
+	if (!evaluateConditions(action.condition, { sourceCard: snapshotFromDerived(sourceDerived, player), cards: state.cards, config, time: state.time })) return state;
 	const resolved = validateAssignments(config, action, player, assignments, state.cards);
 	if (!resolved) return state;
 
