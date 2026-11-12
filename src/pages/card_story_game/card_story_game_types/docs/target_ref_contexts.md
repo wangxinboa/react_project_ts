@@ -189,7 +189,6 @@ FormulaNode 自身没有 `TargetRef` 字段。静态数字直接用 number；只
 export type FormulaNode =
 	| { op: "literal"; value: number }
 	| { op: "numberAttributeValue"; attributeId: number }
-	| { op: "numberAttributeBound"; attributeId: number; boundary: "min" | "max" }
 	| { op: "floor" | "abs"; value: Formula }
 	| { op: "refListsAttributeSum"; refAttributeId: number; valueAttributeId: number }
 	| { op: "refListsAttributeCount"; refAttributeId: number }

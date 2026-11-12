@@ -1,7 +1,7 @@
 import { evaluateFormula } from "../../formula/formula_eval.ts";
 import type { FormulaContext } from "../../formula/formula_eval.ts";
 import type { AttributeValue, BaseNumberCheck, NumberExpression, TargetRef } from "../../card_story_game_types/index.ts";
-import { AddCardDestination, EffectType, AgreementConfirmation, AgreementTimeRelation, AttributeKind, AttributeScope, CardType, ConditionGroupKind, ConditionNotKind, ConditionTarget, MoveItemDestination, TagKind } from "../../card_story_game_types/index.ts";
+import { AddCardDestination, EffectType, FormulaOp, AgreementConfirmation, AgreementTimeRelation, AttributeKind, AttributeScope, CardType, ConditionGroupKind, ConditionNotKind, ConditionTarget, MoveItemDestination, TagKind } from "../../card_story_game_types/index.ts";
 import { getNumberAttribute, getNumberValues, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import type {
 	ActionSlot,
@@ -421,6 +421,64 @@ export function createInitialState(config: FamineRefugeeConfig): FamineState {
 	};
 }
 
+function collectFormulaAttributeIds(
+	formula: NumberExpression | undefined,
+	ids: Set<number>,
+): void {
+	if (formula === undefined || typeof formula === "number") return;
+	switch (formula.op) {
+		case FormulaOp.NUMBER_ATTRIBUTE_VALUE:
+		case FormulaOp.NORMALIZE:
+			if (typeof formula.attributeId === "number") ids.add(formula.attributeId);
+			break;
+		case FormulaOp.REF_LISTS_ATTRIBUTE_SUM:
+			if (typeof formula.refAttributeId === "number") ids.add(formula.refAttributeId);
+			break;
+		case FormulaOp.REF_LISTS_ATTRIBUTE_COUNT:
+			if (typeof formula.refAttributeId === "number") ids.add(formula.refAttributeId);
+			break;
+	}
+	if ("args" in formula) {
+		for (let i = 0; i < formula.args.length; i++) collectFormulaAttributeIds(formula.args[i], ids);
+	}
+	if ("value" in formula) collectFormulaAttributeIds(formula.value, ids);
+	if ("min" in formula) collectFormulaAttributeIds(formula.min, ids);
+	if ("max" in formula) collectFormulaAttributeIds(formula.max, ids);
+	if (formula.op === FormulaOp.SELECT) {
+		for (let i = 0; i < formula.branches.length; i++) {
+			collectFormulaAttributeIds(formula.branches[i].value, ids);
+		}
+		collectFormulaAttributeIds(formula.else, ids);
+	}
+}
+
+function getDerivedAttributeOrder(config: FamineRefugeeConfig): number[] {
+	const definitions = new Map<number, (typeof config.allAttributes)[number]>();
+	for (let i = 0; i < config.allAttributes.length; i++) definitions.set(config.allAttributes[i].id, config.allAttributes[i]);
+	const order: number[] = [];
+	const state = new Map<number, "visiting" | "done">();
+	const visit = (id: number): void => {
+		const definition = definitions.get(id);
+		if (!definition || definition.kind !== AttributeKind.DERIVED) return;
+		const current = state.get(id);
+		if (current === "done") return;
+		if (current === "visiting") return;
+		state.set(id, "visiting");
+		const dependencies = new Set<number>();
+		collectFormulaAttributeIds(definition.formula, dependencies);
+		for (const dependency of dependencies) {
+			if (dependency !== id) visit(dependency);
+		}
+		state.set(id, "done");
+		order.push(id);
+	};
+	for (let i = 0; i < config.allAttributes.length; i++) {
+		const definition = config.allAttributes[i];
+		if (definition.kind === AttributeKind.DERIVED) visit(definition.id);
+	}
+	return order;
+}
+
 export function deriveCard(
 	config: FamineRefugeeConfig,
 	card: CardState,
@@ -428,10 +486,11 @@ export function deriveCard(
 ): CardDerived {
 	const template = getTemplate(config, card.templateId);
 	const values = { ...card.values };
-	for (let i = 0; i < config.allAttributes.length; i++) {
-		const definition = config.allAttributes[i];
-		if (definition.kind === AttributeKind.DERIVED && definition.formula) {
-			values[definition.id] = evaluateFormula(definition.formula, values, createFormulaContext(config, cards));
+	const derivedOrder = getDerivedAttributeOrder(config);
+	for (let i = 0; i < derivedOrder.length; i++) {
+		const definition = config.allAttributes.find((attribute) => attribute.id === derivedOrder[i]);
+		if (definition?.kind === AttributeKind.DERIVED && definition.formula) {
+			values[definition.id] = evaluateFormula(definition.formula, values, createFormulaContext(config, cards, card));
 		}
 	}
 	const numericValues = getNumberValues(values);
@@ -607,19 +666,6 @@ export function getActionTimeCost(
 	return Number.isFinite(result) ? Math.max(0, Math.ceil(result)) : 0;
 }
 
-function resolveNumberBounds(
-	definition: { typeParams?: { bounds?: { min?: NumberExpression; max?: NumberExpression } } },
-	values: Record<number, AttributeValue>,
-	context?: FormulaContext,
-): { min?: number; max?: number } {
-	const bounds = definition.typeParams?.bounds;
-	if (!bounds) return {};
-	return {
-		min: bounds.min === undefined ? undefined : evaluateFormula(bounds.min, values, context),
-		max: bounds.max === undefined ? undefined : evaluateFormula(bounds.max, values, context),
-	};
-}
-
 function evaluateChangeNumber(
 	expression: NumberExpression | undefined,
 	values: Record<number, AttributeValue>,
@@ -646,10 +692,7 @@ function applyChangeAttributes(
 		const current = getNumberAttribute(values, change.attributeId);
 		const set = change.set === undefined ? undefined : evaluateChangeNumber(change.set, values, formulaContext);
 		const delta = evaluateChangeNumber(change.delta, values, formulaContext, 0);
-		let next = set ?? current + delta;
-		const bounds = resolveNumberBounds(definition, values, formulaContext);
-		if (bounds.min !== undefined) next = Math.max(bounds.min, next);
-		if (bounds.max !== undefined) next = Math.min(bounds.max, next);
+		const next = set ?? current + delta;
 		values[change.attributeId] = next;
 	}
 	return { ...card, values };
@@ -707,16 +750,25 @@ function getCard(cards: CardState[], id: string): CardState | null {
 	return null;
 }
 
-function createFormulaContext(config: FamineRefugeeConfig | undefined, cards: CardState[]): FormulaContext {
+function createFormulaContext(config: FamineRefugeeConfig | undefined, cards: CardState[], host?: CardState): FormulaContext {
 	const context: FormulaContext = {
 		resolveCard: (id) => getCard(cards, id),
 	};
-	context.getAttributeBound = (attributeId, boundary, values) => {
-		const definition = config?.allAttributes.find((attribute) => attribute.id === attributeId);
-		const expression = definition?.typeParams?.bounds?.[boundary];
-		if (expression === undefined) return undefined;
-		return evaluateFormula(expression, values, context);
-	};
+	if (host) {
+		const template = getTemplate(config as FamineRefugeeConfig, host.templateId);
+		const hostSnapshot = {
+			values: getNumberValues(host.values),
+			tagIds: new Set(host.tags.map((tag) => tag.tagId)),
+			templateId: host.templateId,
+			cardType: template.cardType,
+			cardId: host.id,
+		};
+		context.evaluateConditions = (conditions) => evaluateConditions(conditions, {
+			host: hostSnapshot,
+			cards,
+			config,
+		});
+	}
 	return context;
 }
 
@@ -1048,10 +1100,7 @@ function applyChangeRelationshipEffect(runtime: EffectRuntime, effect: InlineEff
 		const currentValue = getNumberAttribute(values, change.attributeId);
 		const set = change.set === undefined ? undefined : evaluateFormula(change.set, values, formulaContext);
 		const delta = change.delta === undefined ? 0 : evaluateFormula(change.delta, values, formulaContext);
-		let next = set ?? currentValue + delta;
-		const bounds = resolveNumberBounds(definition, values, formulaContext);
-		if (bounds.min !== undefined) next = Math.max(bounds.min, next);
-		if (bounds.max !== undefined) next = Math.min(bounds.max, next);
+		const next = set ?? currentValue + delta;
 		values[change.attributeId] = next;
 	}
 	const relationships = { ...(source.relationships ?? {}) };
@@ -1167,6 +1216,67 @@ function planActionEffects(
 	return { effects, slotMap };
 }
 
+function applyCardAttributeReactions(config: FamineRefugeeConfig, card: CardState, time: number): CardState {
+	const runtime: EffectRuntime = {
+		config,
+		sourceId: card.id,
+		slotMap: {},
+		cards: [card],
+		nextCardId: 0,
+		removeIds: new Set<string>(),
+		agreements: {},
+		dialogueHistory: [],
+		nextAgreementId: 1,
+		time,
+	};
+	applyAttributeReactions(runtime);
+	return getCard(runtime.cards, card.id) ?? card;
+}
+
+function applyAttributeReactions(runtime: EffectRuntime): void {
+	const source = getCard(runtime.cards, runtime.sourceId);
+	if (!source) return;
+	const target = runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null;
+	for (let i = 0; i < runtime.config.allAttributes.length; i++) {
+		const definition = runtime.config.allAttributes[i];
+		if (!definition.reactions) continue;
+		for (let j = 0; j < definition.reactions.length; j++) {
+			const reaction = definition.reactions[j];
+			const context = getConditionContext(
+				runtime.config,
+				reaction.condition,
+				source,
+				target,
+				null,
+				runtime.slotMap,
+				runtime.cards,
+				runtime.agreements,
+				runtime.dialogueHistory,
+				runtime.time,
+			);
+			if (!evaluateConditions(reaction.condition, context)) continue;
+			for (let k = 0; k < reaction.effects.length; k++) {
+				const effect = resolveEffect(runtime.config, reaction.effects[k]);
+				if (!effect) continue;
+				const effectContext = getConditionContext(
+					runtime.config,
+					effect.condition,
+					source,
+					target,
+					null,
+					runtime.slotMap,
+					runtime.cards,
+					runtime.agreements,
+					runtime.dialogueHistory,
+					runtime.time,
+				);
+				if (!evaluateConditions(effect.condition, effectContext)) continue;
+				effectHandlers[effect.kind](runtime, effect);
+			}
+		}
+	}
+}
+
 function applyActionEffects(
 	config: FamineRefugeeConfig,
 	action: FamineAction,
@@ -1186,6 +1296,7 @@ function applyActionEffects(
 	}
 	const runtime: EffectRuntime = { config, sourceId, targetId, slotMap: plan.slotMap, cards: cards.slice(), nextCardId, removeIds: new Set<string>(), agreements: { ...agreements }, dialogueHistory: dialogueHistory.map((entry) => ({ ...entry, participantIds: [...entry.participantIds], visitedNodeIds: [...entry.visitedNodeIds], chosenOptionIds: [...entry.chosenOptionIds] })), nextAgreementId, time };
 	for (let i = 0; i < plan.effects.length; i++) effectHandlers[plan.effects[i].kind](runtime, plan.effects[i]);
+	applyAttributeReactions(runtime);
 	if (runtime.removeIds.size > 0) {
 		runtime.cards = runtime.cards.filter((card) => !runtime.removeIds.has(card.id));
 		for (let i = 0; i < runtime.cards.length; i++) {
@@ -1232,10 +1343,7 @@ function applyTagAutoEffects(
 				const current = getNumberAttribute(values, change.attributeId);
 				const set = change.set === undefined ? undefined : evaluateChangeNumber(change.set, values, { evaluateConditions: tagCondition });
 				const delta = evaluateChangeNumber(change.delta, values, { evaluateConditions: tagCondition }, 0);
-				let next = set ?? current + delta;
-				const bounds = resolveNumberBounds(definition, values, { evaluateConditions: tagCondition });
-				if (bounds.min !== undefined) next = Math.max(bounds.min, next);
-				if (bounds.max !== undefined) next = Math.min(bounds.max, next);
+				const next = set ?? current + delta;
 				values[change.attributeId] = next;
 			}
 			currentTag = { ...currentTag, values };
@@ -1244,7 +1352,7 @@ function applyTagAutoEffects(
 	return { host: currentHost, tag: currentTag };
 }
 
-function runTagAutoActions(config: FamineRefugeeConfig, card: CardState): CardState {
+function runTagAutoActions(config: FamineRefugeeConfig, card: CardState, time = 0): CardState {
 	let current = card;
 	for (let i = 0; i < current.tags.length; i++) {
 		const tagDefinition = getTagDefinition(config, current.tags[i].tagId);
@@ -1260,10 +1368,10 @@ function runTagAutoActions(config: FamineRefugeeConfig, card: CardState): CardSt
 			current = { ...result.host, tags };
 		}
 	}
-	return current;
+	return applyCardAttributeReactions(config, current, time);
 }
 
-function runAutoActions(config: FamineRefugeeConfig, card: CardState): CardState {
+function runAutoActions(config: FamineRefugeeConfig, card: CardState, time = 0): CardState {
 	let current = card;
 	const template = getTemplate(config, current.templateId);
 	for (let i = 0; i < (template.auto ?? []).length; i++) {
@@ -1275,7 +1383,7 @@ function runAutoActions(config: FamineRefugeeConfig, card: CardState): CardState
 		const updated = getCard(result.cards, current.id);
 		if (updated) current = updated;
 	}
-	return runTagAutoActions(config, current);
+	return runTagAutoActions(config, current, time);
 }
 
 function formatLogTime(time: number, message: string): string {
@@ -1621,9 +1729,7 @@ export function previewAction(
 		const oldValue = before[definition.id] ?? 0;
 		const newValue = after[definition.id] ?? 0;
 		if (Math.abs(oldValue - newValue) < 0.001) continue;
-		const format = definition.id === config.primaryDerivedAttributeId
-			? (value: number) => `${Math.round(value * 100)}%`
-			: (value: number) => `${Math.round(value * 100) / 100}`;
+		const format = (value: number) => `${Math.round(value * 100) / 100}`;
 		lines.push(`${definition.label}: ${format(oldValue)} → ${format(newValue)}`);
 	}
 	const oldBag = getStringListAttribute(player.values, getAttributeId(config, "backpack"));

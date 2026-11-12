@@ -12,7 +12,7 @@
 
 - 属性值支持 `number / cardRef / cardRefList`，统一存放在 `CardState.values`。
 - `AttributeDefinition.valueType` 决定值类型。
-- `typeParams.bounds` 是硬上下限，使用 `NumberExpression`，写入时强制夹在范围内。
+- 属性上限由派生上限属性和 Reaction 共同实现；不再使用 `NumberBounds`。
 - `location / carrier / backpack` 是属性，不是 CardState 硬编码字段。
 
 ## 数字表达式
@@ -20,7 +20,7 @@
 - 静态数字直接使用 number。
 - 动态计算使用 `FormulaNode`。
 - Formula 内部的 `args`、`clamp`、`normalize` 等统一使用 `Formula`；常量使用 `literal`。
-- 支持 `literal / numberAttributeValue / numberAttributeBound / floor / abs / add / sub / mul / div / clamp / normalize / refListsAttributeCount / refListsAttributeSum`。
+- 支持 `literal / numberAttributeValue / floor / abs / add / sub / mul / div / clamp / normalize / refListsAttributeCount / refListsAttributeSum / select`。
 - Condition 的数字比较、ActionSlot 数量、NpcBehavior 间隔、refListsMatch 数量、changeAttributes 的 delta/set 都使用 `NumberExpression`。
 
 ## Condition 与 TargetRef
@@ -67,6 +67,12 @@ interface TargetRef {
 - 条件字段统一为 `condition: ConditionExpression`；支持 `and / or / not`，组合子条件使用 `items`。
 - `Condition`、`ConditionGroup`、`ConditionNot` 都支持 `desc`，仅给编辑者阅读，不参与运行时判断。
 - `Condition.worldTime` 使用 `BaseNumberCheck` 判断世界时间（分钟）；`target` 可省略，但不能在没有 target 时写卡牌判定字段。
+- `Formula.select` 使用 `branches: [{ condition, value }]` 按顺序匹配，首个成立分支生效；都不成立时使用 `else`，没有 `else` 返回 0。
+- 当前属性：生命力、超凡灵性、派生灵性、饱食、体力、饱食上限、体力上限；损伤/污染/身体状态已移除。
+- 上限属性是普通派生属性；`NumberBounds` / `typeParams` / `numberAttributeBound` / `maxAttributeId` 已移除。
+- 损伤/污染通过 Tag 表达；骨折通过 `Formula.select` 影响体力上限，感染/梦魇污染通过 Tag auto 影响属性。
+- `AttributeDefinition.reactions` 在动作 effect 后、Tag auto 后按数组顺序执行一轮。
+- `AttributeDefinition.reactions` 是动作效果结束后的属性反应；数组顺序即优先级，第一版只执行一轮。
 - `startDialogue` effect 启动对话；玩家 incoming 默认使用 targetCard，NPC outgoing 可用 slot。
 - 对话状态保存 sourceCardId / targetCardId / slotMap。
 - 详细触发方式见项目状态与配置案例。

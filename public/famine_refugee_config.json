@@ -1,8 +1,8 @@
 {
-	"schemaVersion": 68,
+	"schemaVersion": 76,
 	"allTags": [
 		{
-			"id": 1,
+			"id": 24,
 			"key": "饥饿",
 			"desc": "饱食度过低",
 			"kind": "derived",
@@ -17,13 +17,13 @@
 					"card": "host"
 				},
 				"isAnyTemplate": [
-					1,
-					2
+					38,
+					39
 				]
 			}
 		},
 		{
-			"id": 2,
+			"id": 25,
 			"key": "虚弱",
 			"desc": "体力过低",
 			"kind": "derived",
@@ -38,13 +38,13 @@
 					"card": "host"
 				},
 				"isAnyTemplate": [
-					1,
-					2
+					38,
+					39
 				]
 			}
 		},
 		{
-			"id": 3,
+			"id": 26,
 			"key": "濒死",
 			"desc": "生命过低",
 			"kind": "derived",
@@ -59,15 +59,15 @@
 					"card": "host"
 				},
 				"isAnyTemplate": [
-					1,
-					2
+					38,
+					39
 				]
 			}
 		},
 		{
-			"id": 4,
-			"key": "重伤",
-			"desc": "损伤过高",
+			"id": 27,
+			"key": "通灵",
+			"desc": "灵性过高",
 			"kind": "derived",
 			"condition": {
 				"attributes": [
@@ -80,115 +80,31 @@
 					"card": "host"
 				},
 				"isAnyTemplate": [
-					1,
-					2
+					38,
+					39
 				]
 			}
 		},
 		{
-			"id": 5,
-			"key": "通灵",
-			"desc": "灵性过高",
-			"kind": "derived",
-			"condition": {
-				"attributes": [
-					{
-						"id": 5,
-						"gte": 50
-					}
-				],
-				"target": {
-					"card": "host"
-				},
-				"isAnyTemplate": [
-					1,
-					2
-				]
-			}
-		},
-		{
-			"id": 6,
-			"key": "污染",
-			"desc": "污染过高",
-			"kind": "derived",
-			"condition": {
-				"attributes": [
-					{
-						"id": 6,
-						"gte": 50
-					}
-				],
-				"target": {
-					"card": "host"
-				},
-				"isAnyTemplate": [
-					1,
-					2
-				]
-			}
-		},
-		{
-			"id": 7,
-			"key": "异化",
-			"desc": "污染越过临界",
-			"kind": "derived",
-			"condition": {
-				"attributes": [
-					{
-						"id": 6,
-						"gte": 60
-					}
-				],
-				"target": {
-					"card": "host"
-				},
-				"isAnyTemplate": [
-					1,
-					2
-				]
-			}
-		},
-		{
-			"id": 8,
+			"id": 28,
 			"key": "食物",
 			"desc": "可以作为食物",
 			"kind": "state"
 		},
 		{
-			"id": 9,
+			"id": 29,
 			"key": "重物",
 			"desc": "沉重、可搬运",
 			"kind": "state"
 		},
 		{
-			"id": 10,
-			"key": "濒危",
-			"desc": "身体状态极低",
-			"kind": "derived",
-			"condition": {
-				"attributes": [
-					{
-						"id": 7,
-						"lte": 0.35
-					}
-				],
-				"target": {
-					"card": "host"
-				},
-				"isAnyTemplate": [
-					1,
-					2
-				]
-			}
-		},
-		{
-			"id": 11,
+			"id": 30,
 			"key": "流血",
 			"desc": "伤口仍在流血",
 			"kind": "state",
 			"attributes": [
 				{
-					"id": 10,
+					"id": 7,
 					"value": 1
 				}
 			],
@@ -196,7 +112,7 @@
 				{
 					"effects": [
 						{
-							"id": 21,
+							"id": 68,
 							"kind": "changeAttributes",
 							"changes": [
 								{
@@ -211,7 +127,7 @@
 							"condition": {
 								"attributes": [
 									{
-										"id": 10,
+										"id": 7,
 										"gt": 0
 									}
 								],
@@ -221,11 +137,11 @@
 							}
 						},
 						{
-							"id": 22,
+							"id": 69,
 							"kind": "changeAttributes",
 							"changes": [
 								{
-									"attributeId": 10,
+									"attributeId": 7,
 									"delta": -1
 								}
 							],
@@ -250,15 +166,96 @@
 			]
 		},
 		{
-			"id": 12,
+			"id": 31,
 			"key": "燃料",
 			"desc": "可以作为燃料",
 			"kind": "state"
 		},
 		{
-			"id": 13,
+			"id": 32,
 			"key": "熟食",
 			"desc": "经过烹饪的食物",
+			"kind": "state"
+		},
+		{
+			"id": 33,
+			"key": "骨折",
+			"desc": "骨头受损，体力受影响",
+			"kind": "state"
+		},
+		{
+			"id": 34,
+			"key": "感染",
+			"desc": "伤口感染，持续消耗生命力",
+			"kind": "state",
+			"auto": [
+				{
+					"effects": [
+						{
+							"kind": "changeAttributes",
+							"target": {
+								"card": "host"
+							},
+							"changes": [
+								{
+									"attributeId": 3,
+									"delta": -1
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": 35,
+			"key": "梦魇污染",
+			"desc": "梦境被某种存在侵入",
+			"kind": "state",
+			"auto": [
+				{
+					"effects": [
+						{
+							"kind": "changeAttributes",
+							"target": {
+								"card": "host"
+							},
+							"changes": [
+								{
+									"attributeId": 21,
+									"delta": -1
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": 36,
+			"key": "阴灵",
+			"desc": "肉身已失，仍以灵性存在",
+			"kind": "derived",
+			"condition": {
+				"target": {
+					"card": "host"
+				},
+				"attributes": [
+					{
+						"id": 3,
+						"lte": 0
+					},
+					{
+						"id": 4,
+						"gte": 30
+					}
+				]
+			}
+		},
+		{
+			"id": 37,
+			"key": "力竭",
+			"desc": "体力耗尽",
 			"kind": "state"
 		}
 	],
@@ -270,12 +267,42 @@
 			"desc": "当前饱食度",
 			"kind": "base",
 			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 100
+			"visible": true,
+			"reactions": [
+				{
+					"condition": {
+						"target": {
+							"card": "sourceCard"
+						},
+						"attributes": [
+							{
+								"id": 1,
+								"gt": {
+									"op": "numberAttributeValue",
+									"attributeId": 22
+								}
+							}
+						]
+					},
+					"effects": [
+						{
+							"kind": "changeAttributes",
+							"target": {
+								"card": "sourceCard"
+							},
+							"changes": [
+								{
+									"attributeId": 1,
+									"set": {
+										"op": "numberAttributeValue",
+										"attributeId": 22
+									}
+								}
+							]
+						}
+					]
 				}
-			}
+			]
 		},
 		{
 			"id": 2,
@@ -284,302 +311,134 @@
 			"desc": "当前体力",
 			"kind": "base",
 			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 100
-				}
-			}
-		},
-		{
-			"id": 3,
-			"key": "life",
-			"label": "生命",
-			"desc": "当前生命",
-			"kind": "base",
-			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 100
-				}
-			}
-		},
-		{
-			"id": 4,
-			"key": "injury",
-			"label": "损伤",
-			"desc": "身体损伤",
-			"kind": "base",
-			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 100
-				}
-			}
-		},
-		{
-			"id": 5,
-			"key": "spirit",
-			"label": "灵性",
-			"desc": "灵性强度",
-			"kind": "base",
-			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 100
-				}
-			}
-		},
-		{
-			"id": 6,
-			"key": "corruption",
-			"label": "污染",
-			"desc": "异化污染",
-			"kind": "base",
-			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 100
-				}
-			}
-		},
-		{
-			"id": 7,
-			"key": "bodyState",
-			"label": "身体状态",
-			"desc": "综合身体状态",
-			"kind": "derived",
-			"valueType": "number",
-			"formula": {
-				"op": "clamp",
-				"min": {
-					"op": "literal",
-					"value": 0
-				},
-				"max": {
-					"op": "literal",
-					"value": 1
-				},
-				"value": {
-					"op": "add",
-					"args": [
-						{
-							"op": "mul",
-							"args": [
-								{
-									"op": "literal",
-									"value": 0.35
-								},
-								{
-									"op": "normalize",
-									"min": {
-										"op": "literal",
-										"value": 0
-									},
-									"max": {
-										"op": "literal",
-										"value": 100
-									},
-									"attributeId": 3
-								}
-							]
+			"visible": true,
+			"reactions": [
+				{
+					"condition": {
+						"target": {
+							"card": "sourceCard"
 						},
-						{
-							"op": "mul",
-							"args": [
-								{
-									"op": "literal",
-									"value": 0.2
-								},
-								{
-									"op": "sub",
-									"args": [
-										{
-											"op": "literal",
-											"value": 1
-										},
-										{
-											"op": "normalize",
-											"min": {
-												"op": "literal",
-												"value": 0
-											},
-											"max": {
-												"op": "literal",
-												"value": 100
-											},
-											"attributeId": 4
-										}
-									]
-								}
-							]
-						},
-						{
-							"op": "mul",
-							"args": [
-								{
-									"op": "literal",
-									"value": 0.2
-								},
-								{
-									"op": "normalize",
-									"min": {
-										"op": "literal",
-										"value": 0
-									},
-									"max": {
-										"op": "literal",
-										"value": 100
-									},
-									"attributeId": 2
-								}
-							]
-						},
-						{
-							"op": "mul",
-							"args": [
-								{
-									"op": "literal",
-									"value": 0.1
-								},
-								{
-									"op": "normalize",
-									"min": {
-										"op": "literal",
-										"value": 0
-									},
-									"max": {
-										"op": "literal",
-										"value": 100
-									},
-									"attributeId": 1
-								}
-							]
-						},
-						{
-							"op": "mul",
-							"args": [
-								{
-									"op": "normalize",
-									"min": {
-										"op": "literal",
-										"value": 0
-									},
-									"max": {
-										"op": "literal",
-										"value": 100
-									},
-									"attributeId": 5
-								},
-								{
+						"attributes": [
+							{
+								"id": 2,
+								"gt": {
 									"op": "numberAttributeValue",
-									"attributeId": 11
+									"attributeId": 23
 								}
-							]
-						},
+							}
+						]
+					},
+					"effects": [
 						{
-							"op": "mul",
-							"args": [
+							"kind": "changeAttributes",
+							"target": {
+								"card": "sourceCard"
+							},
+							"changes": [
 								{
-									"op": "normalize",
-									"min": {
-										"op": "literal",
-										"value": 0
-									},
-									"max": {
-										"op": "literal",
-										"value": 100
-									},
-									"attributeId": 6
-								},
-								{
-									"op": "numberAttributeValue",
-									"attributeId": 12
+									"attributeId": 2,
+									"set": {
+										"op": "numberAttributeValue",
+										"attributeId": 23
+									}
 								}
 							]
 						}
 					]
+				},
+				{
+					"condition": {
+						"target": {
+							"card": "sourceCard"
+						},
+						"attributes": [
+							{
+								"id": 2,
+								"lte": 0
+							}
+						]
+					},
+					"effects": [
+						{
+							"kind": "addTag",
+							"tagId": 37,
+							"target": {
+								"card": "sourceCard"
+							}
+						}
+					]
 				}
-			}
+			]
 		},
 		{
-			"id": 8,
+			"id": 3,
+			"key": "life",
+			"label": "生命力",
+			"desc": "当前生命",
+			"kind": "base",
+			"valueType": "number",
+			"visible": true
+		},
+		{
+			"id": 4,
+			"key": "spirit",
+			"label": "灵性",
+			"desc": "灵性强度",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "add",
+				"args": [
+					{
+						"op": "mul",
+						"args": [
+							{
+								"op": "numberAttributeValue",
+								"attributeId": 3
+							},
+							{
+								"op": "literal",
+								"value": 0.3
+							}
+						]
+					},
+					{
+						"op": "numberAttributeValue",
+						"attributeId": 21
+					}
+				]
+			},
+			"visible": true
+		},
+		{
+			"id": 5,
 			"key": "nutrition",
 			"label": "营养",
 			"desc": "食物营养",
 			"kind": "base",
 			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 100
-				}
-			}
+			"visible": true
 		},
 		{
-			"id": 9,
+			"id": 6,
 			"key": "freshness",
 			"label": "新鲜度",
 			"desc": "食物新鲜度",
 			"kind": "base",
 			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 100
-				}
-			}
+			"visible": true
 		},
 		{
-			"id": 10,
+			"id": 7,
 			"key": "severity",
 			"label": "严重度",
 			"desc": "流血的严重程度",
 			"kind": "base",
 			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 5
-				}
-			}
+			"visible": true
 		},
 		{
-			"id": 11,
-			"key": "spiritWeight",
-			"label": "灵性权重",
-			"desc": "内部公式参数：灵性对身体的权重",
-			"kind": "base",
-			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": -5,
-					"max": 5
-				}
-			},
-			"visible": false
-		},
-		{
-			"id": 12,
-			"key": "corruptionWeight",
-			"label": "污染权重",
-			"desc": "内部公式参数：污染对身体的权重",
-			"kind": "base",
-			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": -5,
-					"max": 5
-				}
-			},
-			"visible": false
-		},
-		{
-			"id": 20,
+			"id": 8,
 			"key": "location",
 			"label": "所在地点",
 			"desc": "所在地点",
@@ -588,7 +447,7 @@
 			"visible": false
 		},
 		{
-			"id": 21,
+			"id": 9,
 			"key": "carrier",
 			"label": "携带者",
 			"desc": "携带者",
@@ -597,7 +456,7 @@
 			"visible": false
 		},
 		{
-			"id": 22,
+			"id": 10,
 			"key": "backpack",
 			"label": "背包",
 			"desc": "背包",
@@ -606,46 +465,34 @@
 			"visible": false
 		},
 		{
-			"id": 30,
+			"id": 11,
 			"key": "baseCarryCapacity",
 			"label": "基础负重",
 			"desc": "基础负重上限",
 			"kind": "base",
 			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 500
-				}
-			},
 			"visible": false
 		},
 		{
-			"id": 32,
+			"id": 12,
 			"key": "capacityBonus",
 			"label": "容量加成",
 			"desc": "物品提供的负重加成",
 			"kind": "base",
 			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 500
-				}
-			},
 			"visible": false
 		},
 		{
-			"id": 35,
+			"id": 13,
 			"key": "backpackCount",
 			"label": "背包数量",
 			"desc": "背包中的物品数量",
 			"kind": "derived",
 			"valueType": "number",
-			"visible": true,
+			"visible": false,
 			"formula": {
 				"op": "refListsAttributeCount",
-				"refAttributeId": 22
+				"refAttributeId": 10
 			}
 		},
 		{
@@ -661,63 +508,45 @@
 				"args": [
 					{
 						"op": "numberAttributeValue",
-						"attributeId": 30
+						"attributeId": 11
 					},
 					{
 						"op": "refListsAttributeSum",
-						"refAttributeId": 22,
-						"valueAttributeId": 32
+						"refAttributeId": 10,
+						"valueAttributeId": 12
 					}
 				]
 			}
 		},
 		{
-			"id": 13,
+			"id": 15,
 			"key": "weight",
 			"label": "重量",
 			"desc": "物品重量",
 			"kind": "base",
 			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 100
-				}
-			},
 			"visible": false
 		},
 		{
-			"id": 31,
+			"id": 16,
 			"key": "baseCarrySlots",
 			"label": "基础格数",
 			"desc": "基础背包格数",
 			"kind": "base",
 			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 50
-				}
-			},
 			"visible": false
 		},
 		{
-			"id": 33,
+			"id": 17,
 			"key": "slotBonus",
 			"label": "格数加成",
 			"desc": "物品提供的格数加成",
 			"kind": "base",
 			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 50
-				}
-			},
 			"visible": false
 		},
 		{
-			"id": 34,
+			"id": 18,
 			"key": "carrySlots",
 			"label": "背包格数",
 			"desc": "基础格数加物品加成",
@@ -729,52 +558,238 @@
 				"args": [
 					{
 						"op": "numberAttributeValue",
-						"attributeId": 31
+						"attributeId": 16
 					},
 					{
 						"op": "refListsAttributeSum",
-						"refAttributeId": 22,
-						"valueAttributeId": 33
+						"refAttributeId": 10,
+						"valueAttributeId": 17
 					}
 				]
 			}
 		},
 		{
-			"id": 60,
+			"id": 19,
 			"key": "trust",
 			"label": "信任",
 			"desc": "信任",
 			"scope": "relationship",
 			"kind": "base",
 			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": -100,
-					"max": 100
-				}
-			},
 			"visible": true
 		},
 		{
-			"id": 61,
+			"id": 20,
 			"key": "fear",
 			"label": "恐惧",
 			"desc": "恐惧",
 			"scope": "relationship",
 			"kind": "base",
 			"valueType": "number",
-			"typeParams": {
-				"bounds": {
-					"min": 0,
-					"max": 100
+			"visible": true
+		},
+		{
+			"id": 21,
+			"key": "transcendence",
+			"label": "超凡灵性",
+			"desc": "独立于肉身的超凡灵性",
+			"kind": "base",
+			"valueType": "number",
+			"visible": true
+		},
+		{
+			"id": 22,
+			"key": "satietyMax",
+			"label": "饱食上限",
+			"desc": "饱食上限",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "clamp",
+				"value": {
+					"op": "add",
+					"args": [
+						{
+							"op": "mul",
+							"args": [
+								{
+									"op": "numberAttributeValue",
+									"attributeId": 3
+								},
+								{
+									"op": "literal",
+									"value": 0.5
+								}
+							]
+						},
+						{
+							"op": "mul",
+							"args": [
+								{
+									"op": "numberAttributeValue",
+									"attributeId": 4
+								},
+								{
+									"op": "literal",
+									"value": 0.1
+								}
+							]
+						},
+						{
+							"op": "literal",
+							"value": 40
+						}
+					]
+				},
+				"min": {
+					"op": "literal",
+					"value": 0
+				},
+				"max": {
+					"op": "literal",
+					"value": 100
 				}
+			},
+			"visible": true
+		},
+		{
+			"id": 23,
+			"key": "staminaMax",
+			"label": "体力上限",
+			"desc": "体力上限",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "select",
+				"else": {
+					"op": "clamp",
+					"value": {
+						"op": "add",
+						"args": [
+							{
+								"op": "mul",
+								"args": [
+									{
+										"op": "numberAttributeValue",
+										"attributeId": 3
+									},
+									{
+										"op": "literal",
+										"value": 0.8
+									}
+								]
+							},
+							{
+								"op": "mul",
+								"args": [
+									{
+										"op": "numberAttributeValue",
+										"attributeId": 4
+									},
+									{
+										"op": "literal",
+										"value": 0.1
+									}
+								]
+							},
+							{
+								"op": "literal",
+								"value": 20
+							}
+						]
+					},
+					"min": {
+						"op": "literal",
+						"value": 0
+					},
+					"max": {
+						"op": "literal",
+						"value": 100
+					}
+				},
+				"branches": [
+					{
+						"condition": {
+							"target": {
+								"card": "host"
+							},
+							"hasTag": 33
+						},
+						"value": {
+							"op": "clamp",
+							"value": {
+								"op": "mul",
+								"args": [
+									{
+										"op": "clamp",
+										"value": {
+											"op": "add",
+											"args": [
+												{
+													"op": "mul",
+													"args": [
+														{
+															"op": "numberAttributeValue",
+															"attributeId": 3
+														},
+														{
+															"op": "literal",
+															"value": 0.8
+														}
+													]
+												},
+												{
+													"op": "mul",
+													"args": [
+														{
+															"op": "numberAttributeValue",
+															"attributeId": 4
+														},
+														{
+															"op": "literal",
+															"value": 0.1
+														}
+													]
+												},
+												{
+													"op": "literal",
+													"value": 20
+												}
+											]
+										},
+										"min": {
+											"op": "literal",
+											"value": 0
+										},
+										"max": {
+											"op": "literal",
+											"value": 100
+										}
+									},
+									{
+										"op": "literal",
+										"value": 0.7
+									}
+								]
+							},
+							"min": {
+								"op": "literal",
+								"value": 0
+							},
+							"max": {
+								"op": "literal",
+								"value": 100
+							}
+						}
+					}
+				]
 			},
 			"visible": true
 		}
 	],
 	"cardTemplates": [
 		{
-			"id": 1,
+			"id": 38,
 			"key": "饥荒流民",
 			"desc": "在饥荒中挣扎的流民",
 			"attributes": [
@@ -792,49 +807,47 @@
 				},
 				{
 					"id": 4,
-					"value": 0
-				},
-				{
-					"id": 5,
 					"value": 10
 				},
 				{
-					"id": 6,
-					"value": 0
-				},
-				{
 					"id": 11,
-					"value": 0.15
-				},
-				{
-					"id": 12,
-					"value": -0.2
-				},
-				{
-					"id": 30,
 					"value": 20
 				},
 				{
-					"id": 31,
+					"id": 16,
 					"value": 5
+				},
+				{
+					"id": 21,
+					"value": 0
+				},
+				{
+					"id": 22,
+					"value": 0
+				},
+				{
+					"id": 23,
+					"value": 0
 				}
 			],
 			"auto": [
 				6
 			],
 			"outgoing": [
-				1,
-				3,
-				4,
-				5,
-				10,
-				11
+				49,
+				51,
+				52,
+				53,
+				56,
+				57,
+				64,
+				65
 			],
 			"createdAt": 1767974400010,
 			"cardType": "person"
 		},
 		{
-			"id": 2,
+			"id": 39,
 			"key": "异化流民",
 			"desc": "被污染改写的流民",
 			"attributes": [
@@ -852,30 +865,14 @@
 				},
 				{
 					"id": 4,
-					"value": 0
-				},
-				{
-					"id": 5,
 					"value": 10
 				},
 				{
-					"id": 6,
-					"value": 0
-				},
-				{
 					"id": 11,
-					"value": 0.25
-				},
-				{
-					"id": 12,
-					"value": -0.1
-				},
-				{
-					"id": 30,
 					"value": 20
 				},
 				{
-					"id": 31,
+					"id": 16,
 					"value": 5
 				}
 			],
@@ -883,41 +880,41 @@
 				6
 			],
 			"outgoing": [
-				1,
-				2,
-				3,
-				4,
-				5
+				49,
+				50,
+				51,
+				52,
+				53
 			],
 			"createdAt": 1767974400011,
 			"cardType": "person"
 		},
 		{
-			"id": 3,
+			"id": 40,
 			"key": "干硬面包",
 			"desc": "勉强能入口的食物",
 			"tags": [
-				8
+				28
 			],
 			"attributes": [
 				{
-					"id": 8,
+					"id": 5,
 					"value": 20
 				},
 				{
-					"id": 9,
+					"id": 6,
 					"value": 100
 				},
 				{
-					"id": 32,
+					"id": 12,
 					"value": 0
 				},
 				{
-					"id": 13,
+					"id": 15,
 					"value": 3
 				},
 				{
-					"id": 33,
+					"id": 17,
 					"value": 0
 				}
 			],
@@ -927,41 +924,41 @@
 			"createdAt": 1767974400012,
 			"cardType": "item",
 			"incoming": [
-				40,
-				50,
-				51
+				58,
+				61,
+				62
 			]
 		},
 		{
-			"id": 4,
+			"id": 41,
 			"key": "石头",
 			"desc": "沉重、没有生命的石头",
 			"tags": [
-				9
+				29
 			],
 			"createdAt": 1767974400013,
 			"cardType": "item",
 			"attributes": [
 				{
-					"id": 32,
+					"id": 12,
 					"value": 0
 				},
 				{
-					"id": 13,
+					"id": 15,
 					"value": 5
 				},
 				{
-					"id": 33,
+					"id": 17,
 					"value": 0
 				}
 			],
 			"incoming": [
-				50,
-				51
+				61,
+				62
 			]
 		},
 		{
-			"id": 5,
+			"id": 42,
 			"key": "另一个流民",
 			"desc": "同样在饥饿中挣扎的人",
 			"attributes": [
@@ -979,22 +976,14 @@
 				},
 				{
 					"id": 4,
-					"value": 0
-				},
-				{
-					"id": 5,
 					"value": 5
 				},
 				{
-					"id": 6,
-					"value": 0
-				},
-				{
-					"id": 30,
+					"id": 11,
 					"value": 10
 				},
 				{
-					"id": 31,
+					"id": 16,
 					"value": 3
 				}
 			],
@@ -1004,94 +993,94 @@
 			"createdAt": 1767974400014,
 			"cardType": "person",
 			"outgoing": [
-				5,
-				2
+				53,
+				50
 			],
 			"behavior": {
 				"decisionInterval": 60
 			},
 			"incoming": [
-				70
+				63
 			]
 		},
 		{
-			"id": 6,
+			"id": 43,
 			"key": "木柴",
 			"desc": "可以燃烧的柴火",
 			"tags": [
-				12
+				31
 			],
 			"createdAt": 1767974400006,
 			"cardType": "item",
 			"attributes": [
 				{
-					"id": 32,
+					"id": 12,
 					"value": 0
 				},
 				{
-					"id": 13,
+					"id": 15,
 					"value": 2
 				},
 				{
-					"id": 33,
+					"id": 17,
 					"value": 0
 				}
 			],
 			"incoming": [
-				50,
-				51
+				61,
+				62
 			]
 		},
 		{
-			"id": 7,
+			"id": 44,
 			"key": "烤面包",
 			"desc": "烤过的面包，更顶饱",
 			"tags": [
-				8,
-				13
+				28,
+				32
 			],
 			"attributes": [
 				{
-					"id": 8,
+					"id": 5,
 					"value": 45
 				},
 				{
-					"id": 9,
+					"id": 6,
 					"value": 100
 				},
 				{
-					"id": 32,
+					"id": 12,
 					"value": 0
 				},
 				{
-					"id": 13,
+					"id": 15,
 					"value": 3
 				},
 				{
-					"id": 33,
+					"id": 17,
 					"value": 0
 				}
 			],
 			"createdAt": 1767974400007,
 			"cardType": "item",
 			"incoming": [
-				50,
-				51
+				61,
+				62
 			]
 		},
 		{
-			"id": 20,
+			"id": 45,
 			"key": "村庄",
 			"cardType": "place",
 			"desc": "破败的流民聚落",
 			"incoming": [
-				2
+				50
 			],
 			"createdAt": 1767974400020,
 			"attributes": []
 		},
 		{
-			"id": 21,
+			"id": 46,
 			"key": "森林",
 			"cardType": "place",
 			"desc": "树木与狼群",
@@ -1099,23 +1088,23 @@
 			"attributes": []
 		},
 		{
-			"id": 22,
+			"id": 47,
 			"key": "通往森林",
 			"cardType": "passage",
 			"desc": "一条通往森林的小路",
 			"incoming": [
-				30
+				59
 			],
 			"createdAt": 1767974400022,
 			"attributes": []
 		},
 		{
-			"id": 23,
+			"id": 48,
 			"key": "通往村庄",
 			"cardType": "passage",
 			"desc": "返回村庄的小路",
 			"incoming": [
-				31
+				60
 			],
 			"createdAt": 1767974400023,
 			"attributes": []
@@ -1126,71 +1115,74 @@
 		"cards": [
 			{
 				"id": "player",
-				"templateId": 1,
+				"templateId": 38,
 				"values": {
-					"20": "village",
-					"22": []
+					"8": "village",
+					"10": []
 				}
 			},
 			{
 				"id": "bread",
-				"templateId": 3,
+				"templateId": 40,
 				"values": {
-					"20": "village"
+					"8": "village"
 				}
 			},
 			{
 				"id": "stone",
-				"templateId": 4,
+				"templateId": 41,
 				"values": {
-					"20": "village"
+					"8": "village"
 				}
 			},
 			{
 				"id": "stranger",
-				"templateId": 5,
+				"templateId": 42,
 				"values": {
-					"20": "village"
+					"8": "village"
 				}
 			},
 			{
 				"id": "village",
-				"templateId": 20
+				"templateId": 45
 			},
 			{
 				"id": "forest",
-				"templateId": 21
+				"templateId": 46
 			},
 			{
 				"id": "entry_forest",
-				"templateId": 22,
+				"templateId": 47,
 				"values": {
-					"20": "village"
+					"8": "village"
 				}
 			},
 			{
 				"id": "entry_village",
-				"templateId": 23,
+				"templateId": 48,
 				"values": {
-					"20": "forest"
+					"8": "forest"
 				}
 			}
 		],
 		"time": 480
 	},
 	"initialLog": "你是一个在饥荒中挣扎的流民。",
-	"primaryDerivedAttributeId": 7,
 	"gameOver": [
 		{
+			"target": {
+				"card": "sourceCard"
+			},
 			"attributes": [
 				{
 					"id": 3,
 					"lte": 0
+				},
+				{
+					"id": 21,
+					"lte": 0
 				}
-			],
-			"target": {
-				"card": "sourceCard"
-			}
+			]
 		}
 	],
 	"tick": {
@@ -1264,7 +1256,7 @@
 	},
 	"allActions": [
 		{
-			"id": 1,
+			"id": 49,
 			"verb": "rest",
 			"desc": "恢复体力，同时降低饱食和损伤。",
 			"timeCost": {
@@ -1273,7 +1265,7 @@
 			},
 			"effects": [
 				{
-					"id": 5,
+					"id": 70,
 					"kind": "changeAttributes",
 					"changes": [
 						{
@@ -1283,10 +1275,6 @@
 						{
 							"attributeId": 1,
 							"delta": -3
-						},
-						{
-							"attributeId": 4,
-							"delta": -4
 						},
 						{
 							"attributeId": 3,
@@ -1299,9 +1287,9 @@
 					}
 				},
 				{
-					"id": 3,
+					"id": 71,
 					"kind": "removeTag",
-					"tagId": 11,
+					"tagId": 30,
 					"desc": "移除标签：流血",
 					"target": {
 						"card": "sourceCard"
@@ -1323,7 +1311,7 @@
 			}
 		},
 		{
-			"id": 2,
+			"id": 50,
 			"verb": "work",
 			"desc": "在村庄消耗体力与饱食，换取面包。",
 			"timeCost": {
@@ -1359,7 +1347,7 @@
 			},
 			"effects": [
 				{
-					"id": 6,
+					"id": 72,
 					"kind": "changeAttributes",
 					"changes": [
 						{
@@ -1373,10 +1361,6 @@
 						{
 							"attributeId": 3,
 							"delta": -2
-						},
-						{
-							"attributeId": 4,
-							"delta": 2
 						}
 					],
 					"desc": "修改属性：体力 -18、饱食 -10、生命 -2、损伤 +2",
@@ -1385,9 +1369,9 @@
 					}
 				},
 				{
-					"id": 4,
+					"id": 73,
 					"kind": "addCard",
-					"templateId": 3,
+					"templateId": 40,
 					"desc": "生成卡牌：干硬面包",
 					"to": "sourceBackpack"
 				}
@@ -1407,7 +1391,7 @@
 			}
 		},
 		{
-			"id": 3,
+			"id": 51,
 			"verb": "wound",
 			"desc": "受到伤害，损伤上升并附加流血。",
 			"timeCost": {
@@ -1416,13 +1400,9 @@
 			},
 			"effects": [
 				{
-					"id": 7,
+					"id": 74,
 					"kind": "changeAttributes",
 					"changes": [
-						{
-							"attributeId": 4,
-							"delta": 25
-						},
 						{
 							"attributeId": 3,
 							"delta": -12
@@ -1434,10 +1414,19 @@
 					}
 				},
 				{
-					"id": 2,
+					"id": 75,
 					"kind": "addTag",
-					"tagId": 11,
+					"tagId": 30,
 					"desc": "添加标签：流血",
+					"target": {
+						"card": "sourceCard"
+					}
+				},
+				{
+					"id": 76,
+					"kind": "addTag",
+					"tagId": 33,
+					"desc": "添加标签：骨折",
 					"target": {
 						"card": "sourceCard"
 					}
@@ -1458,7 +1447,7 @@
 			}
 		},
 		{
-			"id": 4,
+			"id": 52,
 			"verb": "ritual",
 			"desc": "提升灵性与污染，可能引发异化。",
 			"timeCost": {
@@ -1467,16 +1456,12 @@
 			},
 			"effects": [
 				{
-					"id": 8,
+					"id": 77,
 					"kind": "changeAttributes",
 					"changes": [
 						{
-							"attributeId": 5,
+							"attributeId": 21,
 							"delta": 20
-						},
-						{
-							"attributeId": 6,
-							"delta": 15
 						},
 						{
 							"attributeId": 3,
@@ -1493,23 +1478,27 @@
 					}
 				},
 				{
-					"id": 1,
+					"id": 78,
 					"kind": "changeTemplate",
-					"templateId": 2,
+					"templateId": 39,
 					"desc": "切换模板：异化流民",
 					"target": {
 						"card": "sourceCard"
 					},
 					"condition": {
-						"attributes": [
-							{
-								"id": 6,
-								"gte": 60
-							}
-						],
 						"target": {
 							"card": "sourceCard"
-						}
+						},
+						"hasTag": 35
+					}
+				},
+				{
+					"id": 79,
+					"kind": "addTag",
+					"tagId": 35,
+					"desc": "添加标签：梦魇污染",
+					"target": {
+						"card": "sourceCard"
 					}
 				}
 			],
@@ -1528,7 +1517,7 @@
 			}
 		},
 		{
-			"id": 5,
+			"id": 53,
 			"verb": "eat",
 			"desc": "消耗食物恢复状态；熟食恢复更多。",
 			"timeCost": {
@@ -1542,7 +1531,7 @@
 						"op": "literal",
 						"value": -15,
 						"condition": {
-							"hasTag": 13,
+							"hasTag": 32,
 							"target": {
 								"card": "slot",
 								"slot": "food"
@@ -1561,7 +1550,7 @@
 						"kind": "and",
 						"items": [
 							{
-								"hasTag": 8,
+								"hasTag": 28,
 								"target": {
 									"card": "slot"
 								}
@@ -1569,7 +1558,7 @@
 							{
 								"attributes": [
 									{
-										"id": 9,
+										"id": 6,
 										"gt": 0
 									}
 								],
@@ -1583,7 +1572,7 @@
 			],
 			"effects": [
 				{
-					"id": 9,
+					"id": 80,
 					"kind": "changeAttributes",
 					"changes": [
 						{
@@ -1598,7 +1587,7 @@
 							"attributeId": 1,
 							"delta": 25,
 							"condition": {
-								"hasTag": 13,
+								"hasTag": 32,
 								"target": {
 									"card": "slot",
 									"slot": "food"
@@ -1609,7 +1598,7 @@
 							"attributeId": 2,
 							"delta": 10,
 							"condition": {
-								"hasTag": 13,
+								"hasTag": 32,
 								"target": {
 									"card": "slot",
 									"slot": "food"
@@ -1620,7 +1609,7 @@
 							"attributeId": 3,
 							"delta": 2,
 							"condition": {
-								"hasTag": 13,
+								"hasTag": 32,
 								"target": {
 									"card": "slot",
 									"slot": "food"
@@ -1634,7 +1623,7 @@
 					}
 				},
 				{
-					"id": 11,
+					"id": 81,
 					"kind": "removeCard",
 					"desc": "移除目标卡牌",
 					"target": {
@@ -1658,7 +1647,7 @@
 			}
 		},
 		{
-			"id": 6,
+			"id": 54,
 			"verb": "metabolize",
 			"desc": "每小时结算饱食、体力与生命。",
 			"timeCost": {
@@ -1667,7 +1656,7 @@
 			},
 			"effects": [
 				{
-					"id": 12,
+					"id": 82,
 					"kind": "changeAttributes",
 					"changes": [
 						{
@@ -1681,7 +1670,7 @@
 					}
 				},
 				{
-					"id": 13,
+					"id": 83,
 					"kind": "changeAttributes",
 					"changes": [
 						{
@@ -1710,7 +1699,7 @@
 					}
 				},
 				{
-					"id": 14,
+					"id": 84,
 					"kind": "changeAttributes",
 					"changes": [
 						{
@@ -1736,16 +1725,12 @@
 					}
 				},
 				{
-					"id": 15,
+					"id": 85,
 					"kind": "changeAttributes",
 					"changes": [
 						{
 							"attributeId": 2,
 							"delta": 0.5
-						},
-						{
-							"attributeId": 4,
-							"delta": -0.5
 						},
 						{
 							"attributeId": 3,
@@ -1784,7 +1769,7 @@
 			}
 		},
 		{
-			"id": 7,
+			"id": 55,
 			"verb": "spoil",
 			"desc": "食物新鲜度每小时下降。",
 			"timeCost": {
@@ -1793,11 +1778,11 @@
 			},
 			"effects": [
 				{
-					"id": 16,
+					"id": 86,
 					"kind": "changeAttributes",
 					"changes": [
 						{
-							"attributeId": 9,
+							"attributeId": 6,
 							"delta": -1
 						}
 					],
@@ -1811,7 +1796,7 @@
 			"title": "腐败"
 		},
 		{
-			"id": 10,
+			"id": 56,
 			"verb": "gatherWood",
 			"desc": "收集一份木柴。",
 			"timeCost": {
@@ -1820,9 +1805,9 @@
 			},
 			"effects": [
 				{
-					"id": 17,
+					"id": 87,
 					"kind": "addCard",
-					"templateId": 6,
+					"templateId": 43,
 					"desc": "生成卡牌：木柴"
 				}
 			],
@@ -1841,7 +1826,7 @@
 			}
 		},
 		{
-			"id": 11,
+			"id": 57,
 			"verb": "cookBread",
 			"desc": "消耗面包与木柴，制作烤面包。",
 			"timeCost": {
@@ -1857,10 +1842,10 @@
 						"target": {
 							"card": "slot"
 						},
-						"hasTag": 8,
+						"hasTag": 28,
 						"attributes": [
 							{
-								"id": 9,
+								"id": 6,
 								"gt": 0
 							}
 						]
@@ -1871,7 +1856,7 @@
 					"desc": "燃料",
 					"count": 1,
 					"condition": {
-						"hasTag": 12,
+						"hasTag": 31,
 						"target": {
 							"card": "slot"
 						}
@@ -1880,7 +1865,7 @@
 			],
 			"effects": [
 				{
-					"id": 18,
+					"id": 88,
 					"kind": "removeCard",
 					"desc": "移除目标卡牌",
 					"target": {
@@ -1889,7 +1874,7 @@
 					}
 				},
 				{
-					"id": 19,
+					"id": 89,
 					"kind": "removeCard",
 					"desc": "移除目标卡牌",
 					"target": {
@@ -1898,9 +1883,9 @@
 					}
 				},
 				{
-					"id": 20,
+					"id": 90,
 					"kind": "addCard",
-					"templateId": 7,
+					"templateId": 44,
 					"desc": "生成卡牌：烤面包"
 				}
 			],
@@ -1919,7 +1904,7 @@
 			}
 		},
 		{
-			"id": 40,
+			"id": 58,
 			"verb": "eatBread",
 			"title": "吃掉面包",
 			"desc": "直接吃掉这张面包，恢复饱食和体力。",
@@ -1930,7 +1915,7 @@
 			"slots": [],
 			"effects": [
 				{
-					"id": 40,
+					"id": 91,
 					"kind": "changeAttributes",
 					"changes": [
 						{
@@ -1948,7 +1933,7 @@
 					}
 				},
 				{
-					"id": 41,
+					"id": 92,
 					"kind": "removeCard",
 					"desc": "移除目标卡牌",
 					"target": {
@@ -1970,7 +1955,7 @@
 			}
 		},
 		{
-			"id": 30,
+			"id": 59,
 			"verb": "travelForest",
 			"title": "进入森林",
 			"desc": "沿小路进入森林。",
@@ -1981,7 +1966,7 @@
 			"slots": [],
 			"effects": [
 				{
-					"id": 30,
+					"id": 93,
 					"kind": "changeLocation",
 					"toLocation": "forest",
 					"desc": "移动到森林",
@@ -2004,7 +1989,7 @@
 			}
 		},
 		{
-			"id": 31,
+			"id": 60,
 			"verb": "travelVillage",
 			"title": "返回村庄",
 			"desc": "沿小路返回村庄。",
@@ -2015,7 +2000,7 @@
 			"slots": [],
 			"effects": [
 				{
-					"id": 31,
+					"id": 94,
 					"kind": "changeLocation",
 					"toLocation": "village",
 					"desc": "移动到村庄",
@@ -2038,7 +2023,7 @@
 			}
 		},
 		{
-			"id": 50,
+			"id": 61,
 			"verb": "pickup",
 			"title": "拾起",
 			"desc": "把物品放进背包。",
@@ -2048,7 +2033,7 @@
 			},
 			"effects": [
 				{
-					"id": 50,
+					"id": 95,
 					"kind": "moveItemCard",
 					"target": {
 						"card": "targetCard"
@@ -2079,7 +2064,7 @@
 						"attributes": [
 							{
 								"refExists": false,
-								"refId": 21
+								"refId": 9
 							}
 						]
 					}
@@ -2087,7 +2072,7 @@
 			}
 		},
 		{
-			"id": 51,
+			"id": 62,
 			"verb": "drop",
 			"title": "放下",
 			"desc": "把物品放到当前地点。",
@@ -2097,7 +2082,7 @@
 			},
 			"effects": [
 				{
-					"id": 51,
+					"id": 96,
 					"kind": "moveItemCard",
 					"target": {
 						"card": "targetCard"
@@ -2128,7 +2113,7 @@
 						"attributes": [
 							{
 								"refExists": true,
-								"refId": 21
+								"refId": 9
 							}
 						]
 					}
@@ -2136,7 +2121,7 @@
 			}
 		},
 		{
-			"id": 70,
+			"id": 63,
 			"verb": "talk",
 			"title": "交谈",
 			"desc": "和对方说几句话。",
@@ -2144,9 +2129,9 @@
 			"timeCost": 0,
 			"effects": [
 				{
-					"id": 70,
+					"id": 97,
 					"kind": "startDialogue",
-					"dialogueId": 1,
+					"dialogueId": 66,
 					"desc": "开始对话"
 				}
 			],
@@ -2172,11 +2157,80 @@
 					}
 				]
 			}
+		},
+		{
+			"id": 64,
+			"verb": "train",
+			"title": "锻炼",
+			"desc": "用时间和体力换取生命力。",
+			"createdAt": 1767974400120,
+			"timeCost": 60,
+			"effects": [
+				{
+					"id": 98,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "sourceCard"
+					},
+					"changes": [
+						{
+							"attributeId": 2,
+							"delta": -15
+						},
+						{
+							"attributeId": 1,
+							"delta": -5
+						},
+						{
+							"attributeId": 3,
+							"delta": 1
+						}
+					]
+				}
+			],
+			"condition": {
+				"target": {
+					"card": "sourceCard"
+				},
+				"attributes": [
+					{
+						"id": 2,
+						"gte": 15
+					}
+				]
+			}
+		},
+		{
+			"id": 65,
+			"verb": "meditate",
+			"title": "冥想",
+			"desc": "安静地感受自身。",
+			"createdAt": 1767974400121,
+			"timeCost": 60,
+			"effects": [
+				{
+					"id": 99,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "sourceCard"
+					},
+					"changes": [
+						{
+							"attributeId": 21,
+							"delta": 1
+						},
+						{
+							"attributeId": 1,
+							"delta": -2
+						}
+					]
+				}
+			]
 		}
 	],
 	"allDialogues": [
 		{
-			"id": 1,
+			"id": 66,
 			"key": "stranger_first_talk",
 			"title": "与流民交谈",
 			"nodes": [
@@ -2209,9 +2263,9 @@
 							"text": "找到了，给你。",
 							"effects": [
 								{
-									"id": 9301,
+									"id": 100,
 									"kind": "resolveAgreement",
-									"definitionId": 1,
+									"definitionId": 67,
 									"result": "kept"
 								}
 							]
@@ -2266,7 +2320,7 @@
 							"next": "answer_plan",
 							"effects": [
 								{
-									"id": 9101,
+									"id": 101,
 									"kind": "changeRelationshipAttributes",
 									"relationship": {
 										"source": {
@@ -2278,13 +2332,13 @@
 									},
 									"changes": [
 										{
-											"attributeId": 60,
+											"attributeId": 19,
 											"delta": 5
 										}
 									]
 								},
 								{
-									"id": 9102,
+									"id": 102,
 									"kind": "changeRelationshipAttributes",
 									"relationship": {
 										"source": {
@@ -2296,15 +2350,15 @@
 									},
 									"changes": [
 										{
-											"attributeId": 60,
+											"attributeId": 19,
 											"delta": 3
 										}
 									]
 								},
 								{
-									"id": 9201,
+									"id": 103,
 									"kind": "createAgreement",
-									"definitionId": 1,
+									"definitionId": 67,
 									"positions": {
 										"provider": [
 											{
@@ -2357,7 +2411,7 @@
 							"card": "sourceCard"
 						},
 						"agreement": {
-							"definitionId": 1,
+							"definitionId": 67,
 							"confirmation": "confirmed",
 							"includesTargets": [
 								{
@@ -2367,7 +2421,7 @@
 							"hasPosition": "provider"
 						},
 						"dialogue": {
-							"dialogueId": 1,
+							"dialogueId": 66,
 							"includesTargets": [
 								{
 									"card": "targetCard"
@@ -2388,7 +2442,7 @@
 							"card": "sourceCard"
 						},
 						"agreement": {
-							"definitionId": 1,
+							"definitionId": 67,
 							"confirmation": "unconfirmed",
 							"time": "overdue",
 							"includesTargets": [
@@ -2407,7 +2461,7 @@
 							"card": "sourceCard"
 						},
 						"agreement": {
-							"definitionId": 1,
+							"definitionId": 67,
 							"includesTargets": [
 								{
 									"card": "targetCard"
@@ -2424,7 +2478,7 @@
 							"card": "sourceCard"
 						},
 						"dialogue": {
-							"dialogueId": 1,
+							"dialogueId": 66,
 							"count": {
 								"gte": 1
 							},
@@ -2447,7 +2501,7 @@
 	],
 	"allAgreements": [
 		{
-			"id": 1,
+			"id": 67,
 			"key": "find_food",
 			"kind": "promise",
 			"title": "找点吃的",

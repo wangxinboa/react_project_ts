@@ -2,14 +2,12 @@ import type { AttributeValue, ConditionExpression } from "../card_story_game_typ
 import { getNumberAttribute } from "../game/famine_refugee/attribute_value.ts";
 import type { NumberExpression } from "../card_story_game_types/formula_types.ts";
 import { FormulaOp } from "../card_story_game_types/formula_types.ts";
-import type { FormulaBoundary } from "../card_story_game_types/formula_types.ts";
 
 export interface FormulaContext {
 	evaluateConditions?: (conditions: ConditionExpression[]) => boolean;
 	/** 通过 cardRef / cardRefList 中的 id 查找卡牌 */
 	resolveCard?: (id: string) => { values: Record<number, AttributeValue> } | null;
 	/** 解析属性硬边界 */
-	getAttributeBound?: (attributeId: number, boundary: FormulaBoundary, values: Record<number, AttributeValue>) => number | undefined;
 }
 
 export function evaluateFormula(
@@ -26,8 +24,6 @@ export function evaluateFormula(
 			return formula.value;
 		case FormulaOp.NUMBER_ATTRIBUTE_VALUE:
 			return getNumberAttribute(values, formula.attributeId);
-		case FormulaOp.NUMBER_ATTRIBUTE_BOUND:
-			return context?.getAttributeBound?.(formula.attributeId, formula.boundary, values) ?? 0;
 		case FormulaOp.FLOOR:
 			return Math.floor(evaluateFormula(formula.value, values, context));
 		case FormulaOp.ABS:
@@ -91,6 +87,15 @@ export function evaluateFormula(
 			if (range === 0) return 0;
 			const raw = getNumberAttribute(values, formula.attributeId);
 			return (raw - min) / range;
+		}
+		case FormulaOp.SELECT: {
+			for (let i = 0; i < formula.branches.length; i++) {
+				const branch = formula.branches[i];
+				if (context?.evaluateConditions?.([branch.condition])) {
+					return evaluateFormula(branch.value, values, context);
+				}
+			}
+			return formula.else === undefined ? 0 : evaluateFormula(formula.else, values, context);
 		}
 	}
 }

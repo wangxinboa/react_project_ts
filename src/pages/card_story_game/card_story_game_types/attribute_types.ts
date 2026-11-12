@@ -1,4 +1,6 @@
-import type { Formula, NumberExpression } from "./formula_types.ts";
+import type { ConditionExpression } from "./condition_types.ts";
+import type { EffectCall } from "./effect_types/effect_types.ts";
+import type { Formula } from "./formula_types.ts";
 
 /** 属性值：number / cardRef / cardRefList。 */
 export type AttributeValue = number | string | string[];
@@ -31,16 +33,10 @@ export interface AttributeBinding {
 	value: AttributeValue;
 }
 
-export interface NumberBounds {
-	/** 硬下界，写入时不得低于 */
-	min?: NumberExpression;
-	/** 硬上界，写入时不得高于 */
-	max?: NumberExpression;
-}
-
-/** number 类型属性的专属参数。其他 valueType 以后可以有各自的参数对象。 */
-export interface NumberAttributeTypeParams {
-	bounds?: NumberBounds;
+/** 属性变化后的反应；数组顺序即优先级。 */
+export interface AttributeReaction {
+	condition: ConditionExpression;
+	effects: EffectCall[];
 }
 
 /** 全局属性定义，卡牌模板和标签共用。 */
@@ -53,10 +49,10 @@ export interface AttributeDefinition {
 	scope?: AttributeScope;
 	kind: AttributeKind;
 	valueType: AttributeValueType;
-	/** number 类型专属参数，例如范围 */
-	typeParams?: NumberAttributeTypeParams;
 	/** false 表示内部属性，不在卡牌属性面板展示 */
 	visible?: boolean;
 	/** derived 属性的计算公式 */
 	formula?: Formula;
+	/** 属性写入后的反应 */
+	reactions?: AttributeReaction[];
 }

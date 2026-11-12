@@ -1,10 +1,10 @@
 export { CardType, ConditionTarget } from "./condition_types.ts";
 export { ConditionGroupKind, ConditionNotKind } from "./condition_expression_types/condition_expression_types.ts";
 export type { AttributeCheck, BaseNumberCheck, Condition, ConditionExpression, ConditionGroup, ConditionNot, DialogueCheck, DialogueCountCheck, RelationshipRef, TargetRef } from "./condition_types.ts";
-export { FormulaBoundary, FormulaOp } from "./formula_types.ts";
+export { FormulaOp } from "./formula_types.ts";
 export type { Formula, FormulaNode, FormulaValidationIssue, NumberExpression } from "./formula_types.ts";
 export { AttributeKind, AttributeScope, AttributeValueType } from "./attribute_types.ts";
-export type { AttributeBinding, AttributeDefinition, AttributeValue, NumberAttributeTypeParams, NumberBounds } from "./attribute_types.ts";
+export type { AttributeBinding, AttributeDefinition, AttributeReaction, AttributeValue } from "./attribute_types.ts";
 export type {
 	AddCardEffect,
 	AddTagEffect,

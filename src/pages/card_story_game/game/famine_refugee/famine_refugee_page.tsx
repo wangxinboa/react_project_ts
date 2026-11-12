@@ -54,13 +54,11 @@ function isAttributeVisible(config: FamineRefugeeConfig, id: number): boolean {
 	return true;
 }
 
-function getAttributeMax(config: FamineRefugeeConfig, id: number): number | null {
+function getAttributeId(config: FamineRefugeeConfig, key: string): number {
 	for (let i = 0; i < config.allAttributes.length; i++) {
-		if (config.allAttributes[i].id !== id) continue;
-		const max = config.allAttributes[i].typeParams?.bounds?.max;
-		return typeof max === "number" ? max : null;
+		if (config.allAttributes[i].key === key) return config.allAttributes[i].id;
 	}
-	return null;
+	return 0;
 }
 
 function getAction(config: FamineRefugeeConfig, id: number | null): FamineAction | null {
@@ -160,15 +158,15 @@ export default function FamineRefugeePage() {
 	}, [config, game, playerView, selectedView]);
 
 	const backpackViews = useMemo(() => {
-		if (!playerView) return [];
-		const ids = getStringListAttribute(playerView.card.values, 22);
+		if (!config || !playerView) return [];
+		const ids = getStringListAttribute(playerView.card.values, getAttributeId(config, "backpack"));
 		const views: CardView[] = [];
 		for (let i = 0; i < ids.length; i++) {
 			const view = cardViews.find((item) => item.card.id === ids[i]);
 			if (view) views.push(view);
 		}
 		return views;
-	}, [cardViews, playerView]);
+	}, [config, cardViews, playerView]);
 
 	const currentLocationName = useMemo(() => {
 		if (!config || !playerView) return "未知地点";
@@ -449,12 +447,11 @@ export default function FamineRefugeePage() {
 
 	const isPlayerSelected = selectedView.card.id === config.saveData.playerCardId;
 	const isDead = playerView.derived.gameOver;
-	const bodyState = Math.round((playerView.derived.values[config.primaryDerivedAttributeId] ?? 0) * 100);
-	const backpackIds = getStringListAttribute(playerView.card.values, 22);
+	const backpackIds = getStringListAttribute(playerView.card.values, getAttributeId(config, "backpack"));
 	let backpackWeight = 0;
 	for (let i = 0; i < backpackIds.length; i++) {
 		const item = cardViews.find((view) => view.card.id === backpackIds[i]);
-		if (item) backpackWeight += getNumberAttribute(item.card.values, 13);
+		if (item) backpackWeight += getNumberAttribute(item.card.values, getAttributeId(config, "weight"));
 	}
 
 	const previewContent = (
@@ -506,27 +503,20 @@ export default function FamineRefugeePage() {
 							.map((binding) => (
 								<div key={binding.id} className={style.topAttribute}>
 									<span>{getAttributeLabel(config, binding.id)}</span>
-									<strong>
-										{Math.round(playerView.derived.values[binding.id] ?? 0)}
-										{getAttributeMax(config, binding.id) !== null ? ` / ${getAttributeMax(config, binding.id)}` : ""}
-									</strong>
+									<strong>{Math.round(playerView.derived.values[binding.id] ?? 0)}</strong>
 								</div>
 							))}
 						<div className={style.topAttribute}>
 							<span>负重</span>
 							<strong>
-								{backpackWeight} / {Math.round(playerView.derived.values[14] ?? 0)}
+								{backpackWeight} / {Math.round(playerView.derived.values[getAttributeId(config, "carryCapacity")] ?? 0)}
 							</strong>
 						</div>
 						<div className={style.topAttribute}>
 							<span>背包</span>
 							<strong>
-								{backpackIds.length} / {Math.round(playerView.derived.values[34] ?? 0)}
+								{backpackIds.length} / {Math.round(playerView.derived.values[getAttributeId(config, "carrySlots")] ?? 0)}
 							</strong>
-						</div>
-						<div className={style.topAttribute}>
-							<span>状态</span>
-							<strong>{bodyState}%</strong>
 						</div>
 					</div>
 					<div className={style.headerActions}>
@@ -579,7 +569,6 @@ export default function FamineRefugeePage() {
 								<div className={style.inspectorName}>{selectedView.derived.template.key}</div>
 								<div className={style.inspectorDesc}>{selectedView.derived.template.desc}</div>
 							</div>
-							{isPlayerSelected ? <div className={style.inspectorBodyState}>{bodyState}%</div> : null}
 						</div>
 
 						<div className={style.tags}>
@@ -711,7 +700,7 @@ export default function FamineRefugeePage() {
 													className={style.backpackItem}
 													onClick={() => setSelectedCardId(itemId)}
 												>
-													{item.derived.template.key} · {getNumberAttribute(item.card.values, 13)}
+													{item.derived.template.key} · {getNumberAttribute(item.card.values, getAttributeId(config, "weight"))}
 												</button>
 											);
 										})
@@ -764,8 +753,8 @@ export default function FamineRefugeePage() {
 									<div className={style.relationshipBlock}>
 										<div className={style.inspectorSectionTitle}>对玩家的态度</div>
 										<div className={style.relationshipValues}>
-											<span>信任 {getNumberAttribute(selectedView.card.relationships?.[playerView.card.id]?.values ?? {}, 60)}</span>
-											<span>恐惧 {getNumberAttribute(selectedView.card.relationships?.[playerView.card.id]?.values ?? {}, 61)}</span>
+											<span>信任 {getNumberAttribute(selectedView.card.relationships?.[playerView.card.id]?.values ?? {}, getAttributeId(config, "trust"))}</span>
+											<span>恐惧 {getNumberAttribute(selectedView.card.relationships?.[playerView.card.id]?.values ?? {}, getAttributeId(config, "fear"))}</span>
 										</div>
 										{sharedAgreements.length > 0 ? (
 											<div className={style.agreementList}>

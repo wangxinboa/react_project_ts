@@ -91,7 +91,7 @@ export interface FamineRefugeeConfig {
 	cardTemplates: FamineTemplate[];
 	saveData: SaveData;
 	initialLog: string;
-	primaryDerivedAttributeId: number;
+	primaryDerivedAttributeId?: number;
 	gameOver: Condition[];
 	tick: FamineTick;
 }
