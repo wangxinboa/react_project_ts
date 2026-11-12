@@ -1,7 +1,7 @@
 import { evaluateFormula } from "../../formula/formula_eval.ts";
 import type { FormulaContext } from "../../formula/formula_eval.ts";
-import type { AttributeValue, BaseNumberCheck, CardType, MoveItemDestination, NumberExpression, TargetRef } from "../../card_story_game_types/index.ts";
-import { AgreementConfirmation, AgreementTimeRelation } from "../../card_story_game_types/index.ts";
+import type { AttributeValue, BaseNumberCheck, NumberExpression, TargetRef } from "../../card_story_game_types/index.ts";
+import { AddCardDestination, EffectType, AgreementConfirmation, AgreementTimeRelation, AttributeKind, AttributeScope, CardType, ConditionGroupKind, ConditionNotKind, ConditionTarget, MoveItemDestination, TagKind } from "../../card_story_game_types/index.ts";
 import { getNumberAttribute, getNumberValues, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import type {
 	ActionSlot,
@@ -120,11 +120,11 @@ function matchesAttribute(
 }
 
 function resolveTargetEntity(target: TargetRef, context: ConditionContext): EntitySnapshot | undefined {
-	if (target.card === "sourceCard") return context.sourceCard;
-	if (target.card === "sourceTag") return context.sourceTag;
-	if (target.card === "targetCard") return context.targetCard;
-	if (target.card === "host") return context.host;
-	if (target.card === "referencedCard") return context.referencedCard;
+	if (target.card === ConditionTarget.SOURCE_CARD) return context.sourceCard;
+	if (target.card === ConditionTarget.SOURCE_TAG) return context.sourceTag;
+	if (target.card === ConditionTarget.TARGET_CARD) return context.targetCard;
+	if (target.card === ConditionTarget.HOST) return context.host;
+	if (target.card === ConditionTarget.REFERENCED_CARD) return context.referencedCard;
 	return context.slot;
 }
 
@@ -334,18 +334,18 @@ function evaluateCondition(condition: Condition, context: ConditionContext): boo
 }
 
 function isConditionGroup(expression: ConditionExpression): expression is ConditionGroup {
-	return "kind" in expression && (expression.kind === "and" || expression.kind === "or");
+	return "kind" in expression && (expression.kind === ConditionGroupKind.AND || expression.kind === ConditionGroupKind.OR);
 }
 
 function isConditionNot(expression: ConditionExpression): expression is ConditionNot {
-	return "kind" in expression && expression.kind === "not";
+	return "kind" in expression && expression.kind === ConditionNotKind.NOT;
 }
 
 function evaluateExpression(expression: ConditionExpression, context: ConditionContext): boolean {
 	if (isConditionNot(expression)) return !evaluateExpression(expression.item, context);
 	if (isConditionGroup(expression)) {
-		if (expression.items.length === 0) return expression.kind === "and";
-		if (expression.kind === "and") {
+		if (expression.items.length === 0) return expression.kind === ConditionGroupKind.AND;
+		if (expression.kind === ConditionGroupKind.AND) {
 			for (let i = 0; i < expression.items.length; i++) {
 				if (!evaluateExpression(expression.items[i], context)) return false;
 			}
@@ -381,7 +381,7 @@ function getDerivedTags(
 	const host = { values, tagIds: tags };
 	for (let i = 0; i < config.allTags.length; i++) {
 		const tag = config.allTags[i];
-		if (tag.kind !== "derived" || !tag.condition) continue;
+		if (tag.kind !== TagKind.DERIVED || !tag.condition) continue;
 		if (evaluateConditions(tag.condition, { host })) tags.add(tag.id);
 	}
 	return tags;
@@ -430,7 +430,7 @@ export function deriveCard(
 	const values = { ...card.values };
 	for (let i = 0; i < config.allAttributes.length; i++) {
 		const definition = config.allAttributes[i];
-		if (definition.kind === "derived" && definition.formula) {
+		if (definition.kind === AttributeKind.DERIVED && definition.formula) {
 			values[definition.id] = evaluateFormula(definition.formula, values, createFormulaContext(config, cards));
 		}
 	}
@@ -571,7 +571,7 @@ function getConditionSlotId(conditions: ConditionExpression | ConditionExpressio
 			if (nested) return nested;
 			continue;
 		}
-		if (condition.target && condition.target.card === "slot" && condition.target.slot) return condition.target.slot;
+		if (condition.target && condition.target.card === ConditionTarget.SLOT && condition.target.slot) return condition.target.slot;
 	}
 	return null;
 }
@@ -642,7 +642,7 @@ function applyChangeAttributes(
 		const change = changes[i];
 		if (change.condition && evaluateChangeConditions && !evaluateChangeConditions([change.condition])) continue;
 		const definition = config.allAttributes.find((attribute) => attribute.id === change.attributeId);
-		if (!definition || definition.kind !== "base") continue;
+		if (!definition || definition.kind !== AttributeKind.BASE) continue;
 		const current = getNumberAttribute(values, change.attributeId);
 		const set = change.set === undefined ? undefined : evaluateChangeNumber(change.set, values, formulaContext);
 		const delta = evaluateChangeNumber(change.delta, values, formulaContext, 0);
@@ -662,26 +662,26 @@ function applyCardEffect(
 	evaluateChangeConditions?: (conditions: ConditionExpression | ConditionExpression[]) => boolean,
 	formulaContext?: FormulaContext,
 ): CardState {
-	if (effect.kind === "changeAttributes") return applyChangeAttributes(config, card, effect.changes, evaluateChangeConditions, formulaContext);
-	if (effect.kind === "addTag") {
+	if (effect.kind === EffectType.CHANGE_ATTRIBUTES) return applyChangeAttributes(config, card, effect.changes, evaluateChangeConditions, formulaContext);
+	if (effect.kind === EffectType.ADD_TAG) {
 		for (let i = 0; i < card.tags.length; i++) {
 			if (card.tags[i].tagId === effect.tagId) return card;
 		}
 		return { ...card, tags: [...card.tags, createTagInstance(config, effect.tagId)] };
 	}
-	if (effect.kind === "removeTag") {
+	if (effect.kind === EffectType.REMOVE_TAG) {
 		const tags: TagInstanceState[] = [];
 		for (let i = 0; i < card.tags.length; i++) {
 			if (card.tags[i].tagId !== effect.tagId) tags.push(card.tags[i]);
 		}
 		return { ...card, tags };
 	}
-	if (effect.kind === "changeLocation") {
+	if (effect.kind === EffectType.CHANGE_LOCATION) {
 		const values = { ...card.values };
 		values[getAttributeId(config, "location")] = effect.toLocation;
 		return { ...card, values };
 	}
-	if (effect.kind === "changeTemplate") {
+	if (effect.kind === EffectType.CHANGE_TEMPLATE) {
 		const template = getTemplate(config, effect.templateId);
 		const values = { ...card.values };
 		for (let i = 0; i < (template.attributes ?? []).length; i++) {
@@ -804,9 +804,9 @@ interface EffectRuntime {
 type EffectHandler = (runtime: EffectRuntime, effect: InlineEffect) => void;
 
 function getEffectTargetIds(runtime: EffectRuntime, effect: InlineEffect): string[] {
-	if (effect.target?.card === "slot" && effect.target.slot) return runtime.slotMap[effect.target.slot] ?? [];
-	if (effect.target?.card === "targetCard" && runtime.targetId) return [runtime.targetId];
-	if (effect.target?.card === "sourceCard" || !effect.target) return [runtime.sourceId];
+	if (effect.target?.card === ConditionTarget.SLOT && effect.target.slot) return runtime.slotMap[effect.target.slot] ?? [];
+	if (effect.target?.card === ConditionTarget.TARGET_CARD && runtime.targetId) return [runtime.targetId];
+	if (effect.target?.card === ConditionTarget.SOURCE_CARD || !effect.target) return [runtime.sourceId];
 	return [];
 }
 
@@ -834,7 +834,7 @@ function applyTargetedEffect(runtime: EffectRuntime, effect: InlineEffect): void
 }
 
 function applyCreateCardEffect(runtime: EffectRuntime, effect: InlineEffect): void {
-	if (effect.kind !== "addCard") return;
+	if (effect.kind !== EffectType.ADD_CARD) return;
 	const source = getCard(runtime.cards, runtime.sourceId);
 	if (!source) return;
 	const context = getConditionContext(runtime.config, effect.condition, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, null, runtime.slotMap, runtime.cards, {}, [], runtime.time);
@@ -842,7 +842,7 @@ function applyCreateCardEffect(runtime: EffectRuntime, effect: InlineEffect): vo
 	const id = `card_${runtime.nextCardId}`;
 	runtime.nextCardId += 1;
 	const sourceLocation = getStringAttribute(source.values, getAttributeId(runtime.config, "location")) ?? "";
-	if (effect.to === "sourceLocation") {
+	if (effect.to === AddCardDestination.SOURCE_LOCATION) {
 		runtime.cards = [...runtime.cards, createCardState(runtime.config, { id, templateId: effect.templateId, values: { [getAttributeId(runtime.config, "location")]: sourceLocation } })];
 		return;
 	}
@@ -878,8 +878,8 @@ function simulateMoveItemCard(
 		return { ...card, values };
 	});
 	const values = { ...item.values };
-	if (to === "sourceBackpack" || to === "targetBackpack") {
-		const carrier = to === "sourceBackpack" ? source : target;
+	if (to === MoveItemDestination.SOURCE_BACKPACK || to === MoveItemDestination.TARGET_BACKPACK) {
+		const carrier = to === MoveItemDestination.SOURCE_BACKPACK ? source : target;
 		if (!carrier) return null;
 		const current = getCard(updated, carrier.id);
 		if (!current) return null;
@@ -902,7 +902,7 @@ function simulateMoveItemCard(
 			return { ...card, values: own };
 		});
 	} else {
-		const place = to === "sourceLocation" ? source : target;
+		const place = to === MoveItemDestination.SOURCE_LOCATION ? source : target;
 		values[carrierId] = "";
 		values[locationId] = place ? (getStringAttribute(place.values, locationId) ?? "") : "";
 	}
@@ -910,8 +910,8 @@ function simulateMoveItemCard(
 }
 
 function getMoveItemIds(effect: InlineEffect, slotMap: Record<string, string[]>, targetId?: string): string[] {
-	if (effect.kind !== "moveItemCard") return [];
-	return effect.target?.card === "slot" && effect.target.slot
+	if (effect.kind !== EffectType.MOVE_ITEM_CARD) return [];
+	return effect.target?.card === ConditionTarget.SLOT && effect.target.slot
 		? slotMap[effect.target.slot] ?? []
 		: targetId ? [targetId] : [];
 }
@@ -930,7 +930,7 @@ function validateMoveItemEffects(
 	let simulated = cards;
 	for (let i = 0; i < effects.length; i++) {
 		const effect = effects[i];
-		if (effect.kind !== "moveItemCard") continue;
+		if (effect.kind !== EffectType.MOVE_ITEM_CARD) continue;
 		const itemIds = getMoveItemIds(effect, slotMap, targetId);
 		for (let j = 0; j < itemIds.length; j++) {
 			const next = simulateMoveItemCard(config, simulated, itemIds[j], effect.to, source, target);
@@ -942,7 +942,7 @@ function validateMoveItemEffects(
 }
 
 function applyMoveItemEffect(runtime: EffectRuntime, effect: InlineEffect): void {
-	if (effect.kind !== "moveItemCard") return;
+	if (effect.kind !== EffectType.MOVE_ITEM_CARD) return;
 	const source = getCard(runtime.cards, runtime.sourceId);
 	if (!source) return;
 	const target = runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null;
@@ -955,16 +955,16 @@ function applyMoveItemEffect(runtime: EffectRuntime, effect: InlineEffect): void
 }
 
 function applyRemoveCardEffect(runtime: EffectRuntime, effect: InlineEffect): void {
-	if (effect.kind !== "removeCard") return;
+	if (effect.kind !== EffectType.REMOVE_CARD) return;
 	const ids = getEffectTargetIds(runtime, effect);
 	for (let i = 0; i < ids.length; i++) runtime.removeIds.add(ids[i]);
 }
 
 function applyStartDialogueEffect(runtime: EffectRuntime, effect: InlineEffect): void {
-	if (effect.kind !== "startDialogue") return;
+	if (effect.kind !== EffectType.START_DIALOGUE) return;
 	const dialogue = runtime.config.allDialogues.find((item) => item.id === effect.dialogueId);
 	if (!dialogue || dialogue.nodes.length === 0) return;
-	const targetIds = effect.target?.card === "slot" && effect.target.slot
+	const targetIds = effect.target?.card === ConditionTarget.SLOT && effect.target.slot
 		? runtime.slotMap[effect.target.slot] ?? []
 		: runtime.targetId ? [runtime.targetId] : [];
 	const source = getCard(runtime.cards, runtime.sourceId);
@@ -1012,14 +1012,14 @@ function applyStartDialogueEffect(runtime: EffectRuntime, effect: InlineEffect):
 }
 
 function resolveRuntimeCardId(runtime: EffectRuntime, target: TargetRef): string | undefined {
-	if (target.card === "sourceCard") return runtime.sourceId;
-	if (target.card === "targetCard") return runtime.targetId;
-	if (target.card === "slot" && target.slot) return runtime.slotMap[target.slot]?.[0];
+	if (target.card === ConditionTarget.SOURCE_CARD) return runtime.sourceId;
+	if (target.card === ConditionTarget.TARGET_CARD) return runtime.targetId;
+	if (target.card === ConditionTarget.SLOT && target.slot) return runtime.slotMap[target.slot]?.[0];
 	return undefined;
 }
 
 function applyChangeRelationshipEffect(runtime: EffectRuntime, effect: InlineEffect): void {
-	if (effect.kind !== "changeRelationshipAttributes") return;
+	if (effect.kind !== EffectType.CHANGE_RELATIONSHIP_ATTRIBUTES) return;
 	const sourceId = resolveRuntimeCardId(runtime, effect.relationship.source);
 	const targetId = resolveRuntimeCardId(runtime, effect.relationship.target);
 	if (!sourceId || !targetId) return;
@@ -1044,7 +1044,7 @@ function applyChangeRelationshipEffect(runtime: EffectRuntime, effect: InlineEff
 			if (!evaluateConditions(change.condition, context)) continue;
 		}
 		const definition = runtime.config.allAttributes.find((attribute) => attribute.id === change.attributeId);
-		if (!definition || definition.scope !== "relationship") continue;
+		if (!definition || definition.scope !== AttributeScope.RELATIONSHIP) continue;
 		const currentValue = getNumberAttribute(values, change.attributeId);
 		const set = change.set === undefined ? undefined : evaluateFormula(change.set, values, formulaContext);
 		const delta = change.delta === undefined ? 0 : evaluateFormula(change.delta, values, formulaContext);
@@ -1060,7 +1060,7 @@ function applyChangeRelationshipEffect(runtime: EffectRuntime, effect: InlineEff
 }
 
 function applyCreateAgreementEffect(runtime: EffectRuntime, effect: InlineEffect): void {
-	if (effect.kind !== "createAgreement" || !runtime.targetId) return;
+	if (effect.kind !== EffectType.CREATE_AGREEMENT || !runtime.targetId) return;
 	const definition = runtime.config.allAgreements.find((agreement) => agreement.id === effect.definitionId);
 	if (!definition) return;
 	const participants = [runtime.sourceId, runtime.targetId];
@@ -1103,7 +1103,7 @@ function applyCreateAgreementEffect(runtime: EffectRuntime, effect: InlineEffect
 }
 
 function applyResolveAgreementEffect(runtime: EffectRuntime, effect: InlineEffect): void {
-	if (effect.kind !== "resolveAgreement" || !runtime.targetId) return;
+	if (effect.kind !== EffectType.RESOLVE_AGREEMENT || !runtime.targetId) return;
 	const agreement = Object.values(runtime.agreements).find((item) =>
 		item.definitionId === effect.definitionId &&
 		item.participants.includes(runtime.sourceId) &&
@@ -1119,18 +1119,18 @@ function applyResolveAgreementEffect(runtime: EffectRuntime, effect: InlineEffec
 }
 
 const effectHandlers: Record<InlineEffect["kind"], EffectHandler> = {
-	changeAttributes: applyTargetedEffect,
-	addTag: applyTargetedEffect,
-	removeTag: applyTargetedEffect,
-	changeTemplate: applyTargetedEffect,
-	changeLocation: applyTargetedEffect,
-	addCard: applyCreateCardEffect,
-	removeCard: applyRemoveCardEffect,
-	moveItemCard: applyMoveItemEffect,
-	startDialogue: applyStartDialogueEffect,
-	changeRelationshipAttributes: applyChangeRelationshipEffect,
-	createAgreement: applyCreateAgreementEffect,
-	resolveAgreement: applyResolveAgreementEffect,
+	[EffectType.CHANGE_ATTRIBUTES]: applyTargetedEffect,
+	[EffectType.ADD_TAG]: applyTargetedEffect,
+	[EffectType.REMOVE_TAG]: applyTargetedEffect,
+	[EffectType.CHANGE_TEMPLATE]: applyTargetedEffect,
+	[EffectType.CHANGE_LOCATION]: applyTargetedEffect,
+	[EffectType.ADD_CARD]: applyCreateCardEffect,
+	[EffectType.REMOVE_CARD]: applyRemoveCardEffect,
+	[EffectType.MOVE_ITEM_CARD]: applyMoveItemEffect,
+	[EffectType.START_DIALOGUE]: applyStartDialogueEffect,
+	[EffectType.CHANGE_RELATIONSHIP_ATTRIBUTES]: applyChangeRelationshipEffect,
+	[EffectType.CREATE_AGREEMENT]: applyCreateAgreementEffect,
+	[EffectType.RESOLVE_AGREEMENT]: applyResolveAgreementEffect,
 };
 
 function planActionEffects(
@@ -1153,7 +1153,7 @@ function planActionEffects(
 		const context = getConditionContext(config, effect.condition, source, target, null, slotMap, cards);
 		if (!evaluateConditions(effect.condition, context)) continue;
 		let planned: InlineEffect = { ...effect, condition: undefined };
-		if (effect.kind === "changeAttributes") {
+		if (effect.kind === EffectType.CHANGE_ATTRIBUTES) {
 			const changes = effect.changes.filter((change) => {
 				if (!change.condition) return true;
 				const changeContext = getConditionContext(config, change.condition, source, target, source, slotMap, cards);
@@ -1216,13 +1216,13 @@ function applyTagAutoEffects(
 		const tagSnapshot = snapshotFromTag(currentTag);
 		if (!evaluateConditions(effect.condition, { sourceTag: tagSnapshot, host: hostSnapshot })) continue;
 		const tagCondition = (conditions: ConditionExpression | ConditionExpression[]): boolean => evaluateConditions(conditions, { sourceTag: tagSnapshot, host: snapshotFromDerived(deriveCard(config, currentHost)) });
-		if (effect.kind === "changeAttributes" && effect.target?.card === "host") {
+		if (effect.kind === EffectType.CHANGE_ATTRIBUTES && effect.target?.card === ConditionTarget.HOST) {
 			currentHost = applyChangeAttributes(config, currentHost, effect.changes, tagCondition, {
 				evaluateConditions: tagCondition,
 			});
 			continue;
 		}
-		if (effect.kind === "changeAttributes" && (effect.target?.card === "sourceTag" || !effect.target)) {
+		if (effect.kind === EffectType.CHANGE_ATTRIBUTES && (effect.target?.card === ConditionTarget.SOURCE_TAG || !effect.target)) {
 			const values = { ...currentTag.values };
 			for (let j = 0; j < effect.changes.length; j++) {
 				const change = effect.changes[j];
@@ -1383,7 +1383,7 @@ export function getVisibleCards(config: FamineRefugeeConfig, state: FamineState)
 	for (let i = 0; i < state.cards.length; i++) {
 		const card = state.cards[i];
 		if (card.id === player.id) continue;
-		if (getTemplate(config, card.templateId).cardType === "place") {
+		if (getTemplate(config, card.templateId).cardType === CardType.PLACE) {
 			if (card.id === locationId) cards.push(card);
 			continue;
 		}
@@ -1496,9 +1496,9 @@ function getDialogueParticipants(state: FamineState): { dialogue: DialogueState;
 
 export function getDialogueSpeakerCard(state: FamineState, speaker: TargetRef): CardState | null {
 	if (!state.dialogue) return null;
-	if (speaker.card === "sourceCard") return getCard(state.cards, state.dialogue.sourceCardId);
-	if (speaker.card === "targetCard") return state.dialogue.targetCardId ? getCard(state.cards, state.dialogue.targetCardId) : null;
-	if (speaker.card === "slot" && speaker.slot) {
+	if (speaker.card === ConditionTarget.SOURCE_CARD) return getCard(state.cards, state.dialogue.sourceCardId);
+	if (speaker.card === ConditionTarget.TARGET_CARD) return state.dialogue.targetCardId ? getCard(state.cards, state.dialogue.targetCardId) : null;
+	if (speaker.card === ConditionTarget.SLOT && speaker.slot) {
 		const id = state.dialogue.slotMap[speaker.slot]?.[0];
 		return id ? getCard(state.cards, id) : null;
 	}

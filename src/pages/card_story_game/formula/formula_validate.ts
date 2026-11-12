@@ -1,5 +1,6 @@
 import { isPlainObject } from "../../../utils/type_guard.ts";
 import type { FormulaValidationIssue } from "../card_story_game_types/formula_types.ts";
+import { FormulaBoundary, FormulaOp } from "../card_story_game_types/formula_types.ts";
 
 function isFiniteNumber(value: unknown): value is number {
 	return typeof value === "number" && Number.isFinite(value);
@@ -29,32 +30,32 @@ function validateNode(raw: unknown, path: string, issues: FormulaValidationIssue
 	}
 
 	switch (op) {
-		case "literal":
+		case FormulaOp.LITERAL:
 			if (!isFiniteNumber(raw.value)) {
 				issues.push({ path: `${path}.value`, message: "必须是有限数字" });
 			}
 			return;
-		case "floor":
-		case "abs":
+		case FormulaOp.FLOOR:
+		case FormulaOp.ABS:
 			validateNode(raw.value, `${path}.value`, issues);
 			return;
-		case "numberAttributeBound":
+		case FormulaOp.NUMBER_ATTRIBUTE_BOUND:
 			if (!isAttributeId(raw.attributeId)) {
 				issues.push({ path: `${path}.attributeId`, message: "必须是正整数属性 id" });
 			}
-			if (raw.boundary !== "min" && raw.boundary !== "max") {
+			if (raw.boundary !== FormulaBoundary.MIN && raw.boundary !== FormulaBoundary.MAX) {
 				issues.push({ path: `${path}.boundary`, message: "必须是 min 或 max" });
 			}
 			return;
-		case "numberAttributeValue":
+		case FormulaOp.NUMBER_ATTRIBUTE_VALUE:
 			if (!isAttributeId(raw.attributeId)) {
 				issues.push({ path: `${path}.attributeId`, message: "必须是正整数属性 id" });
 			}
 			return;
-		case "add":
-		case "sub":
-		case "mul":
-		case "div": {
+		case FormulaOp.ADD:
+		case FormulaOp.SUB:
+		case FormulaOp.MUL:
+		case FormulaOp.DIV: {
 			if (!Array.isArray(raw.args) || raw.args.length === 0) {
 				issues.push({ path: `${path}.args`, message: "必须是非空数组" });
 				return;
@@ -64,12 +65,12 @@ function validateNode(raw: unknown, path: string, issues: FormulaValidationIssue
 			}
 			return;
 		}
-		case "clamp":
+		case FormulaOp.CLAMP:
 			validateNode(raw.value, `${path}.value`, issues);
 			validateNode(raw.min, `${path}.min`, issues);
 			validateNode(raw.max, `${path}.max`, issues);
 			return;
-		case "refListsAttributeSum":
+		case FormulaOp.REF_LISTS_ATTRIBUTE_SUM:
 			if (!isAttributeId(raw.refAttributeId)) {
 				issues.push({ path: `${path}.refAttributeId`, message: "必须是正整数属性 id" });
 			}
@@ -77,12 +78,12 @@ function validateNode(raw: unknown, path: string, issues: FormulaValidationIssue
 				issues.push({ path: `${path}.valueAttributeId`, message: "必须是正整数属性 id" });
 			}
 			return;
-		case "refListsAttributeCount":
+		case FormulaOp.REF_LISTS_ATTRIBUTE_COUNT:
 			if (!isAttributeId(raw.refAttributeId)) {
 				issues.push({ path: `${path}.refAttributeId`, message: "必须是正整数属性 id" });
 			}
 			return;
-		case "normalize":
+		case FormulaOp.NORMALIZE:
 			if (!isAttributeId(raw.attributeId)) {
 				issues.push({ path: `${path}.attributeId`, message: "必须是正整数属性 id" });
 			}

@@ -1,13 +1,15 @@
 import type { AttributeValue, ConditionExpression } from "../card_story_game_types/index.ts";
 import { getNumberAttribute } from "../game/famine_refugee/attribute_value.ts";
 import type { NumberExpression } from "../card_story_game_types/formula_types.ts";
+import { FormulaOp } from "../card_story_game_types/formula_types.ts";
+import type { FormulaBoundary } from "../card_story_game_types/formula_types.ts";
 
 export interface FormulaContext {
 	evaluateConditions?: (conditions: ConditionExpression[]) => boolean;
 	/** 通过 cardRef / cardRefList 中的 id 查找卡牌 */
 	resolveCard?: (id: string) => { values: Record<number, AttributeValue> } | null;
 	/** 解析属性硬边界 */
-	getAttributeBound?: (attributeId: number, boundary: "min" | "max", values: Record<number, AttributeValue>) => number | undefined;
+	getAttributeBound?: (attributeId: number, boundary: FormulaBoundary, values: Record<number, AttributeValue>) => number | undefined;
 }
 
 export function evaluateFormula(
@@ -20,24 +22,24 @@ export function evaluateFormula(
 		if (!context?.evaluateConditions || !context.evaluateConditions([formula.condition])) return 0;
 	}
 	switch (formula.op) {
-		case "literal":
+		case FormulaOp.LITERAL:
 			return formula.value;
-		case "numberAttributeValue":
+		case FormulaOp.NUMBER_ATTRIBUTE_VALUE:
 			return getNumberAttribute(values, formula.attributeId);
-		case "numberAttributeBound":
+		case FormulaOp.NUMBER_ATTRIBUTE_BOUND:
 			return context?.getAttributeBound?.(formula.attributeId, formula.boundary, values) ?? 0;
-		case "floor":
+		case FormulaOp.FLOOR:
 			return Math.floor(evaluateFormula(formula.value, values, context));
-		case "abs":
+		case FormulaOp.ABS:
 			return Math.abs(evaluateFormula(formula.value, values, context));
-		case "add": {
+		case FormulaOp.ADD: {
 			let total = 0;
 			for (let i = 0; i < formula.args.length; i++) {
 				total += evaluateFormula(formula.args[i], values, context);
 			}
 			return total;
 		}
-		case "sub": {
+		case FormulaOp.SUB: {
 			if (formula.args.length === 0) return 0;
 			let total = evaluateFormula(formula.args[0], values, context);
 			for (let i = 1; i < formula.args.length; i++) {
@@ -45,14 +47,14 @@ export function evaluateFormula(
 			}
 			return total;
 		}
-		case "mul": {
+		case FormulaOp.MUL: {
 			let total = 1;
 			for (let i = 0; i < formula.args.length; i++) {
 				total *= evaluateFormula(formula.args[i], values, context);
 			}
 			return total;
 		}
-		case "div": {
+		case FormulaOp.DIV: {
 			if (formula.args.length === 0) return 0;
 			let total = evaluateFormula(formula.args[0], values, context);
 			for (let i = 1; i < formula.args.length; i++) {
@@ -61,7 +63,7 @@ export function evaluateFormula(
 			}
 			return total;
 		}
-		case "refListsAttributeSum": {
+		case FormulaOp.REF_LISTS_ATTRIBUTE_SUM: {
 			const list = values[formula.refAttributeId];
 			if (!Array.isArray(list) || !context?.resolveCard) return 0;
 			let total = 0;
@@ -73,16 +75,16 @@ export function evaluateFormula(
 			}
 			return total;
 		}
-		case "refListsAttributeCount": {
+		case FormulaOp.REF_LISTS_ATTRIBUTE_COUNT: {
 			const list = values[formula.refAttributeId];
 			return Array.isArray(list) ? list.length : 0;
 		}
-		case "clamp": {
+		case FormulaOp.CLAMP: {
 			const min = evaluateFormula(formula.min, values, context);
 			const max = evaluateFormula(formula.max, values, context);
 			return Math.min(max, Math.max(min, evaluateFormula(formula.value, values, context)));
 		}
-		case "normalize": {
+		case FormulaOp.NORMALIZE: {
 			const min = evaluateFormula(formula.min, values, context);
 			const max = evaluateFormula(formula.max, values, context);
 			const range = max - min;

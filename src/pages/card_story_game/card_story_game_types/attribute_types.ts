@@ -3,7 +3,27 @@ import type { Formula, NumberExpression } from "./formula_types.ts";
 /** 属性值：number / cardRef / cardRefList。 */
 export type AttributeValue = number | string | string[];
 
-export type AttributeValueType = "number" | "cardRef" | "cardRefList";
+export const AttributeValueType = {
+	NUMBER: "number",
+	CARD_REF: "cardRef",
+	CARD_REF_LIST: "cardRefList",
+} as const;
+
+export type AttributeValueType = (typeof AttributeValueType)[keyof typeof AttributeValueType];
+
+export const AttributeScope = {
+	CARD: "card",
+	RELATIONSHIP: "relationship",
+} as const;
+
+export type AttributeScope = (typeof AttributeScope)[keyof typeof AttributeScope];
+
+export const AttributeKind = {
+	BASE: "base",
+	DERIVED: "derived",
+} as const;
+
+export type AttributeKind = (typeof AttributeKind)[keyof typeof AttributeKind];
 
 /** 模板/标签上的属性初始绑定。 */
 export interface AttributeBinding {
@@ -30,8 +50,8 @@ export interface AttributeDefinition {
 	label?: string;
 	desc: string;
 	/** 默认 card；relationship 表示关系边属性 */
-	scope?: "card" | "relationship";
-	kind: "base" | "derived";
+	scope?: AttributeScope;
+	kind: AttributeKind;
 	valueType: AttributeValueType;
 	/** number 类型专属参数，例如范围 */
 	typeParams?: NumberAttributeTypeParams;

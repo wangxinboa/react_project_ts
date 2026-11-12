@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, ConfigProvider, Popover } from "antd";
 import { editorTheme } from "../../editor/editor_theme.ts";
+import { CardType } from "../../card_story_game_types/index.ts";
 import type { DragEvent } from "react";
 
 import { serviceGetFamineRefugeeConfig } from "../../../../services/famine_refugee.ts";
@@ -759,7 +760,7 @@ export default function FamineRefugeePage() {
 							</>
 						) : (
 							<>
-								{selectedView.derived.template.cardType === "person" ? (
+								{selectedView.derived.template.cardType === CardType.PERSON ? (
 									<div className={style.relationshipBlock}>
 										<div className={style.inspectorSectionTitle}>对玩家的态度</div>
 										<div className={style.relationshipValues}>
