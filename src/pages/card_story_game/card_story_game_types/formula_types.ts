@@ -10,6 +10,8 @@ export const FormulaOp = {
 	MUL: "mul",
 	DIV: "div",
 	CLAMP: "clamp",
+	MAX: "max",
+	MIN: "min",
 	NORMALIZE: "normalize",
 	REF_LISTS_ATTRIBUTE_SUM: "refListsAttributeSum",
 	REF_LISTS_ATTRIBUTE_COUNT: "refListsAttributeCount",
@@ -33,6 +35,7 @@ export type FormulaNode =
 	| { op: typeof FormulaOp.FLOOR | typeof FormulaOp.ABS; value: Formula }
 	| { op: typeof FormulaOp.ADD | typeof FormulaOp.SUB | typeof FormulaOp.MUL | typeof FormulaOp.DIV; args: Formula[] }
 	| { op: typeof FormulaOp.CLAMP; value: Formula; min: Formula; max: Formula }
+	| { op: typeof FormulaOp.MAX | typeof FormulaOp.MIN; args: Formula[] }
 	| { op: typeof FormulaOp.NORMALIZE; attributeId: number; min: Formula; max: Formula }
 	| { op: typeof FormulaOp.REF_LISTS_ATTRIBUTE_SUM; refAttributeId: number; valueAttributeId: number }
 	| { op: typeof FormulaOp.REF_LISTS_ATTRIBUTE_COUNT; refAttributeId: number }

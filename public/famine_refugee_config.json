@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 84,
+	"schemaVersion": 86,
 	"allTags": [
 		{
 			"id": 24,
@@ -52,7 +52,7 @@
 				"attributes": [
 					{
 						"id": 3,
-						"lte": 30
+						"lte": 1
 					}
 				],
 				"target": {
@@ -73,7 +73,7 @@
 				"attributes": [
 					{
 						"id": 4,
-						"gte": 50
+						"gte": 6
 					}
 				],
 				"target": {
@@ -222,7 +222,7 @@
 							},
 							"changes": [
 								{
-									"attributeId": 21,
+									"attributeId": 4,
 									"delta": -1
 								}
 							]
@@ -247,7 +247,7 @@
 					},
 					{
 						"id": 4,
-						"gte": 30
+						"gte": 6
 					}
 				]
 			}
@@ -289,30 +289,8 @@
 			"key": "spirit",
 			"label": "灵性",
 			"desc": "灵性强度",
-			"kind": "derived",
-			"valueType": "number",
-			"formula": {
-				"op": "add",
-				"args": [
-					{
-						"op": "mul",
-						"args": [
-							{
-								"op": "numberAttributeValue",
-								"attributeId": 3
-							},
-							{
-								"op": "literal",
-								"value": 0.3
-							}
-						]
-					},
-					{
-						"op": "numberAttributeValue",
-						"attributeId": 21
-					}
-				]
-			}
+			"kind": "base",
+			"valueType": "number"
 		},
 		{
 			"id": 5,
@@ -473,14 +451,6 @@
 			"label": "恐惧",
 			"desc": "恐惧",
 			"scope": "relationship",
-			"kind": "base",
-			"valueType": "number"
-		},
-		{
-			"id": 21,
-			"key": "transcendence",
-			"label": "超凡灵性",
-			"desc": "独立于肉身的超凡灵性",
 			"kind": "base",
 			"valueType": "number"
 		},
@@ -670,6 +640,466 @@
 					}
 				]
 			}
+		},
+		{
+			"id": 301,
+			"key": "qiBloodMax",
+			"label": "气血上限",
+			"desc": "肉身能量上限",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "mul",
+				"args": [
+					{
+						"op": "literal",
+						"value": 3
+					},
+					{
+						"op": "max",
+						"args": [
+							{
+								"op": "literal",
+								"value": 0
+							},
+							{
+								"op": "sub",
+								"args": [
+									{
+										"op": "numberAttributeValue",
+										"attributeId": 3
+									},
+									{
+										"op": "literal",
+										"value": 5
+									}
+								]
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 302,
+			"key": "qiControlMax",
+			"label": "气血控制上限",
+			"desc": "可控制的气血上限",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "add",
+				"args": [
+					{
+						"op": "numberAttributeValue",
+						"attributeId": 4
+					},
+					{
+						"op": "numberAttributeValue",
+						"attributeId": 304
+					},
+					{
+						"op": "mul",
+						"args": [
+							{
+								"op": "literal",
+								"value": 0.3
+							},
+							{
+								"op": "numberAttributeValue",
+								"attributeId": 305
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 303,
+			"key": "qiOverflow",
+			"label": "气血失控",
+			"desc": "超出控制上限的气血",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "max",
+				"args": [
+					{
+						"op": "literal",
+						"value": 0
+					},
+					{
+						"op": "sub",
+						"args": [
+							{
+								"op": "numberAttributeValue",
+								"attributeId": 301
+							},
+							{
+								"op": "numberAttributeValue",
+								"attributeId": 302
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 304,
+			"key": "martialWill",
+			"label": "武道意志",
+			"desc": "以武道方向显化的意志",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "add",
+				"args": [
+					{
+						"op": "mul",
+						"args": [
+							{
+								"op": "literal",
+								"value": 0.6
+							},
+							{
+								"op": "max",
+								"args": [
+									{
+										"op": "literal",
+										"value": 0
+									},
+									{
+										"op": "sub",
+										"args": [
+											{
+												"op": "numberAttributeValue",
+												"attributeId": 3
+											},
+											{
+												"op": "literal",
+												"value": 5
+											}
+										]
+									}
+								]
+							}
+						]
+					},
+					{
+						"op": "mul",
+						"args": [
+							{
+								"op": "literal",
+								"value": 0.4
+							},
+							{
+								"op": "max",
+								"args": [
+									{
+										"op": "literal",
+										"value": 0
+									},
+									{
+										"op": "sub",
+										"args": [
+											{
+												"op": "numberAttributeValue",
+												"attributeId": 4
+											},
+											{
+												"op": "literal",
+												"value": 5
+											}
+										]
+									}
+								]
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 305,
+			"key": "mentalMax",
+			"label": "精神力上限",
+			"desc": "精神力量上限",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "add",
+				"args": [
+					{
+						"op": "mul",
+						"args": [
+							{
+								"op": "literal",
+								"value": 1.5
+							},
+							{
+								"op": "max",
+								"args": [
+									{
+										"op": "literal",
+										"value": 0
+									},
+									{
+										"op": "sub",
+										"args": [
+											{
+												"op": "numberAttributeValue",
+												"attributeId": 4
+											},
+											{
+												"op": "literal",
+												"value": 5
+											}
+										]
+									}
+								]
+							}
+						]
+					},
+					{
+						"op": "mul",
+						"args": [
+							{
+								"op": "literal",
+								"value": 0.2
+							},
+							{
+								"op": "max",
+								"args": [
+									{
+										"op": "literal",
+										"value": 0
+									},
+									{
+										"op": "sub",
+										"args": [
+											{
+												"op": "numberAttributeValue",
+												"attributeId": 3
+											},
+											{
+												"op": "literal",
+												"value": 5
+											}
+										]
+									}
+								]
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 306,
+			"key": "spellCapacityMax",
+			"label": "灵性法术容量上限",
+			"desc": "可承载的法术容量",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "mul",
+				"args": [
+					{
+						"op": "literal",
+						"value": 0.8
+					},
+					{
+						"op": "max",
+						"args": [
+							{
+								"op": "literal",
+								"value": 0
+							},
+							{
+								"op": "sub",
+								"args": [
+									{
+										"op": "numberAttributeValue",
+										"attributeId": 4
+									},
+									{
+										"op": "literal",
+										"value": 5
+									}
+								]
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 307,
+			"key": "manaMax",
+			"label": "法力上限",
+			"desc": "可转化出的法力上限",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "add",
+				"args": [
+					{
+						"op": "mul",
+						"args": [
+							{
+								"op": "literal",
+								"value": 0.8
+							},
+							{
+								"op": "max",
+								"args": [
+									{
+										"op": "literal",
+										"value": 0
+									},
+									{
+										"op": "sub",
+										"args": [
+											{
+												"op": "numberAttributeValue",
+												"attributeId": 3
+											},
+											{
+												"op": "literal",
+												"value": 5
+											}
+										]
+									}
+								]
+							}
+						]
+					},
+					{
+						"op": "mul",
+						"args": [
+							{
+								"op": "literal",
+								"value": 0.4
+							},
+							{
+								"op": "max",
+								"args": [
+									{
+										"op": "literal",
+										"value": 0
+									},
+									{
+										"op": "sub",
+										"args": [
+											{
+												"op": "numberAttributeValue",
+												"attributeId": 4
+											},
+											{
+												"op": "literal",
+												"value": 5
+											}
+										]
+									}
+								]
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 308,
+			"key": "spiritOccupied",
+			"label": "灵性占用",
+			"desc": "被武道意志和法术容量占用的灵性",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "add",
+				"args": [
+					{
+						"op": "mul",
+						"args": [
+							{
+								"op": "literal",
+								"value": 0.5
+							},
+							{
+								"op": "numberAttributeValue",
+								"attributeId": 304
+							}
+						]
+					},
+					{
+						"op": "numberAttributeValue",
+						"attributeId": 306
+					}
+				]
+			}
+		},
+		{
+			"id": 309,
+			"key": "lifeOccupied",
+			"label": "生命力占用",
+			"desc": "被法力占用的生命力",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "mul",
+				"args": [
+					{
+						"op": "literal",
+						"value": 0.5
+					},
+					{
+						"op": "numberAttributeValue",
+						"attributeId": 307
+					}
+				]
+			}
+		},
+		{
+			"id": 310,
+			"key": "spiritRemaining",
+			"label": "灵性余量",
+			"desc": "可自由使用的灵性",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "sub",
+				"args": [
+					{
+						"op": "numberAttributeValue",
+						"attributeId": 4
+					},
+					{
+						"op": "numberAttributeValue",
+						"attributeId": 308
+					}
+				]
+			}
+		},
+		{
+			"id": 311,
+			"key": "lifeRemaining",
+			"label": "生命力余量",
+			"desc": "可自由使用的生命力",
+			"kind": "derived",
+			"valueType": "number",
+			"formula": {
+				"op": "sub",
+				"args": [
+					{
+						"op": "numberAttributeValue",
+						"attributeId": 3
+					},
+					{
+						"op": "numberAttributeValue",
+						"attributeId": 309
+					}
+				]
+			}
 		}
 	],
 	"cardTemplates": [
@@ -680,19 +1110,19 @@
 			"attributes": [
 				{
 					"id": 1,
-					"value": 45
+					"value": 30
 				},
 				{
 					"id": 2,
-					"value": 60
+					"value": 20
 				},
 				{
 					"id": 3,
-					"value": 100
+					"value": 4
 				},
 				{
 					"id": 4,
-					"value": 10
+					"value": 4
 				},
 				{
 					"id": 11,
@@ -701,10 +1131,6 @@
 				{
 					"id": 16,
 					"value": 5
-				},
-				{
-					"id": 21,
-					"value": 0
 				},
 				{
 					"id": 13,
@@ -745,7 +1171,11 @@
 			"reactions": [
 				201,
 				202,
-				203
+				203,
+				204,
+				205,
+				206,
+				207
 			]
 		},
 		{
@@ -755,19 +1185,19 @@
 			"attributes": [
 				{
 					"id": 1,
-					"value": 45
+					"value": 30
 				},
 				{
 					"id": 2,
-					"value": 60
+					"value": 20
 				},
 				{
 					"id": 3,
-					"value": 100
+					"value": 4
 				},
 				{
 					"id": 4,
-					"value": 10
+					"value": 4
 				},
 				{
 					"id": 11,
@@ -813,7 +1243,11 @@
 			"reactions": [
 				201,
 				202,
-				203
+				203,
+				204,
+				205,
+				206,
+				207
 			]
 		},
 		{
@@ -895,15 +1329,15 @@
 				},
 				{
 					"id": 2,
-					"value": 45
+					"value": 20
 				},
 				{
 					"id": 3,
-					"value": 100
+					"value": 4
 				},
 				{
 					"id": 4,
-					"value": 5
+					"value": 4
 				},
 				{
 					"id": 11,
@@ -952,7 +1386,11 @@
 			"reactions": [
 				201,
 				202,
-				203
+				203,
+				204,
+				205,
+				206,
+				207
 			]
 		},
 		{
@@ -1128,10 +1566,6 @@
 			"attributes": [
 				{
 					"id": 3,
-					"lte": 0
-				},
-				{
-					"id": 21,
 					"lte": 0
 				}
 			]
@@ -1312,7 +1746,7 @@
 						},
 						{
 							"attributeId": 3,
-							"delta": -2
+							"delta": -1
 						}
 					],
 					"desc": "修改属性：体力 -18、饱食 -10、生命 -2、损伤 +2",
@@ -1357,7 +1791,7 @@
 					"changes": [
 						{
 							"attributeId": 3,
-							"delta": -12
+							"delta": -1
 						}
 					],
 					"desc": "修改属性：损伤 +25、生命 -12",
@@ -1412,12 +1846,12 @@
 					"kind": "changeAttributes",
 					"changes": [
 						{
-							"attributeId": 21,
-							"delta": 20
+							"attributeId": 4,
+							"delta": 1
 						},
 						{
 							"attributeId": 3,
-							"delta": -8
+							"delta": -1
 						},
 						{
 							"attributeId": 1,
@@ -1559,7 +1993,7 @@
 						},
 						{
 							"attributeId": 3,
-							"delta": 2,
+							"delta": 1,
 							"condition": {
 								"hasTag": 32,
 								"target": {
@@ -2127,7 +2561,7 @@
 					"changes": [
 						{
 							"attributeId": 2,
-							"delta": -15
+							"delta": -5
 						},
 						{
 							"attributeId": 1,
@@ -2147,7 +2581,7 @@
 				"attributes": [
 					{
 						"id": 2,
-						"gte": 15
+						"gte": 5
 					}
 				]
 			}
@@ -2168,7 +2602,7 @@
 					},
 					"changes": [
 						{
-							"attributeId": 21,
+							"attributeId": 4,
 							"delta": 1
 						},
 						{
@@ -2599,6 +3033,266 @@
 					"id": 106,
 					"kind": "addTag",
 					"tagId": 37,
+					"target": {
+						"card": "host"
+					}
+				}
+			]
+		},
+		{
+			"id": 204,
+			"key": "showLifePath",
+			"desc": "生命力达到门槛后显化肉身属性",
+			"trigger": {
+				"kind": "attributeChanged",
+				"attributeIds": [
+					3
+				]
+			},
+			"condition": {
+				"target": {
+					"card": "host"
+				},
+				"attributes": [
+					{
+						"id": 3,
+						"gte": 6
+					}
+				]
+			},
+			"effects": [
+				{
+					"id": 401,
+					"kind": "addAttribute",
+					"attributeId": 301,
+					"target": {
+						"card": "host"
+					}
+				},
+				{
+					"id": 402,
+					"kind": "addAttribute",
+					"attributeId": 304,
+					"target": {
+						"card": "host"
+					}
+				}
+			]
+		},
+		{
+			"id": 205,
+			"key": "showSpiritPath",
+			"desc": "灵性达到门槛后显化灵性属性",
+			"trigger": {
+				"kind": "attributeChanged",
+				"attributeIds": [
+					4
+				]
+			},
+			"condition": {
+				"target": {
+					"card": "host"
+				},
+				"attributes": [
+					{
+						"id": 4,
+						"gte": 6
+					}
+				]
+			},
+			"effects": [
+				{
+					"id": 403,
+					"kind": "addAttribute",
+					"attributeId": 305,
+					"target": {
+						"card": "host"
+					}
+				},
+				{
+					"id": 404,
+					"kind": "addAttribute",
+					"attributeId": 306,
+					"target": {
+						"card": "host"
+					}
+				}
+			]
+		},
+		{
+			"id": 206,
+			"key": "showCombinedPathLife",
+			"desc": "双路线达到门槛后显化资源属性",
+			"trigger": {
+				"kind": "attributeChanged",
+				"attributeIds": [
+					3
+				]
+			},
+			"condition": {
+				"target": {
+					"card": "host"
+				},
+				"attributes": [
+					{
+						"id": 3,
+						"gte": 6
+					},
+					{
+						"id": 4,
+						"gte": 6
+					}
+				],
+				"hasAttributes": [
+					301,
+					304,
+					305,
+					306
+				]
+			},
+			"effects": [
+				{
+					"id": 405,
+					"kind": "addAttribute",
+					"attributeId": 302,
+					"target": {
+						"card": "host"
+					}
+				},
+				{
+					"id": 406,
+					"kind": "addAttribute",
+					"attributeId": 303,
+					"target": {
+						"card": "host"
+					}
+				},
+				{
+					"id": 407,
+					"kind": "addAttribute",
+					"attributeId": 307,
+					"target": {
+						"card": "host"
+					}
+				},
+				{
+					"id": 408,
+					"kind": "addAttribute",
+					"attributeId": 308,
+					"target": {
+						"card": "host"
+					}
+				},
+				{
+					"id": 409,
+					"kind": "addAttribute",
+					"attributeId": 309,
+					"target": {
+						"card": "host"
+					}
+				},
+				{
+					"id": 410,
+					"kind": "addAttribute",
+					"attributeId": 310,
+					"target": {
+						"card": "host"
+					}
+				},
+				{
+					"id": 411,
+					"kind": "addAttribute",
+					"attributeId": 311,
+					"target": {
+						"card": "host"
+					}
+				}
+			]
+		},
+		{
+			"id": 207,
+			"key": "showCombinedPathSpirit",
+			"desc": "双路线达到门槛后显化资源属性",
+			"trigger": {
+				"kind": "attributeChanged",
+				"attributeIds": [
+					4
+				]
+			},
+			"condition": {
+				"target": {
+					"card": "host"
+				},
+				"attributes": [
+					{
+						"id": 3,
+						"gte": 6
+					},
+					{
+						"id": 4,
+						"gte": 6
+					}
+				],
+				"hasAttributes": [
+					301,
+					304,
+					305,
+					306
+				]
+			},
+			"effects": [
+				{
+					"id": 412,
+					"kind": "addAttribute",
+					"attributeId": 302,
+					"target": {
+						"card": "host"
+					}
+				},
+				{
+					"id": 413,
+					"kind": "addAttribute",
+					"attributeId": 303,
+					"target": {
+						"card": "host"
+					}
+				},
+				{
+					"id": 414,
+					"kind": "addAttribute",
+					"attributeId": 307,
+					"target": {
+						"card": "host"
+					}
+				},
+				{
+					"id": 415,
+					"kind": "addAttribute",
+					"attributeId": 308,
+					"target": {
+						"card": "host"
+					}
+				},
+				{
+					"id": 416,
+					"kind": "addAttribute",
+					"attributeId": 309,
+					"target": {
+						"card": "host"
+					}
+				},
+				{
+					"id": 417,
+					"kind": "addAttribute",
+					"attributeId": 310,
+					"target": {
+						"card": "host"
+					}
+				},
+				{
+					"id": 418,
+					"kind": "addAttribute",
+					"attributeId": 311,
 					"target": {
 						"card": "host"
 					}

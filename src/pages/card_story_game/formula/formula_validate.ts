@@ -47,7 +47,9 @@ function validateNode(raw: unknown, path: string, issues: FormulaValidationIssue
 		case FormulaOp.ADD:
 		case FormulaOp.SUB:
 		case FormulaOp.MUL:
-		case FormulaOp.DIV: {
+		case FormulaOp.DIV:
+		case FormulaOp.MAX:
+		case FormulaOp.MIN: {
 			if (!Array.isArray(raw.args) || raw.args.length === 0) {
 				issues.push({ path: `${path}.args`, message: "必须是非空数组" });
 				return;

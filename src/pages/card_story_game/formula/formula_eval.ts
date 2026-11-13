@@ -88,6 +88,18 @@ export function evaluateFormula(
 			const raw = getNumberAttribute(values, formula.attributeId);
 			return (raw - min) / range;
 		}
+		case FormulaOp.MAX: {
+			if (formula.args.length === 0) return 0;
+			let result = evaluateFormula(formula.args[0], values, context);
+			for (let i = 1; i < formula.args.length; i++) result = Math.max(result, evaluateFormula(formula.args[i], values, context));
+			return result;
+		}
+		case FormulaOp.MIN: {
+			if (formula.args.length === 0) return 0;
+			let result = evaluateFormula(formula.args[0], values, context);
+			for (let i = 1; i < formula.args.length; i++) result = Math.min(result, evaluateFormula(formula.args[i], values, context));
+			return result;
+		}
 		case FormulaOp.SELECT: {
 			for (let i = 0; i < formula.branches.length; i++) {
 				const branch = formula.branches[i];

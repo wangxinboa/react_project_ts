@@ -76,7 +76,10 @@ interface TargetRef {
 - `Condition.dialogues` / `agreements` 是数组，数组内按 AND 判断。
 - `Condition.worldTime` 使用 `BaseNumberCheck` 判断世界时间（分钟）；`target` 可省略，但不能在没有 target 时写卡牌判定字段。
 - `Formula.select` 使用 `branches: [{ condition, value }]` 按顺序匹配，首个成立分支生效；都不成立时使用 `else`，没有 `else` 返回 0。
-- 当前属性：生命力、超凡灵性、派生灵性、饱食、体力、饱食上限、体力上限；损伤/污染/身体状态已移除。
+- 当前核心属性：生命力、灵性、气血上限、气血控制上限、气血失控、武道意志、精神力上限、灵性法术容量上限、法力上限、灵性占用、生命力占用、灵性余量、生命力余量。
+- 生命力、灵性为 base；其余进阶属性为 derived，并由 `addAttribute` 按门槛显化。
+- 生命力 >= 6 显化气血上限、武道意志；灵性 >= 6 显化精神力上限、法术容量上限；两者都 >= 6 才显化资源/余量属性。
+- UI 平铺显示已存在的属性，不按属性树分组。
 - 上限属性是普通派生属性；`NumberBounds` / `typeParams` / `numberAttributeBound` / `maxAttributeId` 已移除。
 - 损伤/污染通过 Tag 表达；骨折通过 `Formula.select` 影响体力上限，感染/梦魇污染通过 Tag auto 影响属性。
 - `CardTemplate.reactions` 是卡牌监听定义 id 数组；定义放在 `allCardReactions`，数组顺序即优先级，第一版只执行一轮。

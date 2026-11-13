@@ -65,7 +65,12 @@ function isDisplayedAttribute(config: FamineRefugeeConfig, id: number): boolean 
 	for (let i = 0; i < config.allAttributes.length; i++) {
 		const definition = config.allAttributes[i];
 		if (definition.id !== id) continue;
-		return !definition.key.endsWith("Max") && !SYSTEM_ATTRIBUTE_KEYS.has(definition.key);
+		if (SYSTEM_ATTRIBUTE_KEYS.has(definition.key)) return false;
+		if (definition.key.endsWith("Max")) {
+			const baseKey = definition.key.slice(0, -3);
+			return !config.allAttributes.some((attribute) => attribute.key === baseKey);
+		}
+		return true;
 	}
 	return false;
 }
@@ -482,6 +487,13 @@ export default function FamineRefugeePage() {
 		if (item) backpackWeight += getNumberAttribute(item.card.values, getAttributeId(config, "weight"));
 	}
 
+	const playerAttributes = config.allAttributes.filter((attribute) =>
+		isDisplayedAttribute(config, attribute.id) && isAttributePresent(playerView.card, attribute.id),
+	);
+	const selectedAttributes = config.allAttributes.filter((attribute) =>
+		isDisplayedAttribute(config, attribute.id) && isAttributePresent(selectedView.card, attribute.id),
+	);
+
 	const previewContent = (
 		<div className={style.actionPreview}>
 			<div className={style.actionPreviewTitle}>{previewTitle}</div>
@@ -526,19 +538,17 @@ export default function FamineRefugeePage() {
 						<span className={style.avatarPortrait}>{playerView.derived.template.key.slice(0, 1)}</span>
 					</button>
 					<div className={style.topAttributes}>
-						{(playerView.derived.template.attributes ?? [])
-							.filter((binding) => isDisplayedAttribute(config, binding.id) && isAttributePresent(playerView.card, binding.id))
-							.map((binding) => (
-								<div key={binding.id} className={style.topAttribute}>
-									<span>{getAttributeLabel(config, binding.id)}</span>
-									<strong>
-										{Math.round(playerView.derived.values[binding.id] ?? 0)}
-										{getAttributeMaxValue(config, binding.id, playerView.derived.values) !== null
-											? ` / ${Math.round(getAttributeMaxValue(config, binding.id, playerView.derived.values) ?? 0)}`
-											: ""}
-									</strong>
-								</div>
-							))}
+						{playerAttributes.map((attribute) => (
+							<div key={attribute.id} className={style.topAttribute}>
+								<span>{getAttributeLabel(config, attribute.id)}</span>
+								<strong>
+									{Math.round(playerView.derived.values[attribute.id] ?? 0)}
+									{getAttributeMaxValue(config, attribute.id, playerView.derived.values) !== null
+										? ` / ${Math.round(getAttributeMaxValue(config, attribute.id, playerView.derived.values) ?? 0)}`
+										: ""}
+								</strong>
+							</div>
+						))}
 						<div className={style.topAttribute}>
 							<span>负重</span>
 							<strong>
@@ -618,29 +628,25 @@ export default function FamineRefugeePage() {
 
 						{!isPlayerSelected ? (
 							<div className={style.attributeList}>
-								{(selectedView.derived.template.attributes ?? []).filter((binding) =>
-									isDisplayedAttribute(config, binding.id) && isAttributePresent(selectedView.card, binding.id),
-								).length === 0 ? (
+								{selectedAttributes.length === 0 ? (
 									<div className={style.emptyAttributes}>这张卡没有数值属性。</div>
 								) : (
-									(selectedView.derived.template.attributes ?? [])
-										.filter((binding) => isDisplayedAttribute(config, binding.id) && isAttributePresent(selectedView.card, binding.id))
-										.map((binding) => {
-											const value = selectedView.derived.values[binding.id] ?? 0;
-											const max = getAttributeMaxValue(config, binding.id, selectedView.derived.values);
-											const width = max !== null && max > 0 ? Math.min(100, (value / max) * 100) : value;
-											return (
-												<div key={binding.id} className={style.attributeRow}>
-													<div className={style.attributeHeader}>
-														<span>{getAttributeLabel(config, binding.id)}</span>
-														<span>{Math.round(value)}{max !== null ? ` / ${Math.round(max)}` : ""}</span>
-													</div>
-													<div className={style.bar}>
-														<div className={style.barFill} style={{ width: `${width}%` }} />
-													</div>
+									selectedAttributes.map((attribute) => {
+										const value = selectedView.derived.values[attribute.id] ?? 0;
+										const max = getAttributeMaxValue(config, attribute.id, selectedView.derived.values);
+										const width = max !== null && max > 0 ? Math.min(100, (value / max) * 100) : value;
+										return (
+											<div key={attribute.id} className={style.attributeRow}>
+												<div className={style.attributeHeader}>
+													<span>{getAttributeLabel(config, attribute.id)}</span>
+													<span>{Math.round(value)}{max !== null ? ` / ${Math.round(max)}` : ""}</span>
 												</div>
-											);
-										})
+												<div className={style.bar}>
+													<div className={style.barFill} style={{ width: `${width}%` }} />
+												</div>
+											</div>
+										);
+									})
 								)}
 							</div>
 						) : null}

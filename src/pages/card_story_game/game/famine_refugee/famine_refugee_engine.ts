@@ -755,8 +755,9 @@ function applyChangeAttributes(
 		const definition = config.allAttributes.find((attribute) => attribute.id === change.attributeId);
 		if (!definition || definition.kind !== AttributeKind.BASE) continue;
 		const current = getNumberAttribute(values, change.attributeId);
-		const set = change.set === undefined ? undefined : evaluateChangeNumber(change.set, values, formulaContext);
-		const delta = evaluateChangeNumber(change.delta, values, formulaContext, 0);
+		const formulaValues = deriveCard(config, { ...card, values }).values;
+		const set = change.set === undefined ? undefined : evaluateChangeNumber(change.set, formulaValues, formulaContext);
+		const delta = evaluateChangeNumber(change.delta, formulaValues, formulaContext, 0);
 		const next = set ?? current + delta;
 		values[change.attributeId] = next;
 	}
