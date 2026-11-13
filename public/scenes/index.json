@@ -1,0 +1,10 @@
+{
+	"defaultScene": "famine_refugee",
+	"scenes": [
+		{
+			"id": "famine_refugee",
+			"label": "饥荒流民",
+			"file": "famine_refugee.json"
+		}
+	]
+}

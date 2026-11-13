@@ -133,3 +133,10 @@ interface CardState {
 - `CardTemplate.behavior.decisionInterval` 控制决策间隔。
 - 动作池复用 `outgoing`，按数组顺序尝试。
 - 具体执行仍复用 Action 的原子规则。
+
+## demo 场景
+
+- 每个场景是一份独立 JSON，放在 `public/scenes/`。
+- `public/scenes/index.json` 提供场景列表和默认场景。
+- 场景之间不共享配置，可以独立使用 ID 和作用域。
+- 页面顶部场景选择器切换场景时会重置 demo。

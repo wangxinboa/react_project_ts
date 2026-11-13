@@ -1,10 +1,36 @@
 import { validateFormula } from "../pages/card_story_game/formula/formula_validate.ts";
 import type { FamineRefugeeConfig } from "../pages/card_story_game/game/famine_refugee/famine_refugee_types.ts";
 
-const CONFIG_FILE = "famine_refugee_config.json";
+export interface FamineSceneEntry {
+	id: string;
+	label: string;
+	file: string;
+}
 
-export async function serviceGetFamineRefugeeConfig(): Promise<FamineRefugeeConfig> {
-	const response = await fetch(`${import.meta.env.BASE_URL}${CONFIG_FILE}`);
+export interface FamineSceneIndex {
+	defaultScene: string;
+	scenes: FamineSceneEntry[];
+}
+
+export async function serviceGetFamineSceneIndex(): Promise<FamineSceneIndex> {
+	const response = await fetch(`${import.meta.env.BASE_URL}scenes/index.json`);
+	if (!response.ok) {
+		throw new Error(`场景索引加载失败：HTTP ${response.status}`);
+	}
+	const raw: unknown = await response.json();
+	if (
+		typeof raw !== "object" ||
+		raw === null ||
+		!Array.isArray((raw as { scenes?: unknown }).scenes) ||
+		typeof (raw as { defaultScene?: unknown }).defaultScene !== "string"
+	) {
+		throw new Error("场景索引格式错误：scenes / defaultScene 缺失");
+	}
+	return raw as FamineSceneIndex;
+}
+
+export async function serviceGetFamineRefugeeConfig(sceneFile = "famine_refugee.json"): Promise<FamineRefugeeConfig> {
+	const response = await fetch(`${import.meta.env.BASE_URL}scenes/${sceneFile}`);
 	if (!response.ok) {
 		throw new Error(`原型配置加载失败：HTTP ${response.status}`);
 	}

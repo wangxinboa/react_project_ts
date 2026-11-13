@@ -4,7 +4,8 @@ import { editorTheme } from "../../editor/editor_theme.ts";
 import { CardType } from "../../card_story_game_types/index.ts";
 import type { DragEvent } from "react";
 
-import { serviceGetFamineRefugeeConfig } from "../../../../services/famine_refugee.ts";
+import { serviceGetFamineRefugeeConfig, serviceGetFamineSceneIndex } from "../../../../services/famine_refugee.ts";
+import type { FamineSceneEntry, FamineSceneIndex } from "../../../../services/famine_refugee.ts";
 import { getNumberAttribute, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import {
 	applyAction,
@@ -124,6 +125,8 @@ interface CardView {
 export default function FamineRefugeePage() {
 	const [config, setConfig] = useState<FamineRefugeeConfig | null>(null);
 	const [game, setGame] = useState<FamineState | null>(null);
+	const [sceneIndex, setSceneIndex] = useState<FamineSceneIndex | null>(null);
+	const [activeSceneId, setActiveSceneId] = useState("");
 	const [selectedCardId, setSelectedCardId] = useState("");
 	const [placementActionId, setPlacementActionId] = useState<number | null>(null);
 	const [slotAssignments, setSlotAssignments] = useState<Record<string, string[]>>({});
@@ -132,25 +135,42 @@ export default function FamineRefugeePage() {
 	const [previewTitle, setPreviewTitle] = useState("");
 	const [previewLines, setPreviewLines] = useState<string[]>([]);
 
+	const loadScene = useCallback(async (scene: FamineSceneEntry): Promise<void> => {
+		setLoadError("");
+		try {
+			const loaded = await serviceGetFamineRefugeeConfig(scene.file);
+			setConfig(loaded);
+			setGame(createInitialState(loaded));
+			setSelectedCardId(loaded.saveData.playerCardId);
+			setPlacementActionId(null);
+			setSlotAssignments({});
+			setActiveSlotId("");
+			setPreviewTitle("");
+			setPreviewLines([]);
+			setActiveSceneId(scene.id);
+		} catch (error) {
+			setLoadError(error instanceof Error ? error.message : "原型配置加载失败");
+		}
+	}, []);
+
 	useEffect(() => {
 		let cancelled = false;
-		async function loadConfig() {
+		async function loadIndex() {
 			try {
-				const loaded = await serviceGetFamineRefugeeConfig();
-				if (!cancelled) {
-					setConfig(loaded);
-					setGame(createInitialState(loaded));
-					setSelectedCardId(loaded.saveData.playerCardId);
-				}
+				const index = await serviceGetFamineSceneIndex();
+				if (cancelled) return;
+				setSceneIndex(index);
+				const defaultScene = index.scenes.find((scene) => scene.id === index.defaultScene) ?? index.scenes[0];
+				if (defaultScene) await loadScene(defaultScene);
 			} catch (error) {
-				if (!cancelled) setLoadError(error instanceof Error ? error.message : "原型配置加载失败");
+				if (!cancelled) setLoadError(error instanceof Error ? error.message : "场景索引加载失败");
 			}
 		}
-		void loadConfig();
+		void loadIndex();
 		return () => {
 			cancelled = true;
 		};
-	}, []);
+	}, [loadScene]);
 
 	const cardViews = useMemo<CardView[]>(() => {
 		if (!config || !game) return [];
@@ -563,6 +583,18 @@ export default function FamineRefugeePage() {
 						</div>
 					</div>
 					<div className={style.headerActions}>
+						<div className={style.sceneSwitcher}>
+							{sceneIndex?.scenes.map((scene) => (
+								<button
+									key={scene.id}
+									type="button"
+									className={`${style.sceneButton} ${scene.id === activeSceneId ? style.sceneButtonActive : ""}`}
+									onClick={() => void loadScene(scene)}
+								>
+									{scene.label}
+								</button>
+							))}
+						</div>
 						<span className={style.locationName}>{currentLocationName}</span>
 						<span className={style.clock}>{formatClock(game.time)}</span>
 						<button type="button" className={style.resetButton} onClick={handleReset}>
@@ -859,7 +891,7 @@ export default function FamineRefugeePage() {
 				</section>
 
 				<footer className={style.footer}>
-					每个动作按命名卡槽放置目标；卡槽之间不能复用同一张卡。修改 `public/famine_refugee_config.json`
+					每个动作按命名卡槽放置目标；卡槽之间不能复用同一张卡。修改 `public/scenes/famine_refugee.json`
 					后刷新页面调整配置。
 				</footer>
 				{game.dialogue && dialogueNode ? (

@@ -796,3 +796,24 @@
 	color: #c9a227;
 	font-size: 11px;
 }
+
+.sceneSwitcher {
+	display: flex;
+	gap: 4px;
+	align-items: center;
+}
+
+.sceneButton {
+	padding: 3px 7px;
+	border: 1px solid #2e2a25;
+	border-radius: 4px;
+	background: #171411;
+	color: #8a8276;
+	font-size: 10px;
+	cursor: pointer;
+}
+
+.sceneButtonActive {
+	border-color: #c9a227;
+	color: #e6ddcc;
+}
