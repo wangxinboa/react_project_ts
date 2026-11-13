@@ -1,4 +1,5 @@
-import type { ConditionExpression, TargetRef } from "./condition_types.ts";
+import type { ConditionExpression } from "./condition_expression_types/condition_expression_types.ts";
+import type { TargetRef } from "./condition_expression_types/target_ref.ts";
 import type { EffectCall } from "./effect_types/effect_types.ts";
 
 /** 对话入口：按顺序选择第一个满足条件的节点。 */

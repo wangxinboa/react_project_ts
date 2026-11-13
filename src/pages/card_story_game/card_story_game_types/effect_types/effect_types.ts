@@ -1,7 +1,7 @@
-import type { ConditionExpression, TargetRef } from "../condition_types.ts";
-import type { ChangeAttributesEffect, ChangeRelationshipAttributesEffect } from "./attribute_effects.ts";
+import type { ConditionExpression } from "../condition_expression_types/condition_expression_types.ts";
+import type { TargetRef } from "../condition_expression_types/target_ref.ts";
+import type { AddAttributeEffect, ChangeAttributesEffect, ChangeRelationshipAttributesEffect } from "./attribute_effects.ts";
 import type { CreateAgreementEffect, ConfirmPromiseEffect } from "./agreement_effects.ts";
-export type { CreateAgreementEffect, ConfirmPromiseEffect } from "./agreement_effects.ts";
 import type { AddTagEffect, RemoveTagEffect } from "./tag_effects.ts";
 import type { ChangeTemplateEffect } from "./template_effects.ts";
 import type { AddCardEffect, RemoveCardEffect } from "./card_effects.ts";
@@ -9,21 +9,11 @@ import type { ChangeLocationEffect } from "./location_effects.ts";
 import type { MoveItemCardEffect } from "./item_effects.ts";
 import type { StartDialogueEffect } from "./dialogue_effects.ts";
 
-export type {
-	ChangeAttributeChange,
-	ChangeAttributesEffect,
-	ChangeRelationshipAttributesEffect,
-} from "./attribute_effects.ts";
-export type { AddTagEffect, RemoveTagEffect } from "./tag_effects.ts";
-export type { ChangeTemplateEffect } from "./template_effects.ts";
-export type { AddCardDestination, AddCardEffect, RemoveCardEffect } from "./card_effects.ts";
-export type { ChangeLocationEffect } from "./location_effects.ts";
-export type { MoveItemCardEffect, MoveItemDestination } from "./item_effects.ts";
-export type { StartDialogueEffect } from "./dialogue_effects.ts";
 
 /** 所有效果类型。 */
 export type EffectKind =
 	| ChangeAttributesEffect
+	| AddAttributeEffect
 	| AddTagEffect
 	| RemoveTagEffect
 	| ChangeTemplateEffect

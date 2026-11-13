@@ -70,6 +70,10 @@ function isDisplayedAttribute(config: FamineRefugeeConfig, id: number): boolean 
 	return false;
 }
 
+function isAttributePresent(card: { values: Record<number, unknown> }, id: number): boolean {
+	return card.values[id] !== undefined;
+}
+
 function getAttributeMaxValue(config: FamineRefugeeConfig, id: number, values: Record<number, number>): number | null {
 	const definition = config.allAttributes.find((attribute) => attribute.id === id);
 	if (!definition || definition.key.endsWith("Max")) return null;
@@ -523,7 +527,7 @@ export default function FamineRefugeePage() {
 					</button>
 					<div className={style.topAttributes}>
 						{(playerView.derived.template.attributes ?? [])
-							.filter((binding) => isDisplayedAttribute(config, binding.id))
+							.filter((binding) => isDisplayedAttribute(config, binding.id) && isAttributePresent(playerView.card, binding.id))
 							.map((binding) => (
 								<div key={binding.id} className={style.topAttribute}>
 									<span>{getAttributeLabel(config, binding.id)}</span>
@@ -615,12 +619,12 @@ export default function FamineRefugeePage() {
 						{!isPlayerSelected ? (
 							<div className={style.attributeList}>
 								{(selectedView.derived.template.attributes ?? []).filter((binding) =>
-									isDisplayedAttribute(config, binding.id),
+									isDisplayedAttribute(config, binding.id) && isAttributePresent(selectedView.card, binding.id),
 								).length === 0 ? (
 									<div className={style.emptyAttributes}>这张卡没有数值属性。</div>
 								) : (
 									(selectedView.derived.template.attributes ?? [])
-										.filter((binding) => isDisplayedAttribute(config, binding.id))
+										.filter((binding) => isDisplayedAttribute(config, binding.id) && isAttributePresent(selectedView.card, binding.id))
 										.map((binding) => {
 											const value = selectedView.derived.values[binding.id] ?? 0;
 											const max = getAttributeMaxValue(config, binding.id, selectedView.derived.values);

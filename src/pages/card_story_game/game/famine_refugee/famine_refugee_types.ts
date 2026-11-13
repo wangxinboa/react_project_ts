@@ -5,6 +5,7 @@ import type {
 	ActionSlot,
 	AttributeBinding,
 	AttributeDefinition,
+	CardReactionDefinition,
 	CardTemplate,
 	Condition,
 	EffectCall,
@@ -85,6 +86,7 @@ export interface FamineRefugeeConfig {
 	allTags: FamineTag[];
 	allAttributes: FamineAttributeDefinition[];
 	allEffects?: EffectDefinition[];
+	allCardReactions?: CardReactionDefinition[];
 	allDialogues: DialogueDefinition[];
 	allAgreements: AgreementDefinition[];
 	allActions: FamineAction[];

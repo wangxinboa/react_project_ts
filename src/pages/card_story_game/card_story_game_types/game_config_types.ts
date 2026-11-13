@@ -1,8 +1,8 @@
 import type { AttributeDefinition } from "./attribute_types.ts";
-import type { Condition } from "./condition_types.ts";
+import type { Condition } from "./condition_expression_types/condition_types.ts";
 import type { EffectDefinition } from "./effect_types/effect_types.ts";
 import type { RuleAction } from "./action_types.ts";
-import type { CardTemplate } from "./template_types.ts";
+import type { CardTemplate } from "./card_template_types/card_template_types.ts";
 import type { DialogueDefinition } from "./dialogue_types.ts";
 import type { AgreementDefinition } from "./agreement_types.ts";
 import type { TagItem } from "./tag_types.ts";

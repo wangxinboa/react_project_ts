@@ -1,5 +1,3 @@
-import type { ConditionExpression } from "./condition_types.ts";
-import type { EffectCall } from "./effect_types/effect_types.ts";
 import type { Formula } from "./formula_types.ts";
 
 /** 属性值：number / cardRef / cardRefList。 */
@@ -33,12 +31,6 @@ export interface AttributeBinding {
 	value: AttributeValue;
 }
 
-/** 属性变化后的反应；数组顺序即优先级。 */
-export interface AttributeReaction {
-	condition: ConditionExpression;
-	effects: EffectCall[];
-}
-
 /** 全局属性定义，卡牌模板和标签共用。 */
 export interface AttributeDefinition {
 	id: number;
@@ -51,6 +43,4 @@ export interface AttributeDefinition {
 	valueType: AttributeValueType;
 	/** derived 属性的计算公式 */
 	formula?: Formula;
-	/** 属性写入后的反应 */
-	reactions?: AttributeReaction[];
 }

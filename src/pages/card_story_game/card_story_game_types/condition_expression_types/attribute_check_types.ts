@@ -23,6 +23,12 @@ export interface AttributeCheck extends BaseNumberCheck {
 	refListId?: number;
 	/** cardRef 是否存在 */
 	refExists?: boolean;
+	/** 该卡是否拥有该属性；只判断存在，不判断数值 */
+	hasAttribute?: number;
+	/** 该卡是否同时拥有这些属性 */
+	hasAttributes?: number[];
+	/** 该卡是否至少拥有其中一个属性 */
+	hasAnyAttribute?: number[];
 	/** cardRefList 引用卡匹配；condition 内用 referencedCard 指向当前引用卡 */
 	refListsMatch?: {
 		condition?: ConditionExpression;

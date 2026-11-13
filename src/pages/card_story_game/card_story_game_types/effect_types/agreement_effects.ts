@@ -1,5 +1,5 @@
 import type { PromiseResult } from "../agreement_types.ts";
-import type { TargetRef } from "../condition_types.ts";
+import type { TargetRef } from "../condition_expression_types/target_ref.ts";
 import type { EffectType } from "./effect_kind_types.ts";
 
 /** 创建一份双方已知、已接受的承诺共识。 */

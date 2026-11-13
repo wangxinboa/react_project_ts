@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 80,
+	"schemaVersion": 84,
 	"allTags": [
 		{
 			"id": 24,
@@ -266,42 +266,7 @@
 			"label": "饱食",
 			"desc": "当前饱食度",
 			"kind": "base",
-			"valueType": "number",
-			"reactions": [
-				{
-					"condition": {
-						"target": {
-							"card": "sourceCard"
-						},
-						"attributes": [
-							{
-								"id": 1,
-								"gt": {
-									"op": "numberAttributeValue",
-									"attributeId": 22
-								}
-							}
-						]
-					},
-					"effects": [
-						{
-							"kind": "changeAttributes",
-							"target": {
-								"card": "sourceCard"
-							},
-							"changes": [
-								{
-									"attributeId": 1,
-									"set": {
-										"op": "numberAttributeValue",
-										"attributeId": 22
-									}
-								}
-							]
-						}
-					]
-				}
-			]
+			"valueType": "number"
 		},
 		{
 			"id": 2,
@@ -309,64 +274,7 @@
 			"label": "体力",
 			"desc": "当前体力",
 			"kind": "base",
-			"valueType": "number",
-			"reactions": [
-				{
-					"condition": {
-						"target": {
-							"card": "sourceCard"
-						},
-						"attributes": [
-							{
-								"id": 2,
-								"gt": {
-									"op": "numberAttributeValue",
-									"attributeId": 23
-								}
-							}
-						]
-					},
-					"effects": [
-						{
-							"kind": "changeAttributes",
-							"target": {
-								"card": "sourceCard"
-							},
-							"changes": [
-								{
-									"attributeId": 2,
-									"set": {
-										"op": "numberAttributeValue",
-										"attributeId": 23
-									}
-								}
-							]
-						}
-					]
-				},
-				{
-					"condition": {
-						"target": {
-							"card": "sourceCard"
-						},
-						"attributes": [
-							{
-								"id": 2,
-								"lte": 0
-							}
-						]
-					},
-					"effects": [
-						{
-							"kind": "addTag",
-							"tagId": 37,
-							"target": {
-								"card": "sourceCard"
-							}
-						}
-					]
-				}
-			]
+			"valueType": "number"
 		},
 		{
 			"id": 3,
@@ -797,6 +705,26 @@
 				{
 					"id": 21,
 					"value": 0
+				},
+				{
+					"id": 13,
+					"value": 0
+				},
+				{
+					"id": 14,
+					"value": 0
+				},
+				{
+					"id": 18,
+					"value": 0
+				},
+				{
+					"id": 22,
+					"value": 0
+				},
+				{
+					"id": 23,
+					"value": 0
 				}
 			],
 			"auto": [
@@ -813,7 +741,12 @@
 				65
 			],
 			"createdAt": 1767974400010,
-			"cardType": "being"
+			"cardType": "being",
+			"reactions": [
+				201,
+				202,
+				203
+			]
 		},
 		{
 			"id": 39,
@@ -843,6 +776,26 @@
 				{
 					"id": 16,
 					"value": 5
+				},
+				{
+					"id": 13,
+					"value": 0
+				},
+				{
+					"id": 14,
+					"value": 0
+				},
+				{
+					"id": 18,
+					"value": 0
+				},
+				{
+					"id": 22,
+					"value": 0
+				},
+				{
+					"id": 23,
+					"value": 0
 				}
 			],
 			"auto": [
@@ -856,7 +809,12 @@
 				53
 			],
 			"createdAt": 1767974400011,
-			"cardType": "being"
+			"cardType": "being",
+			"reactions": [
+				201,
+				202,
+				203
+			]
 		},
 		{
 			"id": 40,
@@ -954,6 +912,26 @@
 				{
 					"id": 16,
 					"value": 3
+				},
+				{
+					"id": 13,
+					"value": 0
+				},
+				{
+					"id": 14,
+					"value": 0
+				},
+				{
+					"id": 18,
+					"value": 0
+				},
+				{
+					"id": 22,
+					"value": 0
+				},
+				{
+					"id": 23,
+					"value": 0
 				}
 			],
 			"auto": [
@@ -970,6 +948,11 @@
 			},
 			"incoming": [
 				63
+			],
+			"reactions": [
+				201,
+				202,
+				203
 			]
 		},
 		{
@@ -2379,29 +2362,33 @@
 						"target": {
 							"card": "sourceCard"
 						},
-						"agreement": {
-							"definitionId": 67,
-							"includesTargets": [
-								{
-									"card": "targetCard"
-								}
-							],
-							"promiseConfirmation": "confirmed",
-							"hasPosition": "provider"
-						},
-						"dialogue": {
-							"dialogueId": 66,
-							"includesTargets": [
-								{
-									"card": "targetCard"
-								}
-							],
-							"endedAtNodeId": "promise_overdue",
-							"experiencedNodeId": "promise_overdue",
-							"chosenOptionIds": [
-								"overdue_kept"
-							]
-						}
+						"agreements": [
+							{
+								"definitionId": 67,
+								"includesTargets": [
+									{
+										"card": "targetCard"
+									}
+								],
+								"promiseConfirmation": "confirmed",
+								"hasPosition": "provider"
+							}
+						],
+						"dialogues": [
+							{
+								"dialogueId": 66,
+								"includesTargets": [
+									{
+										"card": "targetCard"
+									}
+								],
+								"endedAtNodeId": "promise_overdue",
+								"experiencedNodeId": "promise_overdue",
+								"chosenOptionIds": [
+									"overdue_kept"
+								]
+							}
+						]
 					}
 				},
 				{
@@ -2410,17 +2397,19 @@
 						"target": {
 							"card": "sourceCard"
 						},
-						"agreement": {
-							"definitionId": 67,
-							"includesTargets": [
-								{
-									"card": "targetCard"
-								}
-							],
-							"promiseConfirmation": "unconfirmed",
-							"promiseTime": "overdue",
-							"hasPosition": "provider"
-						}
+						"agreements": [
+							{
+								"definitionId": 67,
+								"includesTargets": [
+									{
+										"card": "targetCard"
+									}
+								],
+								"promiseConfirmation": "unconfirmed",
+								"promiseTime": "overdue",
+								"hasPosition": "provider"
+							}
+						]
 					}
 				},
 				{
@@ -2429,15 +2418,17 @@
 						"target": {
 							"card": "sourceCard"
 						},
-						"agreement": {
-							"definitionId": 67,
-							"includesTargets": [
-								{
-									"card": "targetCard"
-								}
-							],
-							"hasPosition": "provider"
-						}
+						"agreements": [
+							{
+								"definitionId": 67,
+								"includesTargets": [
+									{
+										"card": "targetCard"
+									}
+								],
+								"hasPosition": "provider"
+							}
+						]
 					}
 				},
 				{
@@ -2446,20 +2437,22 @@
 						"target": {
 							"card": "sourceCard"
 						},
-						"dialogue": {
-							"dialogueId": 66,
-							"count": {
-								"gte": 1
-							},
-							"includesTargets": [
-								{
-									"card": "targetCard"
-								}
-							]
-						},
 						"worldTime": {
 							"gte": 0
-						}
+						},
+						"dialogues": [
+							{
+								"dialogueId": 66,
+								"count": {
+									"gte": 1
+								},
+								"includesTargets": [
+									{
+										"card": "targetCard"
+									}
+								]
+							}
+						]
 					}
 				},
 				{
@@ -2484,6 +2477,131 @@
 				{
 					"key": "receiver",
 					"label": "接收食物的人"
+				}
+			]
+		}
+	],
+	"allCardReactions": [
+		{
+			"id": 201,
+			"key": "clampSatiety",
+			"desc": "饱食超过上限时夹回上限",
+			"trigger": {
+				"kind": "attributeChanged",
+				"attributeIds": [
+					1
+				]
+			},
+			"condition": {
+				"target": {
+					"card": "host"
+				},
+				"attributes": [
+					{
+						"id": 1,
+						"gt": {
+							"op": "numberAttributeValue",
+							"attributeId": 22
+						}
+					}
+				]
+			},
+			"effects": [
+				{
+					"id": 104,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "host"
+					},
+					"changes": [
+						{
+							"attributeId": 1,
+							"set": {
+								"op": "numberAttributeValue",
+								"attributeId": 22
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": 202,
+			"key": "clampStamina",
+			"desc": "体力超过上限时夹回上限",
+			"trigger": {
+				"kind": "attributeChanged",
+				"attributeIds": [
+					2
+				]
+			},
+			"condition": {
+				"target": {
+					"card": "host"
+				},
+				"attributes": [
+					{
+						"id": 2,
+						"gt": {
+							"op": "numberAttributeValue",
+							"attributeId": 23
+						}
+					}
+				]
+			},
+			"effects": [
+				{
+					"id": 105,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "host"
+					},
+					"changes": [
+						{
+							"attributeId": 2,
+							"set": {
+								"op": "numberAttributeValue",
+								"attributeId": 23
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"id": 203,
+			"key": "exhausted",
+			"desc": "体力从正数降到 0 时添加力竭",
+			"trigger": {
+				"kind": "attributeChanged",
+				"attributeIds": [
+					2
+				]
+			},
+			"condition": {
+				"target": {
+					"card": "host"
+				},
+				"attributeChanges": [
+					{
+						"attributeId": 2,
+						"oldValue": {
+							"gt": 0
+						},
+						"newValue": {
+							"lte": 0
+						}
+					}
+				]
+			},
+			"effects": [
+				{
+					"id": 106,
+					"kind": "addTag",
+					"tagId": 37,
+					"target": {
+						"card": "host"
+					}
 				}
 			]
 		}

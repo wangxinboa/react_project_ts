@@ -1,6 +1,7 @@
-import type { CardType } from "./card_type.ts";
+import type { CardType } from "../card_template_types/card_template_types.ts";
 import type { TargetRef } from "./target_ref.ts";
 import type { AttributeCheck } from "./attribute_check_types.ts";
+import type { AttributeChangeCheck } from "./attribute_change_check_types.ts";
 import type { DialogueCheck } from "./dialogue_check_types.ts";
 import type { AgreementCheck } from "./agreement_check_types.ts";
 import type { BaseNumberCheck } from "./base_number_check_types.ts";
@@ -19,8 +20,10 @@ export interface Condition {
 	target?: TargetRef;
 	/** 属性条件列表 */
 	attributes?: AttributeCheck[];
+	/** 反应上下文中的属性变化；只在 CardReactionDefinition 条件中有值 */
+	attributeChanges?: AttributeChangeCheck[];
 	/** 该卡的对话经历 */
-	dialogue?: DialogueCheck;
+	dialogues?: DialogueCheck[];
 	/** 必须拥有该标签 */
 	hasTag?: number;
 	/** 必须同时拥有这些标签 */
@@ -40,5 +43,5 @@ export interface Condition {
 	/** 卡牌类型必须属于该集合 */
 	isAnyCardType?: CardType[];
 	/** 共识判定 */
-	agreement?: AgreementCheck;
+	agreements?: AgreementCheck[];
 }

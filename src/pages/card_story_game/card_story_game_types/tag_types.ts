@@ -1,5 +1,5 @@
 import type { AttributeBinding } from "./attribute_types.ts";
-import type { ConditionExpression } from "./condition_types.ts";
+import type { ConditionExpression } from "./condition_expression_types/condition_expression_types.ts";
 import type { EffectCall } from "./effect_types/effect_types.ts";
 
 /**

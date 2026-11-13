@@ -1,38 +1,36 @@
-export { CardType, ConditionTarget } from "./condition_types.ts";
+export { ConditionTarget } from "./condition_expression_types/target_ref.ts";
+export { CardType } from "./card_template_types/card_template_types.ts";
 export { ConditionGroupKind, ConditionNotKind } from "./condition_expression_types/condition_expression_types.ts";
-export type { AttributeCheck, BaseNumberCheck, Condition, ConditionExpression, ConditionGroup, ConditionNot, DialogueCheck, DialogueCountCheck, RelationshipRef, TargetRef } from "./condition_types.ts";
+export type { AttributeCheck, RelationshipRef } from "./condition_expression_types/attribute_check_types.ts";
+export type { BaseNumberCheck } from "./condition_expression_types/base_number_check_types.ts";
+export type { Condition } from "./condition_expression_types/condition_types.ts";
+export type { ConditionExpression, ConditionGroup, ConditionNot } from "./condition_expression_types/condition_expression_types.ts";
+export type { DialogueCheck, DialogueCountCheck } from "./condition_expression_types/dialogue_check_types.ts";
+export type { TargetRef } from "./condition_expression_types/target_ref.ts";
 export { FormulaOp } from "./formula_types.ts";
 export type { Formula, FormulaNode, FormulaValidationIssue, NumberExpression } from "./formula_types.ts";
 export { AttributeKind, AttributeScope, AttributeValueType } from "./attribute_types.ts";
-export type { AttributeBinding, AttributeDefinition, AttributeReaction, AttributeValue } from "./attribute_types.ts";
-export type {
-	AddCardEffect,
-	AddTagEffect,
-	ChangeAttributeChange,
-	ChangeAttributesEffect,
-	ChangeLocationEffect,
-	MoveItemCardEffect,
-	ChangeTemplateEffect,
-	EffectCall,
-	EffectDefinition,
-	EffectKind,
-	EffectTarget,
-	InlineEffect,
-	RemoveCardEffect,
-	RemoveTagEffect,
-	StartDialogueEffect,
-	ChangeRelationshipAttributesEffect,
-	CreateAgreementEffect,
-	ConfirmPromiseEffect,
-} from "./effect_types/effect_types.ts";
+export type { AttributeBinding, AttributeDefinition, AttributeValue } from "./attribute_types.ts";
+export type { AddCardEffect, RemoveCardEffect } from "./effect_types/card_effects.ts";
+export type { AddTagEffect, RemoveTagEffect } from "./effect_types/tag_effects.ts";
+export type { AddAttributeEffect, ChangeAttributeChange, ChangeAttributesEffect, ChangeRelationshipAttributesEffect } from "./effect_types/attribute_effects.ts";
+export type { ChangeLocationEffect } from "./effect_types/location_effects.ts";
+export type { MoveItemCardEffect } from "./effect_types/item_effects.ts";
+export type { ChangeTemplateEffect } from "./effect_types/template_effects.ts";
+export type { EffectCall, EffectDefinition, EffectKind, EffectTarget, InlineEffect } from "./effect_types/effect_types.ts";
+export type { StartDialogueEffect } from "./effect_types/dialogue_effects.ts";
+export type { CreateAgreementEffect, ConfirmPromiseEffect } from "./effect_types/agreement_effects.ts";
 export { EffectType } from "./effect_types/effect_kind_types.ts";
 export { AddCardDestination } from "./effect_types/card_effects.ts";
 export { MoveItemDestination } from "./effect_types/item_effects.ts";
 export { TagKind } from "./tag_types.ts";
 export type { TagAuto, TagItem } from "./tag_types.ts";
+export { CardReactionTriggerKind } from "./card_template_types/card_reaction_types.ts";
+export type { CardReactionDefinition, CardReactionTrigger } from "./card_template_types/card_reaction_types.ts";
+export type { AttributeChangeCheck } from "./condition_expression_types/attribute_change_check_types.ts";
 export type { DialogueDefinition, DialogueEntry, DialogueNode, DialogueOption } from "./dialogue_types.ts";
 export { AgreementKind, PromiseConfirmation, PromiseResult, PromiseTimeRelation } from "./agreement_types.ts";
 export type { AgreementDefinition, AgreementPositionDefinition } from "./agreement_types.ts";
 export type { ActionSlot, RuleAction } from "./action_types.ts";
-export type { CardTemplate } from "./template_types.ts";
+export type { CardTemplate } from "./card_template_types/card_template_types.ts";
 export type { GameConfig } from "./game_config_types.ts";
