@@ -1,7 +1,7 @@
 /** 卡牌类型。只描述卡牌的结构角色，不直接决定行为。 */
 export const CardType = {
-	/** 人物、NPC、玩家 */
-	PERSON: "person",
+	/** 生灵：人、兽、灵体、NPC、玩家 */
+	BEING: "being",
 	/** 物品、食物、工具 */
 	ITEM: "item",
 	/** 地点 */

@@ -47,11 +47,35 @@ function getAttributeLabel(config: FamineRefugeeConfig, id: number): string {
 	return `#${id}`;
 }
 
-function isAttributeVisible(config: FamineRefugeeConfig, id: number): boolean {
+const SYSTEM_ATTRIBUTE_KEYS = new Set([
+	"location",
+	"carrier",
+	"backpack",
+	"baseCarryCapacity",
+	"capacityBonus",
+	"backpackCount",
+	"carryCapacity",
+	"weight",
+	"baseCarrySlots",
+	"slotBonus",
+	"carrySlots",
+]);
+
+function isDisplayedAttribute(config: FamineRefugeeConfig, id: number): boolean {
 	for (let i = 0; i < config.allAttributes.length; i++) {
-		if (config.allAttributes[i].id === id) return config.allAttributes[i].visible !== false;
+		const definition = config.allAttributes[i];
+		if (definition.id !== id) continue;
+		return !definition.key.endsWith("Max") && !SYSTEM_ATTRIBUTE_KEYS.has(definition.key);
 	}
-	return true;
+	return false;
+}
+
+function getAttributeMaxValue(config: FamineRefugeeConfig, id: number, values: Record<number, number>): number | null {
+	const definition = config.allAttributes.find((attribute) => attribute.id === id);
+	if (!definition || definition.key.endsWith("Max")) return null;
+	const maxDefinition = config.allAttributes.find((attribute) => attribute.key === `${definition.key}Max`);
+	if (!maxDefinition) return null;
+	return values[maxDefinition.id] ?? null;
 }
 
 function getAttributeId(config: FamineRefugeeConfig, key: string): number {
@@ -499,11 +523,16 @@ export default function FamineRefugeePage() {
 					</button>
 					<div className={style.topAttributes}>
 						{(playerView.derived.template.attributes ?? [])
-							.filter((binding) => isAttributeVisible(config, binding.id))
+							.filter((binding) => isDisplayedAttribute(config, binding.id))
 							.map((binding) => (
 								<div key={binding.id} className={style.topAttribute}>
 									<span>{getAttributeLabel(config, binding.id)}</span>
-									<strong>{Math.round(playerView.derived.values[binding.id] ?? 0)}</strong>
+									<strong>
+										{Math.round(playerView.derived.values[binding.id] ?? 0)}
+										{getAttributeMaxValue(config, binding.id, playerView.derived.values) !== null
+											? ` / ${Math.round(getAttributeMaxValue(config, binding.id, playerView.derived.values) ?? 0)}`
+											: ""}
+									</strong>
 								</div>
 							))}
 						<div className={style.topAttribute}>
@@ -586,22 +615,24 @@ export default function FamineRefugeePage() {
 						{!isPlayerSelected ? (
 							<div className={style.attributeList}>
 								{(selectedView.derived.template.attributes ?? []).filter((binding) =>
-									isAttributeVisible(config, binding.id),
+									isDisplayedAttribute(config, binding.id),
 								).length === 0 ? (
 									<div className={style.emptyAttributes}>这张卡没有数值属性。</div>
 								) : (
 									(selectedView.derived.template.attributes ?? [])
-										.filter((binding) => isAttributeVisible(config, binding.id))
+										.filter((binding) => isDisplayedAttribute(config, binding.id))
 										.map((binding) => {
 											const value = selectedView.derived.values[binding.id] ?? 0;
+											const max = getAttributeMaxValue(config, binding.id, selectedView.derived.values);
+											const width = max !== null && max > 0 ? Math.min(100, (value / max) * 100) : value;
 											return (
 												<div key={binding.id} className={style.attributeRow}>
 													<div className={style.attributeHeader}>
 														<span>{getAttributeLabel(config, binding.id)}</span>
-														<span>{Math.round(value)}</span>
+														<span>{Math.round(value)}{max !== null ? ` / ${Math.round(max)}` : ""}</span>
 													</div>
 													<div className={style.bar}>
-														<div className={style.barFill} style={{ width: `${value}%` }} />
+														<div className={style.barFill} style={{ width: `${width}%` }} />
 													</div>
 												</div>
 											);
@@ -749,7 +780,7 @@ export default function FamineRefugeePage() {
 							</>
 						) : (
 							<>
-								{selectedView.derived.template.cardType === CardType.PERSON ? (
+								{selectedView.derived.template.cardType === CardType.BEING ? (
 									<div className={style.relationshipBlock}>
 										<div className={style.inspectorSectionTitle}>对玩家的态度</div>
 										<div className={style.relationshipValues}>

@@ -49,8 +49,6 @@ export interface AttributeDefinition {
 	scope?: AttributeScope;
 	kind: AttributeKind;
 	valueType: AttributeValueType;
-	/** false 表示内部属性，不在卡牌属性面板展示 */
-	visible?: boolean;
 	/** derived 属性的计算公式 */
 	formula?: Formula;
 	/** 属性写入后的反应 */

@@ -729,8 +729,7 @@ function applyCardEffect(
 		const values = { ...card.values };
 		for (let i = 0; i < (template.attributes ?? []).length; i++) {
 			const binding = (template.attributes ?? [])[i];
-			const definition = config.allAttributes.find((attribute) => attribute.id === binding.id);
-			if (definition?.visible === false || typeof values[binding.id] !== "number") {
+			if (typeof values[binding.id] !== "number") {
 				values[binding.id] = binding.value;
 			}
 		}
@@ -1725,7 +1724,7 @@ export function previewAction(
 	const lines: string[] = [];
 	for (let i = 0; i < config.allAttributes.length; i++) {
 		const definition = config.allAttributes[i];
-		if (definition.visible === false) continue;
+		if (definition.key.endsWith("Max")) continue;
 		const oldValue = before[definition.id] ?? 0;
 		const newValue = after[definition.id] ?? 0;
 		if (Math.abs(oldValue - newValue) < 0.001) continue;

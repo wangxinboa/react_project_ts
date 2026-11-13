@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 76,
+	"schemaVersion": 78,
 	"allTags": [
 		{
 			"id": 24,
@@ -267,7 +267,6 @@
 			"desc": "当前饱食度",
 			"kind": "base",
 			"valueType": "number",
-			"visible": true,
 			"reactions": [
 				{
 					"condition": {
@@ -311,7 +310,6 @@
 			"desc": "当前体力",
 			"kind": "base",
 			"valueType": "number",
-			"visible": true,
 			"reactions": [
 				{
 					"condition": {
@@ -376,8 +374,7 @@
 			"label": "生命力",
 			"desc": "当前生命",
 			"kind": "base",
-			"valueType": "number",
-			"visible": true
+			"valueType": "number"
 		},
 		{
 			"id": 4,
@@ -407,8 +404,7 @@
 						"attributeId": 21
 					}
 				]
-			},
-			"visible": true
+			}
 		},
 		{
 			"id": 5,
@@ -416,8 +412,7 @@
 			"label": "营养",
 			"desc": "食物营养",
 			"kind": "base",
-			"valueType": "number",
-			"visible": true
+			"valueType": "number"
 		},
 		{
 			"id": 6,
@@ -425,8 +420,7 @@
 			"label": "新鲜度",
 			"desc": "食物新鲜度",
 			"kind": "base",
-			"valueType": "number",
-			"visible": true
+			"valueType": "number"
 		},
 		{
 			"id": 7,
@@ -434,8 +428,7 @@
 			"label": "严重度",
 			"desc": "流血的严重程度",
 			"kind": "base",
-			"valueType": "number",
-			"visible": true
+			"valueType": "number"
 		},
 		{
 			"id": 8,
@@ -443,8 +436,7 @@
 			"label": "所在地点",
 			"desc": "所在地点",
 			"kind": "base",
-			"valueType": "cardRef",
-			"visible": false
+			"valueType": "cardRef"
 		},
 		{
 			"id": 9,
@@ -452,8 +444,7 @@
 			"label": "携带者",
 			"desc": "携带者",
 			"kind": "base",
-			"valueType": "cardRef",
-			"visible": false
+			"valueType": "cardRef"
 		},
 		{
 			"id": 10,
@@ -461,8 +452,7 @@
 			"label": "背包",
 			"desc": "背包",
 			"kind": "base",
-			"valueType": "cardRefList",
-			"visible": false
+			"valueType": "cardRefList"
 		},
 		{
 			"id": 11,
@@ -470,8 +460,7 @@
 			"label": "基础负重",
 			"desc": "基础负重上限",
 			"kind": "base",
-			"valueType": "number",
-			"visible": false
+			"valueType": "number"
 		},
 		{
 			"id": 12,
@@ -479,8 +468,7 @@
 			"label": "容量加成",
 			"desc": "物品提供的负重加成",
 			"kind": "base",
-			"valueType": "number",
-			"visible": false
+			"valueType": "number"
 		},
 		{
 			"id": 13,
@@ -489,7 +477,6 @@
 			"desc": "背包中的物品数量",
 			"kind": "derived",
 			"valueType": "number",
-			"visible": false,
 			"formula": {
 				"op": "refListsAttributeCount",
 				"refAttributeId": 10
@@ -502,7 +489,6 @@
 			"desc": "基础负重加背包物品加成",
 			"kind": "derived",
 			"valueType": "number",
-			"visible": false,
 			"formula": {
 				"op": "add",
 				"args": [
@@ -524,8 +510,7 @@
 			"label": "重量",
 			"desc": "物品重量",
 			"kind": "base",
-			"valueType": "number",
-			"visible": false
+			"valueType": "number"
 		},
 		{
 			"id": 16,
@@ -533,8 +518,7 @@
 			"label": "基础格数",
 			"desc": "基础背包格数",
 			"kind": "base",
-			"valueType": "number",
-			"visible": false
+			"valueType": "number"
 		},
 		{
 			"id": 17,
@@ -542,8 +526,7 @@
 			"label": "格数加成",
 			"desc": "物品提供的格数加成",
 			"kind": "base",
-			"valueType": "number",
-			"visible": false
+			"valueType": "number"
 		},
 		{
 			"id": 18,
@@ -552,7 +535,6 @@
 			"desc": "基础格数加物品加成",
 			"kind": "derived",
 			"valueType": "number",
-			"visible": false,
 			"formula": {
 				"op": "add",
 				"args": [
@@ -575,8 +557,7 @@
 			"desc": "信任",
 			"scope": "relationship",
 			"kind": "base",
-			"valueType": "number",
-			"visible": true
+			"valueType": "number"
 		},
 		{
 			"id": 20,
@@ -585,8 +566,7 @@
 			"desc": "恐惧",
 			"scope": "relationship",
 			"kind": "base",
-			"valueType": "number",
-			"visible": true
+			"valueType": "number"
 		},
 		{
 			"id": 21,
@@ -594,8 +574,7 @@
 			"label": "超凡灵性",
 			"desc": "独立于肉身的超凡灵性",
 			"kind": "base",
-			"valueType": "number",
-			"visible": true
+			"valueType": "number"
 		},
 		{
 			"id": 22,
@@ -649,8 +628,7 @@
 					"op": "literal",
 					"value": 100
 				}
-			},
-			"visible": true
+			}
 		},
 		{
 			"id": 23,
@@ -783,8 +761,7 @@
 						}
 					}
 				]
-			},
-			"visible": true
+			}
 		}
 	],
 	"cardTemplates": [
@@ -820,14 +797,6 @@
 				{
 					"id": 21,
 					"value": 0
-				},
-				{
-					"id": 22,
-					"value": 0
-				},
-				{
-					"id": 23,
-					"value": 0
 				}
 			],
 			"auto": [
@@ -844,7 +813,7 @@
 				65
 			],
 			"createdAt": 1767974400010,
-			"cardType": "person"
+			"cardType": "being"
 		},
 		{
 			"id": 39,
@@ -887,7 +856,7 @@
 				53
 			],
 			"createdAt": 1767974400011,
-			"cardType": "person"
+			"cardType": "being"
 		},
 		{
 			"id": 40,
@@ -991,7 +960,7 @@
 				6
 			],
 			"createdAt": 1767974400014,
-			"cardType": "person",
+			"cardType": "being",
 			"outgoing": [
 				53,
 				50
@@ -2142,7 +2111,7 @@
 						"target": {
 							"card": "targetCard"
 						},
-						"isCardType": "person"
+						"isCardType": "being"
 					},
 					{
 						"target": {
