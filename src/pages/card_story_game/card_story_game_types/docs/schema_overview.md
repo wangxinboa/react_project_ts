@@ -84,13 +84,13 @@ interface TargetRef {
 - `FamineState.agreements` 是全局权威 map。
 - `CardState.agreementIds` 是参与卡上的索引。
 - `createAgreement` 从动作 source/target 创建双方已知、已接受的承诺。
-- `AgreementDefinition.waitTime` 是分钟时长，创建时用发起卡属性求值；运行时写入 `createdAt` / `deadline`。
-- `AgreementDefinition.positions` 定义共识位置；`AgreementState.positions` 保存 position → cardIds。
+- `AgreementDefinition.promiseWaitTime` 是承诺分钟时长，创建时用发起卡属性求值；运行时写入 `promiseCreatedAt` / `promiseDeadline`。
+- `AgreementDefinition.positions` 定义承诺位置；`AgreementState.positions` 保存 position → cardIds。
 - `createAgreement.positions` 使用 `Record<string, TargetRef[]>`，同一位置可分配多张卡。
-- `AgreementCheck.hasPosition(s)` 判断卡牌在共识实例中的位置；`includesTargets` 定位具体实例。
-- `resolveAgreement` 由双方对话确认后写入 `resolution`；时间到达不会自动失败。
+- `AgreementCheck.hasPosition(s)` 判断卡牌在承诺中的位置；`includesTargets` 定位具体实例。
+- `confirmPromise` 由双方对话确认后写入 `promiseResolution`；时间到达不会自动失败。
 - Condition 使用 `agreement: AgreementCheck` 判定共识。
-- `AgreementCheck.includesTargets` 限定共识实例必须包含的参与者；`confirmation` / `time` / `result` 分别判定确认、时间和结果。
+- `AgreementCheck.includesTargets` 限定共识实例必须包含的参与者；`promiseConfirmation` / `promiseTime` / `promiseResult` 分别判定承诺确认、时间和结果。
 - `DialogueCheck.includesTargets` 先过滤共同经历，再判断 triggered / count。
 - `DialogueCheck` 支持 `experiencedNodeId(s)`、`chosenOptionId(s)`、`endedAtNodeId`；数组语义为全部满足。
 - 对话历史记录 `visitedNodeIds`、`chosenOptionIds`、`endedAtNodeId`。

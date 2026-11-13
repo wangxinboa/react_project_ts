@@ -23,7 +23,7 @@ export type {
 	StartDialogueEffect,
 	ChangeRelationshipAttributesEffect,
 	CreateAgreementEffect,
-	ResolveAgreementEffect,
+	ConfirmPromiseEffect,
 } from "./effect_types/effect_types.ts";
 export { EffectType } from "./effect_types/effect_kind_types.ts";
 export { AddCardDestination } from "./effect_types/card_effects.ts";
@@ -31,7 +31,7 @@ export { MoveItemDestination } from "./effect_types/item_effects.ts";
 export { TagKind } from "./tag_types.ts";
 export type { TagAuto, TagItem } from "./tag_types.ts";
 export type { DialogueDefinition, DialogueEntry, DialogueNode, DialogueOption } from "./dialogue_types.ts";
-export { AgreementConfirmation, AgreementKind, AgreementResult, AgreementTimeRelation } from "./agreement_types.ts";
+export { AgreementKind, PromiseConfirmation, PromiseResult, PromiseTimeRelation } from "./agreement_types.ts";
 export type { AgreementDefinition, AgreementPositionDefinition } from "./agreement_types.ts";
 export type { ActionSlot, RuleAction } from "./action_types.ts";
 export type { CardTemplate } from "./template_types.ts";

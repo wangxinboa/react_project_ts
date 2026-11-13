@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 78,
+	"schemaVersion": 80,
 	"allTags": [
 		{
 			"id": 24,
@@ -2233,9 +2233,9 @@
 							"effects": [
 								{
 									"id": 100,
-									"kind": "resolveAgreement",
+									"kind": "confirmPromise",
 									"definitionId": 67,
-									"result": "kept"
+									"promiseResult": "kept"
 								}
 							]
 						}
@@ -2381,12 +2381,12 @@
 						},
 						"agreement": {
 							"definitionId": 67,
-							"confirmation": "confirmed",
 							"includesTargets": [
 								{
 									"card": "targetCard"
 								}
 							],
+							"promiseConfirmation": "confirmed",
 							"hasPosition": "provider"
 						},
 						"dialogue": {
@@ -2412,13 +2412,13 @@
 						},
 						"agreement": {
 							"definitionId": 67,
-							"confirmation": "unconfirmed",
-							"time": "overdue",
 							"includesTargets": [
 								{
 									"card": "targetCard"
 								}
 							],
+							"promiseConfirmation": "unconfirmed",
+							"promiseTime": "overdue",
 							"hasPosition": "provider"
 						}
 					}
@@ -2475,7 +2475,7 @@
 			"kind": "promise",
 			"title": "找点吃的",
 			"desc": "对方希望你能找到食物。",
-			"waitTime": 60,
+			"promiseWaitTime": 60,
 			"positions": [
 				{
 					"key": "provider",

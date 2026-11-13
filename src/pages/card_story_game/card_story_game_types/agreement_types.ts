@@ -7,29 +7,29 @@ export const AgreementKind = {
 
 export type AgreementKind = (typeof AgreementKind)[keyof typeof AgreementKind];
 
-/** 双方是否已经确认结果。 */
-export const AgreementConfirmation = {
+/** 双方是否已经确认承诺结果。 */
+export const PromiseConfirmation = {
 	CONFIRMED: "confirmed",
 	UNCONFIRMED: "unconfirmed",
 } as const;
 
-export type AgreementConfirmation = (typeof AgreementConfirmation)[keyof typeof AgreementConfirmation];
+export type PromiseConfirmation = (typeof PromiseConfirmation)[keyof typeof PromiseConfirmation];
 
-/** 截止时间关系。 */
-export const AgreementTimeRelation = {
+/** 承诺的截止时间关系。 */
+export const PromiseTimeRelation = {
 	OVERDUE: "overdue",
 	NOT_OVERDUE: "notOverdue",
 } as const;
 
-export type AgreementTimeRelation = (typeof AgreementTimeRelation)[keyof typeof AgreementTimeRelation];
+export type PromiseTimeRelation = (typeof PromiseTimeRelation)[keyof typeof PromiseTimeRelation];
 
 /** 双方确认的承诺结果。 */
-export const AgreementResult = {
+export const PromiseResult = {
 	KEPT: "kept",
 	BROKEN: "broken",
 } as const;
 
-export type AgreementResult = (typeof AgreementResult)[keyof typeof AgreementResult];
+export type PromiseResult = (typeof PromiseResult)[keyof typeof PromiseResult];
 
 /** 共识中的位置定义。 */
 export interface AgreementPositionDefinition {
@@ -44,8 +44,8 @@ export interface AgreementDefinition {
 	kind: AgreementKind;
 	title: string;
 	desc: string;
-	/** 等待时长，单位分钟；创建时求值 */
-	waitTime?: NumberExpression;
 	/** 共识中的位置 */
 	positions?: AgreementPositionDefinition[];
+	/** 承诺等待时长，单位分钟；创建时求值 */
+	promiseWaitTime?: NumberExpression;
 }

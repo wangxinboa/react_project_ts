@@ -1,5 +1,5 @@
 import type { AttributeValue } from "../../card_story_game_types/attribute_types.ts";
-import type { AgreementResult } from "../../card_story_game_types/agreement_types.ts";
+import type { PromiseResult } from "../../card_story_game_types/agreement_types.ts";
 import type { NumberExpression } from "../../card_story_game_types/formula_types.ts";
 import type {
 	ActionSlot,
@@ -122,10 +122,10 @@ export interface DialogueHistoryEntry {
 	endedAtNodeId?: string;
 }
 
-export interface AgreementResolution {
-	result: AgreementResult;
-	at: number;
-	confirmedBy: string[];
+export interface PromiseResolution {
+	promiseResult: PromiseResult;
+	promiseAt: number;
+	promiseConfirmedBy: string[];
 }
 
 export interface AgreementState {
@@ -136,9 +136,9 @@ export interface AgreementState {
 	knownBy: string[];
 	acceptedBy: string[];
 	positions: Record<string, string[]>;
-	createdAt: number;
-	deadline?: number;
-	resolution?: AgreementResolution;
+	promiseCreatedAt: number;
+	promiseDeadline?: number;
+	promiseResolution?: PromiseResolution;
 }
 
 export interface DialogueState {

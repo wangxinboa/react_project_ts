@@ -11,7 +11,7 @@ export const EffectType = {
 	MOVE_ITEM_CARD: "moveItemCard",
 	START_DIALOGUE: "startDialogue",
 	CREATE_AGREEMENT: "createAgreement",
-	RESOLVE_AGREEMENT: "resolveAgreement",
+	CONFIRM_PROMISE: "confirmPromise",
 } as const;
 
 export type EffectType = (typeof EffectType)[keyof typeof EffectType];

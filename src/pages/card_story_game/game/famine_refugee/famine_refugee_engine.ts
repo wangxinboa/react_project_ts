@@ -1,7 +1,7 @@
 import { evaluateFormula } from "../../formula/formula_eval.ts";
 import type { FormulaContext } from "../../formula/formula_eval.ts";
 import type { AttributeValue, BaseNumberCheck, NumberExpression, TargetRef } from "../../card_story_game_types/index.ts";
-import { AddCardDestination, EffectType, FormulaOp, AgreementConfirmation, AgreementTimeRelation, AttributeKind, AttributeScope, CardType, ConditionGroupKind, ConditionNotKind, ConditionTarget, MoveItemDestination, TagKind } from "../../card_story_game_types/index.ts";
+import { AddCardDestination, EffectType, FormulaOp, PromiseConfirmation, PromiseTimeRelation, AttributeKind, AttributeScope, CardType, ConditionGroupKind, ConditionNotKind, ConditionTarget, MoveItemDestination, TagKind } from "../../card_story_game_types/index.ts";
 import { getNumberAttribute, getNumberValues, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import type {
 	ActionSlot,
@@ -144,11 +144,11 @@ function evaluateAgreementCheck(condition: Condition, entity: EntitySnapshot, co
 	return Object.values(context.agreements ?? {}).some((agreement) => {
 		if (agreement.definitionId !== check.definitionId || !owned.has(agreement.id)) return false;
 		if (includedTargetIds.length > 0 && !includedTargetIds.every((id) => agreement.participants.includes(id))) return false;
-		if (check.confirmation === AgreementConfirmation.CONFIRMED && agreement.resolution === undefined) return false;
-		if (check.confirmation === AgreementConfirmation.UNCONFIRMED && agreement.resolution !== undefined) return false;
-		if (check.time === AgreementTimeRelation.OVERDUE && !(agreement.deadline !== undefined && now >= agreement.deadline)) return false;
-		if (check.time === AgreementTimeRelation.NOT_OVERDUE && !(agreement.deadline !== undefined && now < agreement.deadline)) return false;
-		if (check.result !== undefined && agreement.resolution?.result !== check.result) return false;
+		if (check.promiseConfirmation === PromiseConfirmation.CONFIRMED && agreement.promiseResolution === undefined) return false;
+		if (check.promiseConfirmation === PromiseConfirmation.UNCONFIRMED && agreement.promiseResolution !== undefined) return false;
+		if (check.promiseTime === PromiseTimeRelation.OVERDUE && !(agreement.promiseDeadline !== undefined && now >= agreement.promiseDeadline)) return false;
+		if (check.promiseTime === PromiseTimeRelation.NOT_OVERDUE && !(agreement.promiseDeadline !== undefined && now < agreement.promiseDeadline)) return false;
+		if (check.promiseResult !== undefined && agreement.promiseResolution?.promiseResult !== check.promiseResult) return false;
 		if (check.hasPosition !== undefined && !(agreement.positions[check.hasPosition] ?? []).includes(cardId)) return false;
 		if (check.hasPositions && !check.hasPositions.every((position) => (agreement.positions[position] ?? []).includes(cardId))) return false;
 		return true;
@@ -1130,19 +1130,19 @@ function applyCreateAgreementEffect(runtime: EffectRuntime, effect: InlineEffect
 	const id = `agreement_${runtime.nextAgreementId}`;
 	runtime.nextAgreementId += 1;
 	const source = getCard(runtime.cards, runtime.sourceId);
-	const duration = definition.waitTime !== undefined && source
-		? evaluateFormula(definition.waitTime, source.values, createFormulaContext(runtime.config, runtime.cards))
+	const duration = definition.promiseWaitTime !== undefined && source
+		? evaluateFormula(definition.promiseWaitTime, source.values, createFormulaContext(runtime.config, runtime.cards))
 		: undefined;
 	runtime.agreements[id] = {
 		id,
 		definitionId: definition.id,
 		participants,
-		positions,
+		positions: positions,
 		proposerId: runtime.sourceId,
 		knownBy: [runtime.sourceId, runtime.targetId],
 		acceptedBy: [runtime.sourceId, runtime.targetId],
-		createdAt: runtime.time,
-		deadline: duration === undefined ? undefined : runtime.time + Math.max(0, duration),
+		promiseCreatedAt: runtime.time,
+		promiseDeadline: duration === undefined ? undefined : runtime.time + Math.max(0, duration),
 	};
 	runtime.cards = runtime.cards.map((card) => {
 		if (card.id !== runtime.sourceId && card.id !== runtime.targetId) return card;
@@ -1150,19 +1150,19 @@ function applyCreateAgreementEffect(runtime: EffectRuntime, effect: InlineEffect
 	});
 }
 
-function applyResolveAgreementEffect(runtime: EffectRuntime, effect: InlineEffect): void {
-	if (effect.kind !== EffectType.RESOLVE_AGREEMENT || !runtime.targetId) return;
+function applyConfirmPromiseEffect(runtime: EffectRuntime, effect: InlineEffect): void {
+	if (effect.kind !== EffectType.CONFIRM_PROMISE || !runtime.targetId) return;
 	const agreement = Object.values(runtime.agreements).find((item) =>
 		item.definitionId === effect.definitionId &&
 		item.participants.includes(runtime.sourceId) &&
 		item.participants.includes(runtime.targetId ?? "") &&
-		item.resolution === undefined,
+		item.promiseResolution === undefined,
 	);
 	if (!agreement) return;
-	agreement.resolution = {
-		result: effect.result,
-		at: runtime.time,
-		confirmedBy: [runtime.sourceId, runtime.targetId].filter((id): id is string => Boolean(id)),
+	agreement.promiseResolution = {
+		promiseResult: effect.promiseResult,
+		promiseAt: runtime.time,
+		promiseConfirmedBy: [runtime.sourceId, runtime.targetId].filter((id): id is string => Boolean(id)),
 	};
 }
 
@@ -1178,7 +1178,7 @@ const effectHandlers: Record<InlineEffect["kind"], EffectHandler> = {
 	[EffectType.START_DIALOGUE]: applyStartDialogueEffect,
 	[EffectType.CHANGE_RELATIONSHIP_ATTRIBUTES]: applyChangeRelationshipEffect,
 	[EffectType.CREATE_AGREEMENT]: applyCreateAgreementEffect,
-	[EffectType.RESOLVE_AGREEMENT]: applyResolveAgreementEffect,
+	[EffectType.CONFIRM_PROMISE]: applyConfirmPromiseEffect,
 };
 
 function planActionEffects(

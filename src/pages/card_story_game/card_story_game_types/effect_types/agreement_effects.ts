@@ -1,4 +1,4 @@
-import type { AgreementResult } from "../agreement_types.ts";
+import type { PromiseResult } from "../agreement_types.ts";
 import type { TargetRef } from "../condition_types.ts";
 import type { EffectType } from "./effect_kind_types.ts";
 
@@ -11,8 +11,8 @@ export type CreateAgreementEffect = {
 };
 
 /** 双方确认承诺结果；结果只由明确事件写入。 */
-export type ResolveAgreementEffect = {
-	kind: typeof EffectType.RESOLVE_AGREEMENT;
+export type ConfirmPromiseEffect = {
+	kind: typeof EffectType.CONFIRM_PROMISE;
 	definitionId: number;
-	result: AgreementResult;
+	promiseResult: PromiseResult;
 };
