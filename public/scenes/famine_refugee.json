@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 86,
+	"schemaVersion": 87,
 	"allTags": [
 		{
 			"id": 24,
@@ -1158,11 +1158,7 @@
 			],
 			"outgoing": [
 				49,
-				51,
-				52,
 				53,
-				56,
-				57,
 				64,
 				65
 			],
@@ -1417,6 +1413,7 @@
 				}
 			],
 			"incoming": [
+				57,
 				61,
 				62
 			]
@@ -1475,7 +1472,10 @@
 			"cardType": "place",
 			"desc": "树木与狼群",
 			"createdAt": 1767974400021,
-			"attributes": []
+			"attributes": [],
+			"incoming": [
+				56
+			]
 		},
 		{
 			"id": 47,

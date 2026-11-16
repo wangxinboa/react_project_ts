@@ -393,9 +393,11 @@
 
 .actionButton {
 	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	gap: 0.02rem;
+	flex-direction: row;
+	align-items: stretch;
+	gap: 0.06rem;
+	max-height: 0.46rem;
+	overflow: hidden;
 	padding: 0.07rem 0.09rem;
 	border: 1px solid #2e2a25;
 	border-radius: 3px;
@@ -403,6 +405,37 @@
 	color: #d9d2c7;
 	text-align: left;
 	cursor: pointer;
+}
+
+.actionText {
+	display: flex;
+	flex: 0 0 auto;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.02rem;
+}
+
+.actionPreviewInline {
+	display: block;
+	flex: 1;
+	min-width: 0;
+	max-height: 0.34rem;
+	overflow: auto;
+	padding-left: 0.06rem;
+	border-left: 1px solid #2e2a25;
+	color: #8a8276;
+	font-size: 9px;
+	line-height: 1.5;
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
+.actionPreviewInline span {
+	display: inline;
+}
+
+.actionPreviewInline span + span::before {
+	content: "；";
 }
 
 .actionButton small {
@@ -488,10 +521,19 @@
 }
 
 .executePlacement {
+	display: flex;
 	flex: 1;
+	align-items: stretch;
+	gap: 0.06rem;
 	border: 1px solid #c9a227;
 	background: #c9a227;
 	color: #1a1714;
+}
+
+.executePlacement .actionPreviewInline {
+	border-left-color: rgba(26, 23, 20, 0.35);
+	color: #3d3522;
+	text-align: left;
 }
 
 .deadHint {

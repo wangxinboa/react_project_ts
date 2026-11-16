@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, ConfigProvider, Popover } from "antd";
+import { Button, ConfigProvider } from "antd";
 import { editorTheme } from "../../editor/editor_theme.ts";
 import { CardType } from "../../card_story_game_types/index.ts";
 import type { DragEvent } from "react";
@@ -129,11 +129,10 @@ export default function FamineRefugeePage() {
 	const [activeSceneId, setActiveSceneId] = useState("");
 	const [selectedCardId, setSelectedCardId] = useState("");
 	const [placementActionId, setPlacementActionId] = useState<number | null>(null);
+	const [placementTargetId, setPlacementTargetId] = useState<string | undefined>(undefined);
 	const [slotAssignments, setSlotAssignments] = useState<Record<string, string[]>>({});
 	const [activeSlotId, setActiveSlotId] = useState("");
 	const [loadError, setLoadError] = useState("");
-	const [previewTitle, setPreviewTitle] = useState("");
-	const [previewLines, setPreviewLines] = useState<string[]>([]);
 
 	const loadScene = useCallback(async (scene: FamineSceneEntry): Promise<void> => {
 		setLoadError("");
@@ -143,10 +142,9 @@ export default function FamineRefugeePage() {
 			setGame(createInitialState(loaded));
 			setSelectedCardId(loaded.saveData.playerCardId);
 			setPlacementActionId(null);
+			setPlacementTargetId(undefined);
 			setSlotAssignments({});
 			setActiveSlotId("");
-			setPreviewTitle("");
-			setPreviewLines([]);
 			setActiveSceneId(scene.id);
 		} catch (error) {
 			setLoadError(error instanceof Error ? error.message : "原型配置加载失败");
@@ -320,6 +318,7 @@ export default function FamineRefugeePage() {
 		(action: FamineAction) => {
 			if ((action.slots ?? []).length > 0) {
 				setPlacementActionId(action.id);
+				setPlacementTargetId(undefined);
 				setSlotAssignments({});
 				setActiveSlotId((action.slots ?? [])[0]?.id ?? "");
 				return;
@@ -333,27 +332,22 @@ export default function FamineRefugeePage() {
 	const handleIncomingAction = useCallback(
 		(actionId: number) => {
 			if (!config) return;
+			const action = getAction(config, actionId);
+			if (action && (action.slots ?? []).length > 0) {
+				setPlacementActionId(actionId);
+				setPlacementTargetId(selectedCardId);
+				setSlotAssignments({});
+				setActiveSlotId((action.slots ?? [])[0]?.id ?? "");
+				return;
+			}
 			setGame((prev) => (prev ? applyIncomingAction(config, prev, selectedCardId, actionId) : prev));
 			setSelectedCardId(config.saveData.playerCardId);
 			setPlacementActionId(null);
+			setPlacementTargetId(undefined);
 			setSlotAssignments({});
 		},
 		[config, selectedCardId],
 	);
-
-	const handlePreview = useCallback(
-		(action: FamineAction, targetId?: string, assignments: Record<string, string[]> = {}) => {
-			if (!config || !game) return;
-			setPreviewTitle(action.title);
-			setPreviewLines(previewAction(config, game, action.id, targetId, assignments));
-		},
-		[config, game],
-	);
-
-	const clearPreview = useCallback(() => {
-		setPreviewTitle("");
-		setPreviewLines([]);
-	}, []);
 
 	const addToSlot = useCallback(
 		(slotId: string, cardId: string) => {
@@ -467,14 +461,20 @@ export default function FamineRefugeePage() {
 
 	const handleExecute = useCallback(() => {
 		if (!config || placementActionId === null || !canExecute) return;
-		setGame((prev) => (prev ? applyAction(config, prev, placementActionId, slotAssignments) : prev));
+		setGame((prev) => (prev
+			? placementTargetId
+				? applyIncomingAction(config, prev, placementTargetId, placementActionId, slotAssignments)
+				: applyAction(config, prev, placementActionId, slotAssignments)
+			: prev));
 		setPlacementActionId(null);
+		setPlacementTargetId(undefined);
 		setSlotAssignments({});
 		setActiveSlotId("");
-	}, [canExecute, config, placementActionId, slotAssignments]);
+	}, [canExecute, config, placementActionId, placementTargetId, slotAssignments]);
 
 	const handleCancelPlacement = useCallback(() => {
 		setPlacementActionId(null);
+		setPlacementTargetId(undefined);
 		setSlotAssignments({});
 		setActiveSlotId("");
 	}, []);
@@ -482,6 +482,7 @@ export default function FamineRefugeePage() {
 	const handleSelectCard = useCallback((cardId: string) => {
 		setSelectedCardId(cardId);
 		setPlacementActionId(null);
+		setPlacementTargetId(undefined);
 		setSlotAssignments({});
 		setActiveSlotId("");
 	}, []);
@@ -491,6 +492,7 @@ export default function FamineRefugeePage() {
 		setGame(createInitialState(config));
 		setSelectedCardId(config.saveData.playerCardId);
 		setPlacementActionId(null);
+		setPlacementTargetId(undefined);
 		setSlotAssignments({});
 		setActiveSlotId("");
 	}, [config]);
@@ -514,14 +516,9 @@ export default function FamineRefugeePage() {
 		isDisplayedAttribute(config, attribute.id) && isAttributePresent(selectedView.card, attribute.id),
 	);
 
-	const previewContent = (
-		<div className={style.actionPreview}>
-			<div className={style.actionPreviewTitle}>{previewTitle}</div>
-			{previewLines.map((line, index) => (
-				<div key={`${line}-${index}`}>{line}</div>
-			))}
-		</div>
-	);
+	const placementPreviewLines = placementAction && canExecute
+		? previewAction(config, game, placementAction.id, placementTargetId, slotAssignments)
+		: [];
 
 	const isEligible = (cardId: string): boolean => {
 		if (!placementAction) return false;
@@ -740,19 +737,12 @@ export default function FamineRefugeePage() {
 										取消
 									</button>
 									{canExecute ? (
-										<Popover
-											trigger="hover"
-											placement="left"
-											onOpenChange={(open) => {
-												if (open) handlePreview(placementAction, undefined, slotAssignments);
-												else clearPreview();
-											}}
-											content={previewContent}
-										>
-											<button type="button" className={style.executePlacement} onClick={handleExecute}>
-												执行 {placementAction.title}
-											</button>
-										</Popover>
+										<button type="button" className={style.executePlacement} onClick={handleExecute}>
+											<span>执行 {placementAction.title}</span>
+											<span className={style.actionPreviewInline}>
+												{placementPreviewLines.map((line, index) => <span key={`${line}-${index}`}>{line}</span>)}
+											</span>
+										</button>
 									) : null}
 								</div>
 							</div>
@@ -782,36 +772,26 @@ export default function FamineRefugeePage() {
 								<div className={style.inspectorSectionTitle}>玩家行动</div>
 								<div className={style.actions}>
 									{visibleActions.map((action) => {
-										const actionButton = (
+										const lines = (action.slots ?? []).length > 0 ? [action.desc] : previewAction(config, game, action.id);
+										return (
 											<button
+												key={action.id}
 												type="button"
 												className={style.actionButton}
 												onClick={() => handleActionClick(action)}
 												disabled={isDead}
 											>
-												<span>{action.title}</span>
-												<small>
-													{action.verb} ·{" "}
-													{formatDuration(getActionTimeCost(config, action, playerView.card, {}, game.cards))}
-												</small>
+												<span className={style.actionText}>
+													<span>{action.title}</span>
+													<small>
+														{action.verb} ·{" "}
+														{formatDuration(getActionTimeCost(config, action, playerView.card, {}, game.cards))}
+													</small>
+												</span>
+												<span className={style.actionPreviewInline}>
+													{lines.map((line, index) => <span key={`${line}-${index}`}>{line}</span>)}
+												</span>
 											</button>
-										);
-										if ((action.slots ?? []).length > 0) {
-											return <button key={action.id} type="button" className={style.actionButton} onClick={() => handleActionClick(action)} disabled={isDead}><span>{action.title}</span><small>{action.verb} · {formatDuration(getActionTimeCost(config, action, playerView.card, {}, game.cards))}</small></button>;
-										}
-										return (
-											<Popover
-												key={action.id}
-												trigger="hover"
-												placement="left"
-												onOpenChange={(open) => {
-													if (open) handlePreview(action);
-													else clearPreview();
-												}}
-												content={previewContent}
-											>
-												{actionButton}
-											</Popover>
 										);
 									})}
 									{visibleActions.length === 0 && !isDead ? (
@@ -844,31 +824,31 @@ export default function FamineRefugeePage() {
 									<div className={style.emptyActions}>当前没有可用的 incoming 动作。</div>
 								) : (
 									<div className={style.actions}>
-										{incomingActions.map((action) => (
-											<Popover
+										{incomingActions.map((action) => {
+										const lines = (action.slots ?? []).length > 0
+											? [action.desc]
+											: previewAction(config, game, action.id, selectedView.card.id);
+										return (
+											<button
 												key={action.id}
-												trigger="hover"
-												placement="left"
-												onOpenChange={(open) => {
-													if (open) handlePreview(action, selectedView.card.id);
-													else clearPreview();
-												}}
-												content={previewContent}
+												type="button"
+												className={style.actionButton}
+												onClick={() => handleIncomingAction(action.id)}
+												disabled={isDead}
 											>
-												<button
-													type="button"
-													className={style.actionButton}
-													onClick={() => handleIncomingAction(action.id)}
-													disabled={isDead}
-												>
+												<span className={style.actionText}>
 													<span>{action.title}</span>
 													<small>
 														玩家 → {selectedView.derived.template.key} ·{" "}
 														{formatDuration(getActionTimeCost(config, action, playerView.card, {}, game.cards))}
 													</small>
-												</button>
-											</Popover>
-										))}
+												</span>
+												<span className={style.actionPreviewInline}>
+													{lines.map((line, index) => <span key={`${line}-${index}`}>{line}</span>)}
+												</span>
+											</button>
+										);
+									})}
 									</div>
 								)}
 							</>

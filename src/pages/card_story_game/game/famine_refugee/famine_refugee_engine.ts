@@ -1707,6 +1707,7 @@ export function applyIncomingAction(
 	state: FamineState,
 	targetId: string,
 	actionId: number,
+	assignments: Record<string, string[]> = {},
 ): FamineState {
 	if (state.dialogue) return state;
 	const player = getPlayerCard(config, state);
@@ -1720,6 +1721,8 @@ export function applyIncomingAction(
 	if (!player || !target) return state;
 	const action = findAction(config, actionId);
 	if (!action) return state;
+	const resolved = validateAssignments(config, action, player, assignments, state.cards);
+	if (!resolved) return state;
 	const sourceDerived = deriveCard(config, player, state.cards);
 	const targetDerived = deriveCard(config, target, state.cards);
 	if (!evaluateConditions(action.condition, {
@@ -1729,8 +1732,8 @@ export function applyIncomingAction(
 		config,
 		time: state.time,
 	})) return state;
-	const timeCost = getActionTimeCost(config, action, player, {}, state.cards);
-	const result = applyActionEffects(config, action, player.id, [], state.cards, state.nextCardId, targetId, state.agreements, state.dialogueHistory, state.nextAgreementId, state.time);
+	const timeCost = getActionTimeCost(config, action, player, assignments, state.cards);
+	const result = applyActionEffects(config, action, player.id, resolved, state.cards, state.nextCardId, targetId, state.agreements, state.dialogueHistory, state.nextAgreementId, state.time);
 	let next = appendLog({ ...state, cards: result.cards, nextCardId: result.nextCardId, dialogue: result.dialogue, agreements: result.agreements ?? state.agreements, dialogueHistory: result.dialogueHistory ?? state.dialogueHistory, nextAgreementId: result.nextAgreementId ?? state.nextAgreementId }, action.title);
 	next = advanceMinutes(config, next, timeCost);
 	return next;
