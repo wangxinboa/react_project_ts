@@ -134,6 +134,16 @@ interface CardState {
 - 动作池复用 `outgoing`，按数组顺序尝试。
 - 具体执行仍复用 Action 的原子规则。
 
+## 技能卡
+
+- `CardType.SKILL` 表示技能卡，技能卡依附人物卡，不单独摆在场上。
+- `CardTemplate.skill` 定义 `actionIds / requirements / costs / effects`。
+- `CardState.skills` 保存该人物已依附的技能模板 id。
+- 技能区展示人物拥有的技能；点击动作后进入动作面板，再从技能区选择技能放入技能槽。
+- 技能的 `actionIds` 决定可搭配动作。
+- 技能消耗和效果使用现有 `EffectCall`，技能效果先于动作效果执行。
+- 当前演示动作：`修炼`；技能 `基础拳法` / `灵视` 都通过 `actionIds` 搭配修炼。
+
 ## demo 场景
 
 - 每个场景是一份独立 JSON，放在 `public/scenes/`。

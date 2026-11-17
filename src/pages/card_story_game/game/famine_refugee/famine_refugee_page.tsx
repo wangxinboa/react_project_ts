@@ -17,6 +17,7 @@ import {
 	getSlotRange,
 	getIncomingActions,
 	getVisibleActions,
+	getAvailableSkills,
 	getVisibleCards,
 	applyIncomingAction,
 	previewAction,
@@ -132,6 +133,7 @@ export default function FamineRefugeePage() {
 	const [placementTargetId, setPlacementTargetId] = useState<string | undefined>(undefined);
 	const [slotAssignments, setSlotAssignments] = useState<Record<string, string[]>>({});
 	const [activeSlotId, setActiveSlotId] = useState("");
+	const [activeSkillId, setActiveSkillId] = useState<number | undefined>(undefined);
 	const [loadError, setLoadError] = useState("");
 
 	const loadScene = useCallback(async (scene: FamineSceneEntry): Promise<void> => {
@@ -145,6 +147,7 @@ export default function FamineRefugeePage() {
 			setPlacementTargetId(undefined);
 			setSlotAssignments({});
 			setActiveSlotId("");
+			setActiveSkillId(undefined);
 			setActiveSceneId(scene.id);
 		} catch (error) {
 			setLoadError(error instanceof Error ? error.message : "原型配置加载失败");
@@ -265,6 +268,20 @@ export default function FamineRefugeePage() {
 		return config ? getAction(config, placementActionId) : null;
 	}, [config, placementActionId]);
 
+	const placementSkills = useMemo(() => {
+		return config && game && placementAction ? getAvailableSkills(config, game, placementAction.id) : [];
+	}, [config, game, placementAction]);
+
+	const ownedSkills = useMemo(() => {
+		if (!config || !playerView) return [];
+		const result: Array<{ id: number; label: string; desc: string }> = [];
+		for (let i = 0; i < (playerView.card.skills ?? []).length; i++) {
+			const template = config.cardTemplates.find((item) => item.id === (playerView.card.skills ?? [])[i]);
+			if (template?.cardType === CardType.SKILL) result.push({ id: template.id, label: template.key, desc: template.desc });
+		}
+		return result;
+	}, [config, playerView]);
+
 	const slotEligible = useMemo(() => {
 		const result: Record<string, CardState[]> = {};
 		if (!config || !game || !placementAction) return result;
@@ -316,17 +333,19 @@ export default function FamineRefugeePage() {
 
 	const handleActionClick = useCallback(
 		(action: FamineAction) => {
-			if ((action.slots ?? []).length > 0) {
+			if (!config || !game) return;
+			const compatible = getAvailableSkills(config, game, action.id);
+			if ((action.slots ?? []).length > 0 || compatible.length > 0) {
 				setPlacementActionId(action.id);
 				setPlacementTargetId(undefined);
+				setActiveSkillId(undefined);
 				setSlotAssignments({});
 				setActiveSlotId((action.slots ?? [])[0]?.id ?? "");
 				return;
 			}
-			if (!config) return;
 			setGame((prev) => (prev ? applyAction(config, prev, action.id) : prev));
 		},
-		[config],
+		[config, game],
 	);
 
 	const handleIncomingAction = useCallback(
@@ -464,17 +483,19 @@ export default function FamineRefugeePage() {
 		setGame((prev) => (prev
 			? placementTargetId
 				? applyIncomingAction(config, prev, placementTargetId, placementActionId, slotAssignments)
-				: applyAction(config, prev, placementActionId, slotAssignments)
+				: applyAction(config, prev, placementActionId, slotAssignments, activeSkillId)
 			: prev));
 		setPlacementActionId(null);
 		setPlacementTargetId(undefined);
+		setActiveSkillId(undefined);
 		setSlotAssignments({});
 		setActiveSlotId("");
-	}, [canExecute, config, placementActionId, placementTargetId, slotAssignments]);
+	}, [activeSkillId, canExecute, config, placementActionId, placementTargetId, slotAssignments]);
 
 	const handleCancelPlacement = useCallback(() => {
 		setPlacementActionId(null);
 		setPlacementTargetId(undefined);
+		setActiveSkillId(undefined);
 		setSlotAssignments({});
 		setActiveSlotId("");
 	}, []);
@@ -483,6 +504,7 @@ export default function FamineRefugeePage() {
 		setSelectedCardId(cardId);
 		setPlacementActionId(null);
 		setPlacementTargetId(undefined);
+		setActiveSkillId(undefined);
 		setSlotAssignments({});
 		setActiveSlotId("");
 	}, []);
@@ -493,6 +515,7 @@ export default function FamineRefugeePage() {
 		setSelectedCardId(config.saveData.playerCardId);
 		setPlacementActionId(null);
 		setPlacementTargetId(undefined);
+		setActiveSkillId(undefined);
 		setSlotAssignments({});
 		setActiveSlotId("");
 	}, [config]);
@@ -517,7 +540,7 @@ export default function FamineRefugeePage() {
 	);
 
 	const placementPreviewLines = placementAction && canExecute
-		? previewAction(config, game, placementAction.id, placementTargetId, slotAssignments)
+		? previewAction(config, game, placementAction.id, placementTargetId, slotAssignments, activeSkillId)
 		: [];
 
 	const isEligible = (cardId: string): boolean => {
@@ -655,6 +678,33 @@ export default function FamineRefugeePage() {
 							)}
 						</div>
 
+						{isPlayerSelected ? (
+							<>
+								<div className={style.inspectorSectionTitle}>技能</div>
+								<div className={style.skillList}>
+								{ownedSkills.length === 0 ? (
+									<span className={style.emptyTag}>没有技能</span>
+								) : (
+									ownedSkills.map((skill) => {
+										const compatible = placementAction !== null && placementSkills.some((item) => item.id === skill.id);
+										return (
+											<button
+												key={skill.id}
+												type="button"
+												className={`${style.skillItem} ${activeSkillId === skill.id ? style.skillItemActive : ""}`}
+												disabled={!compatible}
+												onClick={() => setActiveSkillId(skill.id)}
+												title={skill.desc}
+											>
+												{skill.label}
+											</button>
+										);
+									})
+								)}
+								</div>
+							</>
+						) : null}
+
 						{!isPlayerSelected ? (
 							<div className={style.attributeList}>
 								{selectedAttributes.length === 0 ? (
@@ -683,6 +733,14 @@ export default function FamineRefugeePage() {
 						{placementAction ? (
 							<div className={style.targetPanel}>
 								<div className={style.inspectorSectionTitle}>卡槽 · {placementAction.title}</div>
+								{placementSkills.length > 0 ? (
+									<div className={style.skillSlot}>
+										<span>技能：{activeSkillId ? placementSkills.find((skill) => skill.id === activeSkillId)?.label ?? "已选" : "从技能列表选择"}</span>
+										{activeSkillId !== undefined ? (
+											<button type="button" className={style.skillClear} onClick={() => setActiveSkillId(undefined)}>清除</button>
+										) : null}
+									</div>
+								) : null}
 								<div className={style.slotList}>
 									{(placementAction.slots ?? []).map((slot) => {
 										const range = getSlotRange(config, slot, playerView.card, game.cards);

@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 87,
+	"schemaVersion": 90,
 	"allTags": [
 		{
 			"id": 24,
@@ -256,6 +256,12 @@
 			"id": 37,
 			"key": "力竭",
 			"desc": "体力耗尽",
+			"kind": "state"
+		},
+		{
+			"id": 38,
+			"key": "灵视",
+			"desc": "灵视状态",
 			"kind": "state"
 		}
 	],
@@ -1159,8 +1165,7 @@
 			"outgoing": [
 				49,
 				53,
-				64,
-				65
+				64
 			],
 			"createdAt": 1767974400010,
 			"cardType": "being",
@@ -1498,6 +1503,115 @@
 			],
 			"createdAt": 1767974400023,
 			"attributes": []
+		},
+		{
+			"id": 70,
+			"key": "基础拳法",
+			"cardType": "skill",
+			"desc": "以拳架、步法和呼吸强化身体训练。",
+			"createdAt": 1767974400070,
+			"skill": {
+				"actionIds": [
+					64
+				],
+				"requirements": {
+					"target": {
+						"card": "sourceCard"
+					},
+					"attributes": [
+						{
+							"id": 3,
+							"gte": 4
+						}
+					]
+				},
+				"costs": [
+					{
+						"kind": "changeAttributes",
+						"target": {
+							"card": "sourceCard"
+						},
+						"changes": [
+							{
+								"attributeId": 2,
+								"delta": -2
+							}
+						]
+					}
+				],
+				"effects": [
+					{
+						"kind": "changeAttributes",
+						"target": {
+							"card": "sourceCard"
+						},
+						"changes": [
+							{
+								"attributeId": 3,
+								"delta": 1
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"id": 71,
+			"key": "灵视",
+			"cardType": "skill",
+			"desc": "通过静心与观想感知灵性异常。",
+			"createdAt": 1767974400071,
+			"skill": {
+				"actionIds": [
+					64
+				],
+				"requirements": {
+					"target": {
+						"card": "sourceCard"
+					},
+					"attributes": [
+						{
+							"id": 4,
+							"gte": 4
+						}
+					]
+				},
+				"costs": [
+					{
+						"kind": "changeAttributes",
+						"target": {
+							"card": "sourceCard"
+						},
+						"changes": [
+							{
+								"attributeId": 2,
+								"delta": -2
+							}
+						]
+					}
+				],
+				"effects": [
+					{
+						"kind": "changeAttributes",
+						"target": {
+							"card": "sourceCard"
+						},
+						"changes": [
+							{
+								"attributeId": 4,
+								"delta": 1
+							}
+						]
+					},
+					{
+						"kind": "addTag",
+						"tagId": 38,
+						"target": {
+							"card": "sourceCard"
+						}
+					}
+				]
+			}
 		}
 	],
 	"saveData": {
@@ -1509,7 +1623,11 @@
 				"values": {
 					"8": "village",
 					"10": []
-				}
+				},
+				"skills": [
+					70,
+					71
+				]
 			},
 			{
 				"id": "bread",
@@ -2546,9 +2664,9 @@
 		},
 		{
 			"id": 64,
-			"verb": "train",
-			"title": "锻炼",
-			"desc": "用时间和体力换取生命力。",
+			"verb": "cultivate",
+			"title": "修炼",
+			"desc": "消耗时间、体力和饱食，通过技能决定修炼方向。",
 			"createdAt": 1767974400120,
 			"timeCost": 60,
 			"effects": [
@@ -2566,10 +2684,6 @@
 						{
 							"attributeId": 1,
 							"delta": -5
-						},
-						{
-							"attributeId": 3,
-							"delta": 1
 						}
 					]
 				}
@@ -2584,34 +2698,8 @@
 						"gte": 5
 					}
 				]
-			}
-		},
-		{
-			"id": 65,
-			"verb": "meditate",
-			"title": "冥想",
-			"desc": "安静地感受自身。",
-			"createdAt": 1767974400121,
-			"timeCost": 60,
-			"effects": [
-				{
-					"id": 99,
-					"kind": "changeAttributes",
-					"target": {
-						"card": "sourceCard"
-					},
-					"changes": [
-						{
-							"attributeId": 4,
-							"delta": 1
-						},
-						{
-							"attributeId": 1,
-							"delta": -2
-						}
-					]
-				}
-			]
+			},
+			"key": "cultivate"
 		}
 	],
 	"allDialogues": [

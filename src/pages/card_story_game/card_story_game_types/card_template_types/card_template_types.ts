@@ -1,4 +1,6 @@
 import type { AttributeBinding } from "../attribute_types.ts";
+import type { ConditionExpression } from "../condition_expression_types/condition_expression_types.ts";
+import type { EffectCall } from "../effect_types/effect_types.ts";
 import type { NumberExpression } from "../formula_types.ts";
 
 /** 卡牌类型。只描述卡牌的结构角色，不直接决定行为。 */
@@ -11,9 +13,23 @@ export const CardType = {
 	PLACE: "place",
 	/** 通往其他地点的通道：小路、门、传送点等 */
 	PASSAGE: "passage",
+	/** 技能卡：依附人物卡使用 */
+	SKILL: "skill",
 } as const;
 
 export type CardType = (typeof CardType)[keyof typeof CardType];
+
+/** 技能定义；技能卡依附人物卡，使用动作上下文。 */
+export interface SkillDefinition {
+	/** 可以搭配的动作 id */
+	actionIds: number[];
+	/** 使用前提 */
+	requirements?: ConditionExpression;
+	/** 使用消耗 */
+	costs?: EffectCall[];
+	/** 技能效果 */
+	effects?: EffectCall[];
+}
 
 /** NPC 自主行为配置；动作池复用 outgoing，按数组顺序尝试。 */
 export interface NpcBehavior {
@@ -41,5 +57,7 @@ export interface CardTemplate {
 	behavior?: NpcBehavior;
 	/** 卡牌级监听定义 id；数组顺序即优先级 */
 	reactions?: number[];
+	/** 技能卡数据 */
+	skill?: SkillDefinition;
 	createdAt: number;
 }
