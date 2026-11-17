@@ -366,6 +366,7 @@ function evaluateDefinitionChecks(condition: Condition, entity: EntitySnapshot):
 
 function hasCardCondition(condition: Condition): boolean {
 	return condition.attributes !== undefined
+		|| condition.memberOfRefList !== undefined
 		|| condition.hasTag !== undefined
 		|| condition.hasTags !== undefined
 		|| condition.hasAnyTag !== undefined
@@ -388,6 +389,14 @@ function evaluateCondition(condition: Condition, context: ConditionContext): boo
 		if (!entity) return false;
 		if (condition.worldTime !== undefined && !matchesAttribute(context.time ?? 0, condition.worldTime, {}, context)) return false;
 		if (condition.attributeChanges !== undefined && !evaluateAttributeChanges(condition.attributeChanges, context)) return false;
+		if (condition.memberOfRefList) {
+			const owner = resolveTargetEntity(condition.memberOfRefList.listOwner, context);
+			if (!entity.cardId || !owner?.cardId) return false;
+			const ownerCard = getCard(context.cards ?? [], owner.cardId);
+			if (!ownerCard) return false;
+			const value = ownerCard.values[condition.memberOfRefList.refListId];
+			if (!Array.isArray(value) || !value.includes(entity.cardId)) return false;
+		}
 		return evaluateAttributeChecks(condition, entity, context)
 			&& evaluateTagChecks(condition, entity)
 			&& evaluateDefinitionChecks(condition, entity)
@@ -468,7 +477,6 @@ function createCardState(config: FamineRefugeeConfig, saveCard: SaveCard): CardS
 		templateId: saveCard.templateId,
 		values,
 		nextBehaviorTime: 0,
-		skills: saveCard.skills ? [...saveCard.skills] : [],
 		tags: (template.tags ?? []).map((tagId) => createTagInstance(config, tagId)),
 	};
 }
@@ -619,11 +627,13 @@ export function getSlotRange(
 	return { min, max, valid: true };
 }
 
-function slotMatches(config: FamineRefugeeConfig, slot: ActionSlot, card: CardState, source: EntitySnapshot): boolean {
+function slotMatches(config: FamineRefugeeConfig, slot: ActionSlot, card: CardState, source: EntitySnapshot, cards: CardState[], target?: CardState): boolean {
 	const derived = deriveCard(config, card);
 	return evaluateConditions(slot.condition, {
 		sourceCard: source,
-		slot: snapshotFromDerived(derived),
+		targetCard: target ? snapshotFromDerived(deriveCard(config, target, cards), target) : undefined,
+		slot: snapshotFromDerived(derived, card),
+		cards,
 	});
 }
 
@@ -633,6 +643,7 @@ export function getAccessibleCards(config: FamineRefugeeConfig, cards: CardState
 	for (let i = 0; i < cards.length; i++) {
 		const card = cards[i];
 		if (card.id === actor.id) continue;
+		if (getTemplate(config, card.templateId).cardType === CardType.SKILL) continue;
 		const carrier = getStringAttribute(card.values, getAttributeId(config, "carrier"));
 		if (carrier === actor.id) {
 			result.push(card);
@@ -649,36 +660,56 @@ export function getEligibleCards(
 	state: FamineState,
 	action: FamineAction,
 	slotId: string,
+	targetId?: string,
 	actor?: CardState,
 ): CardState[] {
 	const player = actor ?? getPlayerCard(config, state);
 	if (!player) return [];
 	const slot = (action.slots ?? []).find((item) => item.id === slotId);
 	if (!slot) return [];
-	const source = snapshotFromDerived(deriveCard(config, player, state.cards));
+	const target = targetId ? getCard(state.cards, targetId) ?? undefined : undefined;
+	const source = snapshotFromDerived(deriveCard(config, player, state.cards), player);
 	const cards: CardState[] = [];
-	const accessible = getAccessibleCards(config, state.cards, player);
-	for (let i = 0; i < accessible.length; i++) {
-		if (slotMatches(config, slot, accessible[i], source)) cards.push(accessible[i]);
+	for (let i = 0; i < state.cards.length; i++) {
+		if (slotMatches(config, slot, state.cards[i], source, state.cards, target)) cards.push(state.cards[i]);
 	}
 	return cards;
 }
 
-function getVisibleActionsFromSource(config: FamineRefugeeConfig, source: CardState, cards: CardState[], time = 0): FamineAction[] {
-	const derived = deriveCard(config, source, cards);
-	const sourceSnapshot = snapshotFromDerived(derived, source);
+function getPlayerActionsFromSource(config: FamineRefugeeConfig, source: CardState): FamineAction[] {
+	const derived = deriveCard(config, source, [source]);
 	const actions: FamineAction[] = [];
 	for (let i = 0; i < (derived.template.outgoing ?? []).length; i++) {
 		const action = findAction(config, (derived.template.outgoing ?? [])[i]);
-		if (!action) continue;
-		if (evaluateConditions(action.condition, { sourceCard: sourceSnapshot, cards, config, time })) actions.push(action);
+		if (action) actions.push(action);
 	}
 	return actions;
 }
 
-export function getVisibleActions(config: FamineRefugeeConfig, state: FamineState): FamineAction[] {
+export function getPlayerActions(config: FamineRefugeeConfig, state: FamineState): FamineAction[] {
 	const player = getPlayerCard(config, state);
-	return player ? getVisibleActionsFromSource(config, player, state.cards, state.time) : [];
+	return player ? getPlayerActionsFromSource(config, player) : [];
+}
+
+export function isActionAvailable(
+	config: FamineRefugeeConfig,
+	state: FamineState,
+	actionId: number,
+	targetId?: string,
+): boolean {
+	const player = getPlayerCard(config, state);
+	const action = findAction(config, actionId);
+	if (!player || !action) return false;
+	const target = targetId ? getCard(state.cards, targetId) : null;
+	const sourceDerived = deriveCard(config, player, state.cards);
+	const targetDerived = target ? deriveCard(config, target, state.cards) : null;
+	return evaluateConditions(action.condition, {
+		sourceCard: snapshotFromDerived(sourceDerived, player),
+		targetCard: targetDerived && target ? snapshotFromDerived(targetDerived, target) : undefined,
+		cards: state.cards,
+		config,
+		time: state.time,
+	});
 }
 
 function getConditionSlotId(conditions: ConditionExpression | ConditionExpression[] | undefined): string | null {
@@ -849,8 +880,10 @@ function validateAssignments(
 	source: CardState,
 	assignments: Record<string, string[]>,
 	cards: CardState[],
+	targetId?: string,
 ): SlotAssignment[] | null {
-	const sourceSnapshot = snapshotFromDerived(deriveCard(config, source, cards));
+	const target = targetId ? getCard(cards, targetId) ?? undefined : undefined;
+	const sourceSnapshot = snapshotFromDerived(deriveCard(config, source, cards), source);
 	const used = new Set<string>();
 	const result: SlotAssignment[] = [];
 	for (let i = 0; i < (action.slots ?? []).length; i++) {
@@ -864,7 +897,7 @@ function validateAssignments(
 			used.add(ids[j]);
 			const card = getCard(cards, ids[j]);
 			if (!card || card.id === source.id) return null;
-			if (!slotMatches(config, slot, card, sourceSnapshot)) return null;
+			if (!slotMatches(config, slot, card, sourceSnapshot, cards, target)) return null;
 			assignedCards.push(card);
 		}
 		result.push({ slot, cards: assignedCards });
@@ -1251,9 +1284,35 @@ function applyAddAttributeEffect(runtime: EffectRuntime, effect: InlineEffect): 
 	}
 }
 
+function applyLearnSkillEffect(runtime: EffectRuntime, effect: InlineEffect): void {
+	if (effect.kind !== EffectType.LEARN_SKILL || !runtime.targetId) return;
+	const target = getCard(runtime.cards, runtime.targetId);
+	const source = getCard(runtime.cards, runtime.sourceId);
+	if (!source || !target) return;
+	const skillCardId = (runtime.slotMap[effect.skillSlot] ?? [])[0];
+	if (!skillCardId) return;
+	const teacherSkills = getSkillListIds(runtime.config, target);
+	if (!teacherSkills.includes(skillCardId)) return;
+	const template = getSkillCardTemplate(runtime.config, runtime.cards, skillCardId);
+	if (!template) return;
+	const sourceSkills = getSkillListIds(runtime.config, source);
+	for (let i = 0; i < sourceSkills.length; i++) {
+		const owned = getCard(runtime.cards, sourceSkills[i]);
+		if (owned?.templateId === template.id) return;
+	}
+	const newId = `skill_${source.id}_${template.id}`;
+	if (getCard(runtime.cards, newId)) return;
+	const newCard = createCardState(runtime.config, { id: newId, templateId: template.id });
+	const values = { ...source.values, [getAttributeId(runtime.config, "skillList")]: [...sourceSkills, newId] };
+	runtime.cards = [...runtime.cards, newCard];
+	runtime.cards = replaceCard(runtime.cards, { ...source, values });
+}
+
+
 const effectHandlers: Record<InlineEffect["kind"], EffectHandler> = {
 	[EffectType.CHANGE_ATTRIBUTES]: applyTargetedEffect,
 	[EffectType.ADD_ATTRIBUTE]: applyAddAttributeEffect,
+	[EffectType.LEARN_SKILL]: applyLearnSkillEffect,
 	[EffectType.ADD_TAG]: applyTargetedEffect,
 	[EffectType.REMOVE_TAG]: applyTargetedEffect,
 	[EffectType.CHANGE_TEMPLATE]: applyTargetedEffect,
@@ -1447,41 +1506,24 @@ function applyCardReactionsForCard(config: FamineRefugeeConfig, card: CardState,
 	return getCard(runtime.cards, card.id) ?? card;
 }
 
-function getSkillTemplate(config: FamineRefugeeConfig, skillId: number): FamineTemplate | null {
-	const template = config.cardTemplates.find((item) => item.id === skillId);
+function getSkillTemplate(config: FamineRefugeeConfig, skillTemplateId: number): FamineTemplate | null {
+	const template = config.cardTemplates.find((item) => item.id === skillTemplateId);
 	if (!template || template.cardType !== CardType.SKILL || !template.skill) return null;
 	return template;
 }
 
-function evaluateSkillRequirements(config: FamineRefugeeConfig, player: CardState, target: CardState | null, cards: CardState[], skill: NonNullable<FamineTemplate["skill"]>): boolean {
-	const source = snapshotFromDerived(deriveCard(config, player, cards), player);
-	const targetSnapshot = target ? snapshotFromDerived(deriveCard(config, target, cards), target) : undefined;
-	return evaluateConditions(skill.requirements, {
-		sourceCard: source,
-		targetCard: targetSnapshot,
-		cards,
-		config,
-		time: 0,
-	});
+function getSkillListIds(config: FamineRefugeeConfig, card: CardState): string[] {
+	return getStringListAttribute(card.values, getAttributeId(config, "skillList"));
 }
 
-export function getAvailableSkills(
-	config: FamineRefugeeConfig,
-	state: FamineState,
-	actionId: number,
-): Array<{ id: number; label: string; desc: string }> {
-	const player = getPlayerCard(config, state);
-	const action = findAction(config, actionId);
-	if (!player || !action) return [];
-	const result: Array<{ id: number; label: string; desc: string }> = [];
-	for (let i = 0; i < (player.skills ?? []).length; i++) {
-		const template = getSkillTemplate(config, (player.skills ?? [])[i]);
-		if (!template?.skill || !template.skill.actionIds.includes(actionId)) continue;
-		if (!evaluateSkillRequirements(config, player, null, state.cards, template.skill)) continue;
-		result.push({ id: template.id, label: template.key, desc: template.desc });
-	}
-	return result;
+function getSkillCardTemplate(config: FamineRefugeeConfig, cards: CardState[], skillCardId: string): FamineTemplate | null {
+	const card = getCard(cards, skillCardId);
+	if (!card || card.id === "") return null;
+	return getSkillTemplate(config, card.templateId);
 }
+
+
+
 
 function applySkillEffects(runtime: EffectRuntime, template: FamineTemplate): void {
 	const skill = template.skill;
@@ -1511,7 +1553,6 @@ function applyActionEffects(
 	dialogueHistory: DialogueHistoryEntry[] = [],
 	nextAgreementId = 1,
 	time = 0,
-	skillId?: number,
 ): { cards: CardState[]; nextCardId: number; dialogue?: DialogueState; agreements?: Record<string, AgreementState>; dialogueHistory?: DialogueHistoryEntry[]; nextAgreementId?: number } {
 	const plan = planActionEffects(config, action, sourceId, assignments, cards, targetId);
 	if (!validateMoveItemEffects(config, plan.effects, plan.slotMap, sourceId, targetId, cards)) {
@@ -1519,9 +1560,15 @@ function applyActionEffects(
 	}
 	const runtime: EffectRuntime = { config, sourceId, targetId, hostId: targetId, slotMap: plan.slotMap, cards: cards.slice(), nextCardId, removeIds: new Set<string>(), agreements: { ...agreements }, dialogueHistory: dialogueHistory.map((entry) => ({ ...entry, participantIds: [...entry.participantIds], visitedNodeIds: [...entry.visitedNodeIds], chosenOptionIds: [...entry.chosenOptionIds] })), nextAgreementId, time };
 	const before = snapshotCards(config, runtime.cards);
-	if (skillId !== undefined) {
-		const skillTemplate = getSkillTemplate(config, skillId);
-		if (skillTemplate) applySkillEffects(runtime, skillTemplate);
+	const runtimeSource = getCard(runtime.cards, runtime.sourceId);
+	const ownedSkillIds = new Set(runtimeSource ? getSkillListIds(config, runtimeSource) : []);
+	for (let i = 0; i < assignments.length; i++) {
+		const assignment = assignments[i];
+		for (let j = 0; j < assignment.cards.length; j++) {
+			if (!ownedSkillIds.has(assignment.cards[j].id)) continue;
+			const skillTemplate = getSkillCardTemplate(config, runtime.cards, assignment.cards[j].id);
+			if (skillTemplate) applySkillEffects(runtime, skillTemplate);
+		}
 	}
 	for (let i = 0; i < plan.effects.length; i++) effectHandlers[plan.effects[i].kind](runtime, plan.effects[i]);
 	applyCardReactions(runtime, before);
@@ -1654,7 +1701,7 @@ function runNpcBehaviors(config: FamineRefugeeConfig, state: FamineState): Famin
 					valid = false;
 					break;
 				}
-				const eligible = getEligibleCards(config, current, action, slot.id, npc).filter((card) => !used.has(card.id));
+				const eligible = getEligibleCards(config, current, action, slot.id, undefined, npc).filter((card) => !used.has(card.id));
 				if (eligible.length < range.min) {
 					valid = false;
 					break;
@@ -1743,19 +1790,11 @@ export function getIncomingActions(
 		}
 	}
 	if (!player || !target) return [];
-	const sourceDerived = deriveCard(config, player, state.cards);
-	const targetDerived = deriveCard(config, target, state.cards);
+	const template = getTemplate(config, target.templateId);
 	const actions: FamineAction[] = [];
-	for (let i = 0; i < (targetDerived.template.incoming ?? []).length; i++) {
-		const action = findAction(config, (targetDerived.template.incoming ?? [])[i]);
-		if (!action) continue;
-		if (evaluateConditions(action.condition, {
-			sourceCard: snapshotFromDerived(sourceDerived, player),
-			targetCard: snapshotFromDerived(targetDerived, target),
-			cards: state.cards,
-			config,
-			time: state.time,
-		})) actions.push(action);
+	for (let i = 0; i < (template.incoming ?? []).length; i++) {
+		const action = findAction(config, (template.incoming ?? [])[i]);
+		if (action) actions.push(action);
 	}
 	return actions;
 }
@@ -1779,7 +1818,7 @@ export function applyIncomingAction(
 	if (!player || !target) return state;
 	const action = findAction(config, actionId);
 	if (!action) return state;
-	const resolved = validateAssignments(config, action, player, assignments, state.cards);
+	const resolved = validateAssignments(config, action, player, assignments, state.cards, targetId);
 	if (!resolved) return state;
 	const sourceDerived = deriveCard(config, player, state.cards);
 	const targetDerived = deriveCard(config, target, state.cards);
@@ -1939,7 +1978,6 @@ export function previewAction(
 	actionId: number,
 	targetId?: string,
 	assignments: Record<string, string[]> = {},
-	skillId?: number,
 ): string[] {
 	const action = findAction(config, actionId);
 	if (!action) return [];
@@ -1949,8 +1987,8 @@ export function previewAction(
 	const before = deriveCard(config, player, state.cards).values;
 	const cloned = cloneFamineState(state);
 	const next = targetId
-		? applyIncomingAction(config, cloned, targetId, actionId)
-		: applyAction(config, cloned, actionId, assignments, skillId);
+		? applyIncomingAction(config, cloned, targetId, actionId, assignments)
+		: applyAction(config, cloned, actionId, assignments);
 	const nextPlayer = getPlayerCard(config, next);
 	if (!nextPlayer) return [];
 	const after = deriveCard(config, nextPlayer, next.cards).values;
@@ -1985,26 +2023,19 @@ export function applyAction(
 	state: FamineState,
 	actionId: number,
 	assignments: Record<string, string[]> = {},
-	skillId?: number,
 ): FamineState {
 	if (state.dialogue) return state;
 	const player = getPlayerCard(config, state);
 	if (!player) return state;
 	const action = findAction(config, actionId);
 	if (!action) return state;
-	if (skillId !== undefined) {
-		const skillTemplate = getSkillTemplate(config, skillId);
-		if (!skillTemplate?.skill || !skillTemplate.skill.actionIds.includes(actionId)) return state;
-		if (!(player.skills ?? []).includes(skillId)) return state;
-		if (!evaluateSkillRequirements(config, player, null, state.cards, skillTemplate.skill)) return state;
-	}
 	const sourceDerived = deriveCard(config, player, state.cards);
 	if (!evaluateConditions(action.condition, { sourceCard: snapshotFromDerived(sourceDerived, player), cards: state.cards, config, time: state.time })) return state;
 	const resolved = validateAssignments(config, action, player, assignments, state.cards);
 	if (!resolved) return state;
 
 	const timeCost = getActionTimeCost(config, action, player, assignments, state.cards);
-	const result = applyActionEffects(config, action, player.id, resolved, state.cards, state.nextCardId, undefined, state.agreements, state.dialogueHistory, state.nextAgreementId, state.time, skillId);
+	const result = applyActionEffects(config, action, player.id, resolved, state.cards, state.nextCardId, undefined, state.agreements, state.dialogueHistory, state.nextAgreementId, state.time);
 	let next = appendLog({ ...state, cards: result.cards, nextCardId: result.nextCardId, dialogue: result.dialogue, agreements: result.agreements ?? state.agreements, dialogueHistory: result.dialogueHistory ?? state.dialogueHistory, nextAgreementId: result.nextAgreementId ?? state.nextAgreementId }, action.title);
 	next = advanceMinutes(config, next, timeCost);
 	return next;

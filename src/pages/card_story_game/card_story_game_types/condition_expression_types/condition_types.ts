@@ -20,6 +20,11 @@ export interface Condition {
 	target?: TargetRef;
 	/** 属性条件列表 */
 	attributes?: AttributeCheck[];
+	/** target 指向的卡是否是 listOwner 指向卡的 refListId 列表成员 */
+	memberOfRefList?: {
+		listOwner: TargetRef;
+		refListId: number;
+	};
 	/** 反应上下文中的属性变化；只在 CardReactionDefinition 条件中有值 */
 	attributeChanges?: AttributeChangeCheck[];
 	/** 该卡的对话经历 */

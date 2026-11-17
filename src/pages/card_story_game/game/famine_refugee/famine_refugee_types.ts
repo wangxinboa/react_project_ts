@@ -68,8 +68,6 @@ export interface SaveCard {
 	id: string;
 	templateId: number;
 	values?: Record<string, AttributeValue>;
-	/** 依附到该卡的技能模板 id */
-	skills?: number[];
 }
 
 export interface SaveData {
@@ -113,8 +111,6 @@ export interface CardState {
 	relationships?: Record<string, RelationshipState>;
 	/** 已知/参与的共识 id */
 	agreementIds?: string[];
-	/** 依附到该卡的技能模板 id */
-	skills?: number[];
 	tags: TagInstanceState[];
 }
 

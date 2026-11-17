@@ -138,11 +138,12 @@ interface CardState {
 
 - `CardType.SKILL` 表示技能卡，技能卡依附人物卡，不单独摆在场上。
 - `CardTemplate.skill` 定义 `actionIds / requirements / costs / effects`。
-- `CardState.skills` 保存该人物已依附的技能模板 id。
-- 技能区展示人物拥有的技能；点击动作后进入动作面板，再从技能区选择技能放入技能槽。
-- 技能的 `actionIds` 决定可搭配动作。
+- 人物通过 `skillList`（`cardRefList` 属性）引用技能卡实例；技能卡放在 `state.cards` 中，但不进入场景/背包。
+- 技能区展示人物拥有的技能；点击动作进入动作模式后，技能区、背包区继续显示，点击卡牌只填卡槽，不切换 inspector。
+- 技能的 `actionIds` 决定可搭配动作；动作卡槽不限制候选来源，由 Condition 判断能否放入。
+- 学习动作通过 `memberOfRefList` 判断技能卡是否属于老师 `skillList`，效果 `learnSkill` 通过 `skillSlot` 读取选中的技能卡。
 - 技能消耗和效果使用现有 `EffectCall`，技能效果先于动作效果执行。
-- 当前演示动作：`修炼`；技能 `基础拳法` / `灵视` 都通过 `actionIds` 搭配修炼。
+- 当前演示动作：`修炼`；技能 `基础拳法` / `灵视` 都通过 `actionIds` 搭配修炼；`学习` 动作从老师 `skillList` 选择技能卡并复制新实例。
 
 ## demo 场景
 

@@ -2,6 +2,7 @@
 export const EffectType = {
 	CHANGE_ATTRIBUTES: "changeAttributes",
 	ADD_ATTRIBUTE: "addAttribute",
+	LEARN_SKILL: "learnSkill",
 	CHANGE_RELATIONSHIP_ATTRIBUTES: "changeRelationshipAttributes",
 	ADD_TAG: "addTag",
 	REMOVE_TAG: "removeTag",

@@ -8,6 +8,7 @@ import type { AddCardEffect, RemoveCardEffect } from "./card_effects.ts";
 import type { ChangeLocationEffect } from "./location_effects.ts";
 import type { MoveItemCardEffect } from "./item_effects.ts";
 import type { StartDialogueEffect } from "./dialogue_effects.ts";
+import type { LearnSkillEffect } from "./skill_effects.ts";
 
 
 /** 所有效果类型。 */
@@ -24,7 +25,8 @@ export type EffectKind =
 	| StartDialogueEffect
 	| ChangeRelationshipAttributesEffect
 	| CreateAgreementEffect
-	| ConfirmPromiseEffect;
+	| ConfirmPromiseEffect
+	| LearnSkillEffect;
 
 /** Effect 作用对象；与 Condition target 使用同一套 TargetRef。 */
 export type EffectTarget = TargetRef;

@@ -19,6 +19,7 @@ export type { MoveItemCardEffect } from "./effect_types/item_effects.ts";
 export type { ChangeTemplateEffect } from "./effect_types/template_effects.ts";
 export type { EffectCall, EffectDefinition, EffectKind, EffectTarget, InlineEffect } from "./effect_types/effect_types.ts";
 export type { StartDialogueEffect } from "./effect_types/dialogue_effects.ts";
+export type { LearnSkillEffect } from "./effect_types/skill_effects.ts";
 export type { CreateAgreementEffect, ConfirmPromiseEffect } from "./effect_types/agreement_effects.ts";
 export { EffectType } from "./effect_types/effect_kind_types.ts";
 export { AddCardDestination } from "./effect_types/card_effects.ts";

@@ -16,8 +16,8 @@ import {
 	getPlayerCard,
 	getSlotRange,
 	getIncomingActions,
-	getVisibleActions,
-	getAvailableSkills,
+	getPlayerActions,
+	isActionAvailable,
 	getVisibleCards,
 	applyIncomingAction,
 	previewAction,
@@ -61,6 +61,7 @@ const SYSTEM_ATTRIBUTE_KEYS = new Set([
 	"baseCarrySlots",
 	"slotBonus",
 	"carrySlots",
+	"skillList",
 ]);
 
 function isDisplayedAttribute(config: FamineRefugeeConfig, id: number): boolean {
@@ -123,6 +124,18 @@ interface CardView {
 	derived: CardDerived;
 }
 
+function getSkillOptions(config: FamineRefugeeConfig, cards: CardState[], card: CardState): Array<{ id: string; label: string; desc: string }> {
+	const ids = getStringListAttribute(card.values, getAttributeId(config, "skillList"));
+	const result: Array<{ id: string; label: string; desc: string }> = [];
+	for (let i = 0; i < ids.length; i++) {
+		const skillCard = cards.find((item) => item.id === ids[i]);
+		if (!skillCard) continue;
+		const template = config.cardTemplates.find((item) => item.id === skillCard.templateId);
+		if (template?.cardType === CardType.SKILL) result.push({ id: skillCard.id, label: template.key, desc: template.desc });
+	}
+	return result;
+}
+
 export default function FamineRefugeePage() {
 	const [config, setConfig] = useState<FamineRefugeeConfig | null>(null);
 	const [game, setGame] = useState<FamineState | null>(null);
@@ -133,7 +146,6 @@ export default function FamineRefugeePage() {
 	const [placementTargetId, setPlacementTargetId] = useState<string | undefined>(undefined);
 	const [slotAssignments, setSlotAssignments] = useState<Record<string, string[]>>({});
 	const [activeSlotId, setActiveSlotId] = useState("");
-	const [activeSkillId, setActiveSkillId] = useState<number | undefined>(undefined);
 	const [loadError, setLoadError] = useState("");
 
 	const loadScene = useCallback(async (scene: FamineSceneEntry): Promise<void> => {
@@ -147,8 +159,7 @@ export default function FamineRefugeePage() {
 			setPlacementTargetId(undefined);
 			setSlotAssignments({});
 			setActiveSlotId("");
-			setActiveSkillId(undefined);
-			setActiveSceneId(scene.id);
+				setActiveSceneId(scene.id);
 		} catch (error) {
 			setLoadError(error instanceof Error ? error.message : "原型配置加载失败");
 		}
@@ -222,6 +233,11 @@ export default function FamineRefugeePage() {
 		return views;
 	}, [config, cardViews, playerView]);
 
+	const selectedBackpackIds = useMemo(() => {
+		if (!config || !selectedView) return [];
+		return getStringListAttribute(selectedView.card.values, getAttributeId(config, "backpack"));
+	}, [config, selectedView]);
+
 	const currentLocationName = useMemo(() => {
 		if (!config || !playerView) return "未知地点";
 		const locationAttribute = config.allAttributes.find((attribute) => attribute.key === "location");
@@ -255,8 +271,8 @@ export default function FamineRefugeePage() {
 		return cardViews.find((view) => view.card.id === dialogueSpeaker.id)?.derived.template.key ?? dialogueSpeaker.id;
 	}, [dialogueSpeaker, cardViews]);
 
-	const visibleActions = useMemo(() => {
-		return config && game ? getVisibleActions(config, game) : [];
+	const playerActions = useMemo(() => {
+		return config && game ? getPlayerActions(config, game) : [];
 	}, [config, game]);
 
 	const incomingActions = useMemo(() => {
@@ -268,26 +284,23 @@ export default function FamineRefugeePage() {
 		return config ? getAction(config, placementActionId) : null;
 	}, [config, placementActionId]);
 
-	const placementSkills = useMemo(() => {
-		return config && game && placementAction ? getAvailableSkills(config, game, placementAction.id) : [];
-	}, [config, game, placementAction]);
-
 	const ownedSkills = useMemo(() => {
-		if (!config || !playerView) return [];
-		const result: Array<{ id: number; label: string; desc: string }> = [];
-		for (let i = 0; i < (playerView.card.skills ?? []).length; i++) {
-			const template = config.cardTemplates.find((item) => item.id === (playerView.card.skills ?? [])[i]);
-			if (template?.cardType === CardType.SKILL) result.push({ id: template.id, label: template.key, desc: template.desc });
-		}
-		return result;
-	}, [config, playerView]);
+		if (!config || !playerView || !game) return [];
+		return getSkillOptions(config, game.cards, playerView.card);
+	}, [config, game, playerView]);
+
+	const selectedSkills = useMemo(() => {
+		if (!config || !selectedView || !game) return [];
+		return getSkillOptions(config, game.cards, selectedView.card);
+	}, [config, game, selectedView]);
+
 
 	const slotEligible = useMemo(() => {
 		const result: Record<string, CardState[]> = {};
 		if (!config || !game || !placementAction) return result;
 		for (let i = 0; i < (placementAction.slots ?? []).length; i++) {
 			const slot = (placementAction.slots ?? [])[i];
-			result[slot.id] = getEligibleCards(config, game, placementAction, slot.id);
+			result[slot.id] = getEligibleCards(config, game, placementAction, slot.id, placementTargetId);
 		}
 		return result;
 	}, [config, game, placementAction]);
@@ -334,11 +347,9 @@ export default function FamineRefugeePage() {
 	const handleActionClick = useCallback(
 		(action: FamineAction) => {
 			if (!config || !game) return;
-			const compatible = getAvailableSkills(config, game, action.id);
-			if ((action.slots ?? []).length > 0 || compatible.length > 0) {
+			if ((action.slots ?? []).length > 0) {
 				setPlacementActionId(action.id);
 				setPlacementTargetId(undefined);
-				setActiveSkillId(undefined);
 				setSlotAssignments({});
 				setActiveSlotId((action.slots ?? [])[0]?.id ?? "");
 				return;
@@ -350,7 +361,7 @@ export default function FamineRefugeePage() {
 
 	const handleIncomingAction = useCallback(
 		(actionId: number) => {
-			if (!config) return;
+			if (!config || !game) return;
 			const action = getAction(config, actionId);
 			if (action && (action.slots ?? []).length > 0) {
 				setPlacementActionId(actionId);
@@ -365,7 +376,7 @@ export default function FamineRefugeePage() {
 			setPlacementTargetId(undefined);
 			setSlotAssignments({});
 		},
-		[config, selectedCardId],
+		[config, game, selectedCardId],
 	);
 
 	const addToSlot = useCallback(
@@ -442,6 +453,34 @@ export default function FamineRefugeePage() {
 		[addToSlot, slotEligible],
 	);
 
+	const canAddSkillToAnySlot = useCallback((skillCardId: string): boolean => {
+		if (!config || !game || !playerView || !placementAction) return false;
+		for (let i = 0; i < (placementAction.slots ?? []).length; i++) {
+			const slot = (placementAction.slots ?? [])[i];
+			const range = getSlotRange(config, slot, playerView.card, game.cards);
+			const assigned = slotAssignments[slot.id] ?? [];
+			if (assigned.length >= range.max) continue;
+			if ((slotEligible[slot.id] ?? []).some((card) => card.id === skillCardId)) return true;
+		}
+		return false;
+	}, [config, game, placementAction, playerView, slotAssignments, slotEligible]);
+
+	const handleSkillClick = useCallback((skillCardId: string) => {
+		if (!config || !game || !playerView || !placementAction) return;
+		const slots = activeSlot
+			? [activeSlot, ...(placementAction.slots ?? []).filter((slot) => slot.id !== activeSlot.id)]
+			: (placementAction.slots ?? []);
+		for (let i = 0; i < slots.length; i++) {
+			const slot = slots[i];
+			const range = getSlotRange(config, slot, playerView.card, game.cards);
+			const assigned = slotAssignments[slot.id] ?? [];
+			if (assigned.length >= range.max) continue;
+			if (!(slotEligible[slot.id] ?? []).some((card) => card.id === skillCardId)) continue;
+			addToSlot(slot.id, skillCardId);
+			return;
+		}
+	}, [activeSlot, addToSlot, config, game, placementAction, playerView, slotAssignments, slotEligible]);
+
 	const handleDragStart = useCallback(
 		(event: DragEvent<HTMLButtonElement>, cardId: string) => {
 			if (!placementAction) {
@@ -483,19 +522,17 @@ export default function FamineRefugeePage() {
 		setGame((prev) => (prev
 			? placementTargetId
 				? applyIncomingAction(config, prev, placementTargetId, placementActionId, slotAssignments)
-				: applyAction(config, prev, placementActionId, slotAssignments, activeSkillId)
+				: applyAction(config, prev, placementActionId, slotAssignments)
 			: prev));
 		setPlacementActionId(null);
 		setPlacementTargetId(undefined);
-		setActiveSkillId(undefined);
 		setSlotAssignments({});
 		setActiveSlotId("");
-	}, [activeSkillId, canExecute, config, placementActionId, placementTargetId, slotAssignments]);
+	}, [canExecute, config, placementActionId, placementTargetId, slotAssignments]);
 
 	const handleCancelPlacement = useCallback(() => {
 		setPlacementActionId(null);
 		setPlacementTargetId(undefined);
-		setActiveSkillId(undefined);
 		setSlotAssignments({});
 		setActiveSlotId("");
 	}, []);
@@ -504,7 +541,6 @@ export default function FamineRefugeePage() {
 		setSelectedCardId(cardId);
 		setPlacementActionId(null);
 		setPlacementTargetId(undefined);
-		setActiveSkillId(undefined);
 		setSlotAssignments({});
 		setActiveSlotId("");
 	}, []);
@@ -515,7 +551,6 @@ export default function FamineRefugeePage() {
 		setSelectedCardId(config.saveData.playerCardId);
 		setPlacementActionId(null);
 		setPlacementTargetId(undefined);
-		setActiveSkillId(undefined);
 		setSlotAssignments({});
 		setActiveSlotId("");
 	}, [config]);
@@ -526,6 +561,8 @@ export default function FamineRefugeePage() {
 	const isPlayerSelected = selectedView.card.id === config.saveData.playerCardId;
 	const isDead = playerView.derived.gameOver;
 	const backpackIds = getStringListAttribute(playerView.card.values, getAttributeId(config, "backpack"));
+	const displaySkills = isPlayerSelected ? ownedSkills : selectedSkills;
+	const displayBackpackIds = isPlayerSelected ? backpackIds : selectedBackpackIds;
 	let backpackWeight = 0;
 	for (let i = 0; i < backpackIds.length; i++) {
 		const item = cardViews.find((view) => view.card.id === backpackIds[i]);
@@ -540,7 +577,7 @@ export default function FamineRefugeePage() {
 	);
 
 	const placementPreviewLines = placementAction && canExecute
-		? previewAction(config, game, placementAction.id, placementTargetId, slotAssignments, activeSkillId)
+		? previewAction(config, game, placementAction.id, placementTargetId, slotAssignments)
 		: [];
 
 	const isEligible = (cardId: string): boolean => {
@@ -678,29 +715,52 @@ export default function FamineRefugeePage() {
 							)}
 						</div>
 
-						{isPlayerSelected ? (
+						{selectedView.derived.template.cardType === CardType.BEING ? (
 							<>
 								<div className={style.inspectorSectionTitle}>技能</div>
 								<div className={style.skillList}>
-								{ownedSkills.length === 0 ? (
-									<span className={style.emptyTag}>没有技能</span>
-								) : (
-									ownedSkills.map((skill) => {
-										const compatible = placementAction !== null && placementSkills.some((item) => item.id === skill.id);
-										return (
+									{displaySkills.length === 0 ? (
+										<span className={style.emptyTag}>没有技能</span>
+									) : (
+										displaySkills.map((skill) => (
 											<button
 												key={skill.id}
 												type="button"
-												className={`${style.skillItem} ${activeSkillId === skill.id ? style.skillItemActive : ""}`}
-												disabled={!compatible}
-												onClick={() => setActiveSkillId(skill.id)}
+												className={style.skillItem}
 												title={skill.desc}
+												disabled={!canAddSkillToAnySlot(skill.id)}
+												onClick={() => handleSkillClick(skill.id)}
 											>
 												{skill.label}
 											</button>
-										);
-									})
-								)}
+										))
+									)}
+								</div>
+							</>
+						) : null}
+
+						{selectedView.derived.template.cardType === CardType.BEING ? (
+							<>
+								<div className={style.inspectorSectionTitle}>背包</div>
+								<div className={style.backpackList}>
+									{displayBackpackIds.length === 0 ? (
+										<span className={style.emptyTag}>背包为空</span>
+									) : (
+										displayBackpackIds.map((itemId) => {
+											const item = cardViews.find((view) => view.card.id === itemId);
+											if (!item) return null;
+											return (
+												<button
+													key={itemId}
+													type="button"
+													className={style.backpackItem}
+													onClick={() => handleCardClick(itemId)}
+												>
+													{item.derived.template.key} · {getNumberAttribute(item.card.values, getAttributeId(config, "weight"))}
+												</button>
+											);
+										})
+									)}
 								</div>
 							</>
 						) : null}
@@ -733,14 +793,6 @@ export default function FamineRefugeePage() {
 						{placementAction ? (
 							<div className={style.targetPanel}>
 								<div className={style.inspectorSectionTitle}>卡槽 · {placementAction.title}</div>
-								{placementSkills.length > 0 ? (
-									<div className={style.skillSlot}>
-										<span>技能：{activeSkillId ? placementSkills.find((skill) => skill.id === activeSkillId)?.label ?? "已选" : "从技能列表选择"}</span>
-										{activeSkillId !== undefined ? (
-											<button type="button" className={style.skillClear} onClick={() => setActiveSkillId(undefined)}>清除</button>
-										) : null}
-									</div>
-								) : null}
 								<div className={style.slotList}>
 									{(placementAction.slots ?? []).map((slot) => {
 										const range = getSlotRange(config, slot, playerView.card, game.cards);
@@ -781,6 +833,7 @@ export default function FamineRefugeePage() {
 														))
 													)}
 												</div>
+
 											</div>
 										);
 									})}
@@ -806,38 +859,22 @@ export default function FamineRefugeePage() {
 							</div>
 						) : isPlayerSelected ? (
 							<>
-								<div className={style.inspectorSectionTitle}>背包</div>
-								<div className={style.backpackList}>
-									{backpackIds.length === 0 ? (
-										<span className={style.emptyTag}>背包为空</span>
-									) : (
-										backpackIds.map((itemId) => {
-											const item = cardViews.find((view) => view.card.id === itemId);
-											if (!item) return null;
-											return (
-												<button
-													key={itemId}
-													type="button"
-													className={style.backpackItem}
-													onClick={() => setSelectedCardId(itemId)}
-												>
-													{item.derived.template.key} · {getNumberAttribute(item.card.values, getAttributeId(config, "weight"))}
-												</button>
-											);
-										})
-									)}
-								</div>
 								<div className={style.inspectorSectionTitle}>玩家行动</div>
 								<div className={style.actions}>
-									{visibleActions.map((action) => {
-										const lines = (action.slots ?? []).length > 0 ? [action.desc] : previewAction(config, game, action.id);
+									{playerActions.map((action) => {
+										const available = isActionAvailable(config, game, action.id);
+										const lines = !available
+											? ["条件不足"]
+											: (action.slots ?? []).length > 0
+												? [action.desc]
+												: previewAction(config, game, action.id);
 										return (
 											<button
 												key={action.id}
 												type="button"
 												className={style.actionButton}
 												onClick={() => handleActionClick(action)}
-												disabled={isDead}
+												disabled={isDead || !available}
 											>
 												<span className={style.actionText}>
 													<span>{action.title}</span>
@@ -852,8 +889,8 @@ export default function FamineRefugeePage() {
 											</button>
 										);
 									})}
-									{visibleActions.length === 0 && !isDead ? (
-										<div className={style.emptyActions}>当前没有满足条件的动作。</div>
+									{playerActions.length === 0 && !isDead ? (
+										<div className={style.emptyActions}>当前没有动作。</div>
 									) : null}
 								</div>
 								{isDead ? <div className={style.deadHint}>你已经倒下了。重置后再试一次。</div> : null}
@@ -879,20 +916,23 @@ export default function FamineRefugeePage() {
 								) : null}
 								<div className={style.inspectorSectionTitle}>「{selectedView.derived.template.key}」的 incoming</div>
 								{incomingActions.length === 0 ? (
-									<div className={style.emptyActions}>当前没有可用的 incoming 动作。</div>
+									<div className={style.emptyActions}>当前没有 incoming 动作。</div>
 								) : (
 									<div className={style.actions}>
 										{incomingActions.map((action) => {
-										const lines = (action.slots ?? []).length > 0
-											? [action.desc]
-											: previewAction(config, game, action.id, selectedView.card.id);
+										const available = isActionAvailable(config, game, action.id, selectedView.card.id);
+										const lines = !available
+											? ["条件不足"]
+											: (action.slots ?? []).length > 0
+												? [action.desc]
+												: previewAction(config, game, action.id, selectedView.card.id);
 										return (
 											<button
 												key={action.id}
 												type="button"
 												className={style.actionButton}
 												onClick={() => handleIncomingAction(action.id)}
-												disabled={isDead}
+												disabled={isDead || !available}
 											>
 												<span className={style.actionText}>
 													<span>{action.title}</span>

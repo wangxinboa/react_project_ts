@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 90,
+	"schemaVersion": 97,
 	"allTags": [
 		{
 			"id": 24,
@@ -1106,6 +1106,14 @@
 					}
 				]
 			}
+		},
+		{
+			"id": 312,
+			"key": "skillList",
+			"label": "技能列表",
+			"desc": "人物拥有的技能卡",
+			"kind": "base",
+			"valueType": "cardRefList"
 		}
 	],
 	"cardTemplates": [
@@ -1157,6 +1165,14 @@
 				{
 					"id": 23,
 					"value": 0
+				},
+				{
+					"id": 10,
+					"value": []
+				},
+				{
+					"id": 312,
+					"value": []
 				}
 			],
 			"auto": [
@@ -1227,6 +1243,14 @@
 				{
 					"id": 23,
 					"value": 0
+				},
+				{
+					"id": 10,
+					"value": []
+				},
+				{
+					"id": 312,
+					"value": []
 				}
 			],
 			"auto": [
@@ -1367,6 +1391,14 @@
 				{
 					"id": 23,
 					"value": 0
+				},
+				{
+					"id": 10,
+					"value": []
+				},
+				{
+					"id": 312,
+					"value": []
 				}
 			],
 			"auto": [
@@ -1382,7 +1414,7 @@
 				"decisionInterval": 60
 			},
 			"incoming": [
-				63
+				66
 			],
 			"reactions": [
 				201,
@@ -1622,12 +1654,11 @@
 				"templateId": 38,
 				"values": {
 					"8": "village",
-					"10": []
-				},
-				"skills": [
-					70,
-					71
-				]
+					"10": [],
+					"312": [
+						"skill_player_70"
+					]
+				}
 			},
 			{
 				"id": "bread",
@@ -1647,7 +1678,10 @@
 				"id": "stranger",
 				"templateId": 42,
 				"values": {
-					"8": "village"
+					"8": "village",
+					"312": [
+						"skill_teacher_71"
+					]
 				}
 			},
 			{
@@ -1671,6 +1705,14 @@
 				"values": {
 					"8": "forest"
 				}
+			},
+			{
+				"id": "skill_player_70",
+				"templateId": 70
+			},
+			{
+				"id": "skill_teacher_71",
+				"templateId": 71
 			}
 		],
 		"time": 480
@@ -2699,7 +2741,71 @@
 					}
 				]
 			},
-			"key": "cultivate"
+			"key": "cultivate",
+			"slots": [
+				{
+					"id": "skill",
+					"desc": "修炼技能",
+					"min": 0,
+					"max": 1,
+					"condition": {
+						"target": {
+							"card": "slot"
+						},
+						"isCardType": "skill",
+						"memberOfRefList": {
+							"listOwner": {
+								"card": "sourceCard"
+							},
+							"refListId": 312
+						}
+					}
+				}
+			]
+		},
+		{
+			"id": 66,
+			"key": "learn",
+			"verb": "learn",
+			"title": "学习",
+			"desc": "向目标学习一项技能。",
+			"createdAt": 1767974400066,
+			"timeCost": 60,
+			"condition": {
+				"target": {
+					"card": "targetCard"
+				},
+				"isCardType": "being"
+			},
+			"effects": [
+				{
+					"id": 420,
+					"kind": "learnSkill",
+					"target": {
+						"card": "sourceCard"
+					},
+					"skillSlot": "skill"
+				}
+			],
+			"slots": [
+				{
+					"id": "skill",
+					"desc": "学习技能",
+					"count": 1,
+					"condition": {
+						"target": {
+							"card": "slot"
+						},
+						"isCardType": "skill",
+						"memberOfRefList": {
+							"listOwner": {
+								"card": "targetCard"
+							},
+							"refListId": 312
+						}
+					}
+				}
+			]
 		}
 	],
 	"allDialogues": [
