@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 97,
+	"schemaVersion": 101,
 	"allTags": [
 		{
 			"id": 24,
@@ -9,8 +9,9 @@
 			"condition": {
 				"attributes": [
 					{
-						"id": 1,
-						"lte": 20
+						"lte": 20,
+						"type": "baseNumber",
+						"attributeId": 1
 					}
 				],
 				"target": {
@@ -30,8 +31,9 @@
 			"condition": {
 				"attributes": [
 					{
-						"id": 2,
-						"lte": 20
+						"lte": 20,
+						"type": "baseNumber",
+						"attributeId": 2
 					}
 				],
 				"target": {
@@ -51,8 +53,9 @@
 			"condition": {
 				"attributes": [
 					{
-						"id": 3,
-						"lte": 1
+						"lte": 1,
+						"type": "baseNumber",
+						"attributeId": 3
 					}
 				],
 				"target": {
@@ -72,8 +75,9 @@
 			"condition": {
 				"attributes": [
 					{
-						"id": 4,
-						"gte": 6
+						"gte": 6,
+						"type": "baseNumber",
+						"attributeId": 4
 					}
 				],
 				"target": {
@@ -113,7 +117,7 @@
 					"effects": [
 						{
 							"id": 68,
-							"kind": "changeAttributes",
+							"kind": "changeBaseNumberAttributes",
 							"changes": [
 								{
 									"attributeId": 3,
@@ -127,8 +131,9 @@
 							"condition": {
 								"attributes": [
 									{
-										"id": 7,
-										"gt": 0
+										"gt": 0,
+										"type": "baseNumber",
+										"attributeId": 7
 									}
 								],
 								"target": {
@@ -138,7 +143,7 @@
 						},
 						{
 							"id": 69,
-							"kind": "changeAttributes",
+							"kind": "changeBaseNumberAttributes",
 							"changes": [
 								{
 									"attributeId": 7,
@@ -154,8 +159,9 @@
 					"condition": {
 						"attributes": [
 							{
-								"id": 3,
-								"gt": 0
+								"gt": 0,
+								"type": "baseNumber",
+								"attributeId": 3
 							}
 						],
 						"target": {
@@ -192,7 +198,7 @@
 				{
 					"effects": [
 						{
-							"kind": "changeAttributes",
+							"kind": "changeBaseNumberAttributes",
 							"target": {
 								"card": "host"
 							},
@@ -216,7 +222,7 @@
 				{
 					"effects": [
 						{
-							"kind": "changeAttributes",
+							"kind": "changeBaseNumberAttributes",
 							"target": {
 								"card": "host"
 							},
@@ -242,12 +248,14 @@
 				},
 				"attributes": [
 					{
-						"id": 3,
-						"lte": 0
+						"lte": 0,
+						"type": "baseNumber",
+						"attributeId": 3
 					},
 					{
-						"id": 4,
-						"gte": 6
+						"gte": 6,
+						"type": "baseNumber",
+						"attributeId": 4
 					}
 				]
 			}
@@ -271,116 +279,101 @@
 			"key": "satiety",
 			"label": "饱食",
 			"desc": "当前饱食度",
-			"kind": "base",
-			"valueType": "number"
+			"type": "baseNumber"
 		},
 		{
 			"id": 2,
 			"key": "stamina",
 			"label": "体力",
 			"desc": "当前体力",
-			"kind": "base",
-			"valueType": "number"
+			"type": "baseNumber"
 		},
 		{
 			"id": 3,
 			"key": "life",
 			"label": "生命力",
 			"desc": "当前生命",
-			"kind": "base",
-			"valueType": "number"
+			"type": "baseNumber"
 		},
 		{
 			"id": 4,
 			"key": "spirit",
 			"label": "灵性",
 			"desc": "灵性强度",
-			"kind": "base",
-			"valueType": "number"
+			"type": "baseNumber"
 		},
 		{
 			"id": 5,
 			"key": "nutrition",
 			"label": "营养",
 			"desc": "食物营养",
-			"kind": "base",
-			"valueType": "number"
+			"type": "baseNumber"
 		},
 		{
 			"id": 6,
 			"key": "freshness",
 			"label": "新鲜度",
 			"desc": "食物新鲜度",
-			"kind": "base",
-			"valueType": "number"
+			"type": "baseNumber"
 		},
 		{
 			"id": 7,
 			"key": "severity",
 			"label": "严重度",
 			"desc": "流血的严重程度",
-			"kind": "base",
-			"valueType": "number"
+			"type": "baseNumber"
 		},
 		{
 			"id": 8,
 			"key": "location",
 			"label": "所在地点",
 			"desc": "所在地点",
-			"kind": "base",
-			"valueType": "cardRef"
+			"type": "cardRef"
 		},
 		{
 			"id": 9,
 			"key": "carrier",
 			"label": "携带者",
 			"desc": "携带者",
-			"kind": "base",
-			"valueType": "cardRef"
+			"type": "cardRef"
 		},
 		{
 			"id": 10,
 			"key": "backpack",
 			"label": "背包",
 			"desc": "背包",
-			"kind": "base",
-			"valueType": "cardRefList"
+			"type": "cardRefList"
 		},
 		{
 			"id": 11,
 			"key": "baseCarryCapacity",
 			"label": "基础负重",
 			"desc": "基础负重上限",
-			"kind": "base",
-			"valueType": "number"
+			"type": "baseNumber"
 		},
 		{
 			"id": 12,
 			"key": "capacityBonus",
 			"label": "容量加成",
 			"desc": "物品提供的负重加成",
-			"kind": "base",
-			"valueType": "number"
+			"type": "baseNumber"
 		},
 		{
 			"id": 13,
 			"key": "backpackCount",
 			"label": "背包数量",
 			"desc": "背包中的物品数量",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "refListsAttributeCount",
 				"refAttributeId": 10
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 14,
 			"key": "carryCapacity",
 			"label": "负重上限",
 			"desc": "基础负重加背包物品加成",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "add",
 				"args": [
@@ -394,39 +387,35 @@
 						"valueAttributeId": 12
 					}
 				]
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 15,
 			"key": "weight",
 			"label": "重量",
 			"desc": "物品重量",
-			"kind": "base",
-			"valueType": "number"
+			"type": "baseNumber"
 		},
 		{
 			"id": 16,
 			"key": "baseCarrySlots",
 			"label": "基础格数",
 			"desc": "基础背包格数",
-			"kind": "base",
-			"valueType": "number"
+			"type": "baseNumber"
 		},
 		{
 			"id": 17,
 			"key": "slotBonus",
 			"label": "格数加成",
 			"desc": "物品提供的格数加成",
-			"kind": "base",
-			"valueType": "number"
+			"type": "baseNumber"
 		},
 		{
 			"id": 18,
 			"key": "carrySlots",
 			"label": "背包格数",
 			"desc": "基础格数加物品加成",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "add",
 				"args": [
@@ -440,33 +429,28 @@
 						"valueAttributeId": 17
 					}
 				]
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 19,
 			"key": "trust",
 			"label": "信任",
 			"desc": "信任",
-			"scope": "relationship",
-			"kind": "base",
-			"valueType": "number"
+			"type": "relationshipNumber"
 		},
 		{
 			"id": 20,
 			"key": "fear",
 			"label": "恐惧",
 			"desc": "恐惧",
-			"scope": "relationship",
-			"kind": "base",
-			"valueType": "number"
+			"type": "relationshipNumber"
 		},
 		{
 			"id": 22,
 			"key": "satietyMax",
 			"label": "饱食上限",
 			"desc": "饱食上限",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "clamp",
 				"value": {
@@ -512,15 +496,14 @@
 					"op": "literal",
 					"value": 100
 				}
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 23,
 			"key": "staminaMax",
 			"label": "体力上限",
 			"desc": "体力上限",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "select",
 				"else": {
@@ -645,15 +628,14 @@
 						}
 					}
 				]
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 301,
 			"key": "qiBloodMax",
 			"label": "气血上限",
 			"desc": "肉身能量上限",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "mul",
 				"args": [
@@ -684,15 +666,14 @@
 						]
 					}
 				]
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 302,
 			"key": "qiControlMax",
 			"label": "气血控制上限",
 			"desc": "可控制的气血上限",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "add",
 				"args": [
@@ -718,15 +699,14 @@
 						]
 					}
 				]
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 303,
 			"key": "qiOverflow",
 			"label": "气血失控",
 			"desc": "超出控制上限的气血",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "max",
 				"args": [
@@ -748,15 +728,14 @@
 						]
 					}
 				]
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 304,
 			"key": "martialWill",
 			"label": "武道意志",
 			"desc": "以武道方向显化的意志",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "add",
 				"args": [
@@ -823,15 +802,14 @@
 						]
 					}
 				]
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 305,
 			"key": "mentalMax",
 			"label": "精神力上限",
 			"desc": "精神力量上限",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "add",
 				"args": [
@@ -898,15 +876,14 @@
 						]
 					}
 				]
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 306,
 			"key": "spellCapacityMax",
 			"label": "灵性法术容量上限",
 			"desc": "可承载的法术容量",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "mul",
 				"args": [
@@ -937,15 +914,14 @@
 						]
 					}
 				]
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 307,
 			"key": "manaMax",
 			"label": "法力上限",
 			"desc": "可转化出的法力上限",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "add",
 				"args": [
@@ -1012,15 +988,14 @@
 						]
 					}
 				]
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 308,
 			"key": "spiritOccupied",
 			"label": "灵性占用",
 			"desc": "被武道意志和法术容量占用的灵性",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "add",
 				"args": [
@@ -1042,15 +1017,14 @@
 						"attributeId": 306
 					}
 				]
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 309,
 			"key": "lifeOccupied",
 			"label": "生命力占用",
 			"desc": "被法力占用的生命力",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "mul",
 				"args": [
@@ -1063,15 +1037,14 @@
 						"attributeId": 307
 					}
 				]
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 310,
 			"key": "spiritRemaining",
 			"label": "灵性余量",
 			"desc": "可自由使用的灵性",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "sub",
 				"args": [
@@ -1084,15 +1057,14 @@
 						"attributeId": 308
 					}
 				]
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 311,
 			"key": "lifeRemaining",
 			"label": "生命力余量",
 			"desc": "可自由使用的生命力",
-			"kind": "derived",
-			"valueType": "number",
 			"formula": {
 				"op": "sub",
 				"args": [
@@ -1105,15 +1077,15 @@
 						"attributeId": 309
 					}
 				]
-			}
+			},
+			"type": "derivedNumber"
 		},
 		{
 			"id": 312,
 			"key": "skillList",
 			"label": "技能列表",
 			"desc": "人物拥有的技能卡",
-			"kind": "base",
-			"valueType": "cardRefList"
+			"type": "cardRefList"
 		}
 	],
 	"cardTemplates": [
@@ -1500,8 +1472,7 @@
 			"incoming": [
 				50
 			],
-			"createdAt": 1767974400020,
-			"attributes": []
+			"createdAt": 1767974400020
 		},
 		{
 			"id": 46,
@@ -1509,7 +1480,6 @@
 			"cardType": "place",
 			"desc": "树木与狼群",
 			"createdAt": 1767974400021,
-			"attributes": [],
 			"incoming": [
 				56
 			]
@@ -1522,8 +1492,7 @@
 			"incoming": [
 				59
 			],
-			"createdAt": 1767974400022,
-			"attributes": []
+			"createdAt": 1767974400022
 		},
 		{
 			"id": 48,
@@ -1533,8 +1502,7 @@
 			"incoming": [
 				60
 			],
-			"createdAt": 1767974400023,
-			"attributes": []
+			"createdAt": 1767974400023
 		},
 		{
 			"id": 70,
@@ -1552,14 +1520,15 @@
 					},
 					"attributes": [
 						{
-							"id": 3,
-							"gte": 4
+							"gte": 4,
+							"type": "baseNumber",
+							"attributeId": 3
 						}
 					]
 				},
 				"costs": [
 					{
-						"kind": "changeAttributes",
+						"kind": "changeBaseNumberAttributes",
 						"target": {
 							"card": "sourceCard"
 						},
@@ -1573,7 +1542,7 @@
 				],
 				"effects": [
 					{
-						"kind": "changeAttributes",
+						"kind": "changeBaseNumberAttributes",
 						"target": {
 							"card": "sourceCard"
 						},
@@ -1603,14 +1572,15 @@
 					},
 					"attributes": [
 						{
-							"id": 4,
-							"gte": 4
+							"gte": 4,
+							"type": "baseNumber",
+							"attributeId": 4
 						}
 					]
 				},
 				"costs": [
 					{
-						"kind": "changeAttributes",
+						"kind": "changeBaseNumberAttributes",
 						"target": {
 							"card": "sourceCard"
 						},
@@ -1624,7 +1594,7 @@
 				],
 				"effects": [
 					{
-						"kind": "changeAttributes",
+						"kind": "changeBaseNumberAttributes",
 						"target": {
 							"card": "sourceCard"
 						},
@@ -1725,8 +1695,9 @@
 			},
 			"attributes": [
 				{
-					"id": 3,
-					"lte": 0
+					"lte": 0,
+					"type": "baseNumber",
+					"attributeId": 3
 				}
 			]
 		}
@@ -1738,8 +1709,9 @@
 					{
 						"attributes": [
 							{
-								"id": 3,
-								"lte": 0
+								"lte": 0,
+								"type": "baseNumber",
+								"attributeId": 3
 							}
 						],
 						"target": {
@@ -1754,8 +1726,9 @@
 					{
 						"attributes": [
 							{
-								"id": 1,
-								"lte": 0
+								"lte": 0,
+								"type": "baseNumber",
+								"attributeId": 1
 							}
 						],
 						"target": {
@@ -1770,8 +1743,9 @@
 					{
 						"attributes": [
 							{
-								"id": 1,
-								"lt": 20
+								"lt": 20,
+								"type": "baseNumber",
+								"attributeId": 1
 							}
 						],
 						"target": {
@@ -1786,8 +1760,9 @@
 					{
 						"attributes": [
 							{
-								"id": 1,
-								"gte": 50
+								"gte": 50,
+								"type": "baseNumber",
+								"attributeId": 1
 							}
 						],
 						"target": {
@@ -1812,7 +1787,7 @@
 			"effects": [
 				{
 					"id": 70,
-					"kind": "changeAttributes",
+					"kind": "changeBaseNumberAttributes",
 					"changes": [
 						{
 							"attributeId": 2,
@@ -1850,8 +1825,9 @@
 				},
 				"attributes": [
 					{
-						"id": 3,
-						"gt": 0
+						"gt": 0,
+						"type": "baseNumber",
+						"attributeId": 3
 					}
 				]
 			}
@@ -1894,7 +1870,7 @@
 			"effects": [
 				{
 					"id": 72,
-					"kind": "changeAttributes",
+					"kind": "changeBaseNumberAttributes",
 					"changes": [
 						{
 							"attributeId": 2,
@@ -1927,8 +1903,9 @@
 			"condition": {
 				"attributes": [
 					{
-						"id": 2,
-						"gte": 18
+						"gte": 18,
+						"type": "baseNumber",
+						"attributeId": 2
 					}
 				],
 				"target": {
@@ -1947,7 +1924,7 @@
 			"effects": [
 				{
 					"id": 74,
-					"kind": "changeAttributes",
+					"kind": "changeBaseNumberAttributes",
 					"changes": [
 						{
 							"attributeId": 3,
@@ -1983,8 +1960,9 @@
 			"condition": {
 				"attributes": [
 					{
-						"id": 3,
-						"gt": 0
+						"gt": 0,
+						"type": "baseNumber",
+						"attributeId": 3
 					}
 				],
 				"target": {
@@ -2003,7 +1981,7 @@
 			"effects": [
 				{
 					"id": 77,
-					"kind": "changeAttributes",
+					"kind": "changeBaseNumberAttributes",
 					"changes": [
 						{
 							"attributeId": 4,
@@ -2053,8 +2031,9 @@
 			"condition": {
 				"attributes": [
 					{
-						"id": 3,
-						"gt": 0
+						"gt": 0,
+						"type": "baseNumber",
+						"attributeId": 3
 					}
 				],
 				"target": {
@@ -2104,8 +2083,9 @@
 							{
 								"attributes": [
 									{
-										"id": 6,
-										"gt": 0
+										"gt": 0,
+										"type": "baseNumber",
+										"attributeId": 6
 									}
 								],
 								"target": {
@@ -2119,7 +2099,7 @@
 			"effects": [
 				{
 					"id": 80,
-					"kind": "changeAttributes",
+					"kind": "changeBaseNumberAttributes",
 					"changes": [
 						{
 							"attributeId": 1,
@@ -2183,8 +2163,9 @@
 			"condition": {
 				"attributes": [
 					{
-						"id": 3,
-						"gt": 0
+						"gt": 0,
+						"type": "baseNumber",
+						"attributeId": 3
 					}
 				],
 				"target": {
@@ -2203,7 +2184,7 @@
 			"effects": [
 				{
 					"id": 82,
-					"kind": "changeAttributes",
+					"kind": "changeBaseNumberAttributes",
 					"changes": [
 						{
 							"attributeId": 1,
@@ -2217,7 +2198,7 @@
 				},
 				{
 					"id": 83,
-					"kind": "changeAttributes",
+					"kind": "changeBaseNumberAttributes",
 					"changes": [
 						{
 							"attributeId": 2,
@@ -2235,8 +2216,9 @@
 					"condition": {
 						"attributes": [
 							{
-								"id": 1,
-								"lte": 0
+								"lte": 0,
+								"type": "baseNumber",
+								"attributeId": 1
 							}
 						],
 						"target": {
@@ -2246,7 +2228,7 @@
 				},
 				{
 					"id": 84,
-					"kind": "changeAttributes",
+					"kind": "changeBaseNumberAttributes",
 					"changes": [
 						{
 							"attributeId": 2,
@@ -2263,16 +2245,17 @@
 						},
 						"attributes": [
 							{
-								"id": 1,
 								"gt": 0,
-								"lt": 20
+								"lt": 20,
+								"type": "baseNumber",
+								"attributeId": 1
 							}
 						]
 					}
 				},
 				{
 					"id": 85,
-					"kind": "changeAttributes",
+					"kind": "changeBaseNumberAttributes",
 					"changes": [
 						{
 							"attributeId": 2,
@@ -2290,8 +2273,9 @@
 					"condition": {
 						"attributes": [
 							{
-								"id": 1,
-								"gte": 50
+								"gte": 50,
+								"type": "baseNumber",
+								"attributeId": 1
 							}
 						],
 						"target": {
@@ -2305,8 +2289,9 @@
 			"condition": {
 				"attributes": [
 					{
-						"id": 3,
-						"gt": 0
+						"gt": 0,
+						"type": "baseNumber",
+						"attributeId": 3
 					}
 				],
 				"target": {
@@ -2325,7 +2310,7 @@
 			"effects": [
 				{
 					"id": 86,
-					"kind": "changeAttributes",
+					"kind": "changeBaseNumberAttributes",
 					"changes": [
 						{
 							"attributeId": 6,
@@ -2362,8 +2347,9 @@
 			"condition": {
 				"attributes": [
 					{
-						"id": 3,
-						"gt": 0
+						"gt": 0,
+						"type": "baseNumber",
+						"attributeId": 3
 					}
 				],
 				"target": {
@@ -2391,8 +2377,9 @@
 						"hasTag": 28,
 						"attributes": [
 							{
-								"id": 6,
-								"gt": 0
+								"gt": 0,
+								"type": "baseNumber",
+								"attributeId": 6
 							}
 						]
 					}
@@ -2440,8 +2427,9 @@
 			"condition": {
 				"attributes": [
 					{
-						"id": 3,
-						"gt": 0
+						"gt": 0,
+						"type": "baseNumber",
+						"attributeId": 3
 					}
 				],
 				"target": {
@@ -2462,7 +2450,7 @@
 			"effects": [
 				{
 					"id": 91,
-					"kind": "changeAttributes",
+					"kind": "changeBaseNumberAttributes",
 					"changes": [
 						{
 							"attributeId": 1,
@@ -2491,8 +2479,9 @@
 			"condition": {
 				"attributes": [
 					{
-						"id": 3,
-						"gt": 0
+						"gt": 0,
+						"type": "baseNumber",
+						"attributeId": 3
 					}
 				],
 				"target": {
@@ -2525,8 +2514,9 @@
 			"condition": {
 				"attributes": [
 					{
-						"id": 3,
-						"gt": 0
+						"gt": 0,
+						"type": "baseNumber",
+						"attributeId": 3
 					}
 				],
 				"target": {
@@ -2559,8 +2549,9 @@
 			"condition": {
 				"attributes": [
 					{
-						"id": 3,
-						"gt": 0
+						"gt": 0,
+						"type": "baseNumber",
+						"attributeId": 3
 					}
 				],
 				"target": {
@@ -2598,8 +2589,9 @@
 						},
 						"attributes": [
 							{
-								"id": 3,
-								"gt": 0
+								"gt": 0,
+								"type": "baseNumber",
+								"attributeId": 3
 							}
 						]
 					},
@@ -2610,7 +2602,8 @@
 						"attributes": [
 							{
 								"refExists": false,
-								"refId": 9
+								"type": "cardRef",
+								"attributeId": 9
 							}
 						]
 					}
@@ -2647,8 +2640,9 @@
 						},
 						"attributes": [
 							{
-								"id": 3,
-								"gt": 0
+								"gt": 0,
+								"type": "baseNumber",
+								"attributeId": 3
 							}
 						]
 					},
@@ -2659,7 +2653,8 @@
 						"attributes": [
 							{
 								"refExists": true,
-								"refId": 9
+								"type": "cardRef",
+								"attributeId": 9
 							}
 						]
 					}
@@ -2696,8 +2691,9 @@
 						},
 						"attributes": [
 							{
-								"id": 3,
-								"gt": 0
+								"gt": 0,
+								"type": "baseNumber",
+								"attributeId": 3
 							}
 						]
 					}
@@ -2714,7 +2710,7 @@
 			"effects": [
 				{
 					"id": 98,
-					"kind": "changeAttributes",
+					"kind": "changeBaseNumberAttributes",
 					"target": {
 						"card": "sourceCard"
 					},
@@ -2736,8 +2732,9 @@
 				},
 				"attributes": [
 					{
-						"id": 2,
-						"gte": 5
+						"gte": 5,
+						"type": "baseNumber",
+						"attributeId": 2
 					}
 				]
 			},
@@ -2901,7 +2898,7 @@
 							"effects": [
 								{
 									"id": 101,
-									"kind": "changeRelationshipAttributes",
+									"kind": "changeRelationshipNumberAttributes",
 									"relationship": {
 										"source": {
 											"card": "sourceCard"
@@ -2919,7 +2916,7 @@
 								},
 								{
 									"id": 102,
-									"kind": "changeRelationshipAttributes",
+									"kind": "changeRelationshipNumberAttributes",
 									"relationship": {
 										"source": {
 											"card": "targetCard"
@@ -3115,7 +3112,7 @@
 			"key": "clampSatiety",
 			"desc": "饱食超过上限时夹回上限",
 			"trigger": {
-				"kind": "attributeChanged",
+				"kind": "baseNumberAttributeChanged",
 				"attributeIds": [
 					1
 				]
@@ -3126,18 +3123,19 @@
 				},
 				"attributes": [
 					{
-						"id": 1,
 						"gt": {
 							"op": "numberAttributeValue",
 							"attributeId": 22
-						}
+						},
+						"type": "baseNumber",
+						"attributeId": 1
 					}
 				]
 			},
 			"effects": [
 				{
 					"id": 104,
-					"kind": "changeAttributes",
+					"kind": "changeBaseNumberAttributes",
 					"target": {
 						"card": "host"
 					},
@@ -3158,7 +3156,7 @@
 			"key": "clampStamina",
 			"desc": "体力超过上限时夹回上限",
 			"trigger": {
-				"kind": "attributeChanged",
+				"kind": "baseNumberAttributeChanged",
 				"attributeIds": [
 					2
 				]
@@ -3169,18 +3167,19 @@
 				},
 				"attributes": [
 					{
-						"id": 2,
 						"gt": {
 							"op": "numberAttributeValue",
 							"attributeId": 23
-						}
+						},
+						"type": "baseNumber",
+						"attributeId": 2
 					}
 				]
 			},
 			"effects": [
 				{
 					"id": 105,
-					"kind": "changeAttributes",
+					"kind": "changeBaseNumberAttributes",
 					"target": {
 						"card": "host"
 					},
@@ -3201,7 +3200,7 @@
 			"key": "exhausted",
 			"desc": "体力从正数降到 0 时添加力竭",
 			"trigger": {
-				"kind": "attributeChanged",
+				"kind": "baseNumberAttributeChanged",
 				"attributeIds": [
 					2
 				]
@@ -3218,7 +3217,8 @@
 						},
 						"newValue": {
 							"lte": 0
-						}
+						},
+						"type": "baseNumber"
 					}
 				]
 			},
@@ -3238,7 +3238,7 @@
 			"key": "showLifePath",
 			"desc": "生命力达到门槛后显化肉身属性",
 			"trigger": {
-				"kind": "attributeChanged",
+				"kind": "baseNumberAttributeChanged",
 				"attributeIds": [
 					3
 				]
@@ -3249,15 +3249,16 @@
 				},
 				"attributes": [
 					{
-						"id": 3,
-						"gte": 6
+						"gte": 6,
+						"type": "baseNumber",
+						"attributeId": 3
 					}
 				]
 			},
 			"effects": [
 				{
 					"id": 401,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 301,
 					"target": {
 						"card": "host"
@@ -3265,7 +3266,7 @@
 				},
 				{
 					"id": 402,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 304,
 					"target": {
 						"card": "host"
@@ -3278,7 +3279,7 @@
 			"key": "showSpiritPath",
 			"desc": "灵性达到门槛后显化灵性属性",
 			"trigger": {
-				"kind": "attributeChanged",
+				"kind": "baseNumberAttributeChanged",
 				"attributeIds": [
 					4
 				]
@@ -3289,15 +3290,16 @@
 				},
 				"attributes": [
 					{
-						"id": 4,
-						"gte": 6
+						"gte": 6,
+						"type": "baseNumber",
+						"attributeId": 4
 					}
 				]
 			},
 			"effects": [
 				{
 					"id": 403,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 305,
 					"target": {
 						"card": "host"
@@ -3305,7 +3307,7 @@
 				},
 				{
 					"id": 404,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 306,
 					"target": {
 						"card": "host"
@@ -3318,7 +3320,7 @@
 			"key": "showCombinedPathLife",
 			"desc": "双路线达到门槛后显化资源属性",
 			"trigger": {
-				"kind": "attributeChanged",
+				"kind": "baseNumberAttributeChanged",
 				"attributeIds": [
 					3
 				]
@@ -3329,25 +3331,27 @@
 				},
 				"attributes": [
 					{
-						"id": 3,
-						"gte": 6
+						"gte": 6,
+						"type": "baseNumber",
+						"attributeId": 3,
+						"hasAttributes": [
+							301,
+							304,
+							305,
+							306
+						]
 					},
 					{
-						"id": 4,
-						"gte": 6
+						"gte": 6,
+						"type": "baseNumber",
+						"attributeId": 4
 					}
-				],
-				"hasAttributes": [
-					301,
-					304,
-					305,
-					306
 				]
 			},
 			"effects": [
 				{
 					"id": 405,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 302,
 					"target": {
 						"card": "host"
@@ -3355,7 +3359,7 @@
 				},
 				{
 					"id": 406,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 303,
 					"target": {
 						"card": "host"
@@ -3363,7 +3367,7 @@
 				},
 				{
 					"id": 407,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 307,
 					"target": {
 						"card": "host"
@@ -3371,7 +3375,7 @@
 				},
 				{
 					"id": 408,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 308,
 					"target": {
 						"card": "host"
@@ -3379,7 +3383,7 @@
 				},
 				{
 					"id": 409,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 309,
 					"target": {
 						"card": "host"
@@ -3387,7 +3391,7 @@
 				},
 				{
 					"id": 410,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 310,
 					"target": {
 						"card": "host"
@@ -3395,7 +3399,7 @@
 				},
 				{
 					"id": 411,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 311,
 					"target": {
 						"card": "host"
@@ -3408,7 +3412,7 @@
 			"key": "showCombinedPathSpirit",
 			"desc": "双路线达到门槛后显化资源属性",
 			"trigger": {
-				"kind": "attributeChanged",
+				"kind": "baseNumberAttributeChanged",
 				"attributeIds": [
 					4
 				]
@@ -3419,25 +3423,27 @@
 				},
 				"attributes": [
 					{
-						"id": 3,
-						"gte": 6
+						"gte": 6,
+						"type": "baseNumber",
+						"attributeId": 3,
+						"hasAttributes": [
+							301,
+							304,
+							305,
+							306
+						]
 					},
 					{
-						"id": 4,
-						"gte": 6
+						"gte": 6,
+						"type": "baseNumber",
+						"attributeId": 4
 					}
-				],
-				"hasAttributes": [
-					301,
-					304,
-					305,
-					306
 				]
 			},
 			"effects": [
 				{
 					"id": 412,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 302,
 					"target": {
 						"card": "host"
@@ -3445,7 +3451,7 @@
 				},
 				{
 					"id": 413,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 303,
 					"target": {
 						"card": "host"
@@ -3453,7 +3459,7 @@
 				},
 				{
 					"id": 414,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 307,
 					"target": {
 						"card": "host"
@@ -3461,7 +3467,7 @@
 				},
 				{
 					"id": 415,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 308,
 					"target": {
 						"card": "host"
@@ -3469,7 +3475,7 @@
 				},
 				{
 					"id": 416,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 309,
 					"target": {
 						"card": "host"
@@ -3477,7 +3483,7 @@
 				},
 				{
 					"id": 417,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 310,
 					"target": {
 						"card": "host"
@@ -3485,7 +3491,7 @@
 				},
 				{
 					"id": 418,
-					"kind": "addAttribute",
+					"kind": "addCardAttribute",
 					"attributeId": 311,
 					"target": {
 						"card": "host"

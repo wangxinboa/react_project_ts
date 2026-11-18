@@ -26,12 +26,12 @@ export interface TargetRef {
 `TargetRef` 只回答“判断/作用哪张卡”。属性的具体判断放在 `AttributeCheck`：
 
 ```ts
-{ id: 3, gt: 0 }                 // number 属性
-{ refId: 21, refExists: false }  // cardRef 属性
-{ refListId: 22, refListsMatch: { count: 0 } } // cardRefList 属性
+{ type: "baseNumber", attributeId: 3, gt: 0 }
+{ type: "cardRef", attributeId: 21, refExists: false }
+{ type: "cardRefList", attributeId: 22, refListsMatch: { count: 0 } }
 ```
 
-`refId` / `refListId` 属于 `AttributeCheck`，不属于 `TargetRef`。
+`type: "cardRef"` / `type: "cardRefList"` 属于 `AttributeCheck`，不属于 `TargetRef`。
 
 ---
 
@@ -87,7 +87,7 @@ slot       = 可选，动作额外卡槽中的卡
 {
   "target": { "card": "targetCard" },
   "attributes": [
-    { "refId": 21, "refExists": true }
+    { "type": "cardRef", "attributeId": 21, "refExists": true }
   ]
 }
 ```
@@ -146,7 +146,7 @@ targetCard = incoming 的响应目标（仅 incoming）
 ```json
 {
   "id": 100,
-  "kind": "changeAttributes",
+  "kind": "changeBaseNumberAttributes",
   "target": { "card": "slot", "slot": "food" },
   "changes": [{ "attributeId": 8, "delta": -10 }]
 }
@@ -157,7 +157,7 @@ incoming 动作修改当前目标：
 ```json
 {
   "id": 101,
-  "kind": "changeAttributes",
+  "kind": "changeBaseNumberAttributes",
   "target": { "card": "targetCard" },
   "changes": [{ "attributeId": 1, "delta": 10 }]
 }
@@ -258,14 +258,14 @@ Formula 节点的 condition 使用与所在环境相同的 Condition 上下文�
 
 ## 5. referencedCard
 
-`referencedCard` 只在 `AttributeCheck.refListsMatch.match` 内有效。
+`referencedCard` 只在 `AttributeCheck.refListsMatch` 内有效。
 
 ```json
 {
   "target": { "card": "sourceCard" },
   "attributes": [
     {
-      "refListId": 22,
+      "attributeId": 22,
       "refListsMatch": {
         "match": [
           {

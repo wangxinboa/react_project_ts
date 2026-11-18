@@ -1,7 +1,7 @@
 import type { CardType } from "../card_template_types/card_template_types.ts";
 import type { TargetRef } from "./target_ref.ts";
 import type { AttributeCheck } from "./attribute_check_types.ts";
-import type { AttributeChangeCheck } from "./attribute_change_check_types.ts";
+import type { BaseNumberAttributeChangeCheck } from "./attribute_change_check_types.ts";
 import type { DialogueCheck } from "./dialogue_check_types.ts";
 import type { AgreementCheck } from "./agreement_check_types.ts";
 import type { BaseNumberCheck } from "./base_number_check_types.ts";
@@ -20,13 +20,13 @@ export interface Condition {
 	target?: TargetRef;
 	/** 属性条件列表 */
 	attributes?: AttributeCheck[];
+	/** 反应上下文中的属性变化；只在 CardReactionDefinition 条件中有值 */
+	attributeChanges?: BaseNumberAttributeChangeCheck[];
 	/** target 指向的卡是否是 listOwner 指向卡的 refListId 列表成员 */
 	memberOfRefList?: {
 		listOwner: TargetRef;
 		refListId: number;
 	};
-	/** 反应上下文中的属性变化；只在 CardReactionDefinition 条件中有值 */
-	attributeChanges?: AttributeChangeCheck[];
 	/** 该卡的对话经历 */
 	dialogues?: DialogueCheck[];
 	/** 必须拥有该标签 */

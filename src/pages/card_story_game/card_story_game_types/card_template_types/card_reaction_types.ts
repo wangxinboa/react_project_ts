@@ -2,14 +2,14 @@ import type { ConditionExpression } from "../condition_expression_types/conditio
 import type { EffectCall } from "../effect_types/effect_types.ts";
 
 export const CardReactionTriggerKind = {
-	ATTRIBUTE_CHANGED: "attributeChanged",
+	BASE_NUMBER_ATTRIBUTE_CHANGED: "baseNumberAttributeChanged",
 	TAG_ADDED: "tagAdded",
 	TAG_REMOVED: "tagRemoved",
 } as const;
 
 export type CardReactionTrigger =
 	| {
-			kind: typeof CardReactionTriggerKind.ATTRIBUTE_CHANGED;
+			kind: typeof CardReactionTriggerKind.BASE_NUMBER_ATTRIBUTE_CHANGED;
 			attributeIds?: number[];
 	  }
 	| {

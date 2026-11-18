@@ -1,6 +1,6 @@
 import type { ConditionExpression } from "../condition_expression_types/condition_expression_types.ts";
 import type { TargetRef } from "../condition_expression_types/target_ref.ts";
-import type { AddAttributeEffect, ChangeAttributesEffect, ChangeRelationshipAttributesEffect } from "./attribute_effects.ts";
+import type { AddCardAttributeEffect, ChangeBaseNumberAttributesEffect, ChangeRelationshipNumberAttributesEffect } from "./attribute_effects.ts";
 import type { CreateAgreementEffect, ConfirmPromiseEffect } from "./agreement_effects.ts";
 import type { AddTagEffect, RemoveTagEffect } from "./tag_effects.ts";
 import type { ChangeTemplateEffect } from "./template_effects.ts";
@@ -13,8 +13,8 @@ import type { LearnSkillEffect } from "./skill_effects.ts";
 
 /** 所有效果类型。 */
 export type EffectKind =
-	| ChangeAttributesEffect
-	| AddAttributeEffect
+	| ChangeBaseNumberAttributesEffect
+	| AddCardAttributeEffect
 	| AddTagEffect
 	| RemoveTagEffect
 	| ChangeTemplateEffect
@@ -23,7 +23,7 @@ export type EffectKind =
 	| ChangeLocationEffect
 	| MoveItemCardEffect
 	| StartDialogueEffect
-	| ChangeRelationshipAttributesEffect
+	| ChangeRelationshipNumberAttributesEffect
 	| CreateAgreementEffect
 	| ConfirmPromiseEffect
 	| LearnSkillEffect;

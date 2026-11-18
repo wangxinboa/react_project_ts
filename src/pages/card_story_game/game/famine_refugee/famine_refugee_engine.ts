@@ -1,7 +1,7 @@
 import { evaluateFormula } from "../../formula/formula_eval.ts";
 import type { FormulaContext } from "../../formula/formula_eval.ts";
 import type { AttributeValue, BaseNumberCheck, NumberExpression, TargetRef } from "../../card_story_game_types/index.ts";
-import { AddCardDestination, EffectType, FormulaOp, PromiseConfirmation, PromiseTimeRelation, AttributeKind, AttributeScope, CardReactionTriggerKind, CardType, ConditionGroupKind, ConditionNotKind, ConditionTarget, MoveItemDestination, TagKind } from "../../card_story_game_types/index.ts";
+import { AddCardDestination, EffectType, FormulaOp, PromiseConfirmation, PromiseTimeRelation, AttributeType, CardReactionTriggerKind, CardType, ConditionGroupKind, ConditionNotKind, ConditionTarget, MoveItemDestination, TagKind } from "../../card_story_game_types/index.ts";
 import { getNumberAttribute, getNumberValues, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import type {
 	ActionSlot,
@@ -234,39 +234,45 @@ function evaluateAttributeChecks(condition: Condition, entity: EntitySnapshot, c
 			const check = condition.attributes[i];
 			if (check.hasAttribute !== undefined && entity.values[check.hasAttribute] === undefined) return false;
 			if (check.hasAttributes) {
-				for (let j = 0; j < check.hasAttributes.length; j++) if (entity.values[check.hasAttributes[j]] === undefined) return false;
+				for (let j = 0; j < check.hasAttributes.length; j++) {
+					if (entity.values[check.hasAttributes[j]] === undefined) return false;
+				}
 			}
 			if (check.hasAnyAttribute && check.hasAnyAttribute.length > 0) {
 				let any = false;
 				for (let j = 0; j < check.hasAnyAttribute.length; j++) {
-					if (entity.values[check.hasAnyAttribute[j]] !== undefined) { any = true; break; }
+					if (entity.values[check.hasAnyAttribute[j]] !== undefined) {
+						any = true;
+						break;
+					}
 				}
 				if (!any) return false;
 			}
-			if (check.relationshipId !== undefined) {
-				if (!check.relationship || check.id !== undefined || check.refId !== undefined || check.refListId !== undefined) return false;
+			if (check.type === "relationshipNumber") {
 				const sourceEntity = resolveTargetEntity(check.relationship.source, context);
 				const targetEntity = resolveTargetEntity(check.relationship.target, context);
 				if (!sourceEntity?.cardId || !targetEntity?.cardId) return false;
 				const source = getCard(context.cards ?? [], sourceEntity.cardId);
 				if (!source) return false;
-				const relationship = source.relationships?.[targetEntity.cardId];
-				const relationshipValues = relationship?.values ?? {};
-				if (!matchesAttribute(relationshipValues[check.relationshipId] ?? 0, check, relationshipValues, context)) return false;
+				const values = source.relationships?.[targetEntity.cardId]?.values ?? {};
+				if (!matchesAttribute(values[check.attributeId] ?? 0, check, values, context)) return false;
 				continue;
 			}
-			if (check.relationship) return false;
-			const ids = [check.id, check.refId, check.refListId].filter((id): id is number => typeof id === "number");
-			if (ids.length !== 1) return false;
-			const attributeId = ids[0];
-			const value = entity.values[attributeId];
-			if (typeof check.refExists === "boolean") {
+
+			const value = entity.values[check.attributeId];
+			if (check.type === "baseNumber" || check.type === "derivedNumber") {
+				if (typeof value !== "number" || !matchesAttribute(value, check, entity.values, context)) return false;
+				continue;
+			}
+			if (check.type === "cardRef") {
 				const exists = value !== undefined && value !== "" && (!Array.isArray(value) || value.length > 0);
 				if (exists !== check.refExists) return false;
 				continue;
 			}
-			if (check.refListsMatch) {
-				if (!Array.isArray(value) || !context.config) return false;
+			if (check.type === "cardRefList") {
+				if (!Array.isArray(value)) return false;
+				if (!check.refListsMatch) continue;
+				if (!context.config) return false;
 				const cards = context.cards ?? [];
 				let matched = 0;
 				for (let j = 0; j < value.length; j++) {
@@ -295,7 +301,6 @@ function evaluateAttributeChecks(condition: Condition, entity: EntitySnapshot, c
 				if (count !== undefined ? matched !== count : matched < min || matched > max) return false;
 				continue;
 			}
-			if (typeof value !== "number" || !matchesAttribute(value, check, entity.values, context)) return false;
 		}
 	}
 
@@ -335,6 +340,7 @@ function evaluateAttributeChanges(checks: NonNullable<Condition["attributeChange
 	if (!context.reaction) return false;
 	for (let i = 0; i < checks.length; i++) {
 		const check = checks[i];
+		if (check.type !== "baseNumber") return false;
 		const change = context.reaction.attributeChanges.find((item) => item.attributeId === check.attributeId);
 		if (!change) return false;
 		if (check.oldExists !== undefined && change.oldExists !== check.oldExists) return false;
@@ -533,7 +539,7 @@ function getDerivedAttributeOrder(config: FamineRefugeeConfig): number[] {
 	const state = new Map<number, "visiting" | "done">();
 	const visit = (id: number): void => {
 		const definition = definitions.get(id);
-		if (!definition || definition.kind !== AttributeKind.DERIVED) return;
+		if (!definition || definition.type !== AttributeType.DERIVED_NUMBER) return;
 		const current = state.get(id);
 		if (current === "done") return;
 		if (current === "visiting") return;
@@ -548,7 +554,7 @@ function getDerivedAttributeOrder(config: FamineRefugeeConfig): number[] {
 	};
 	for (let i = 0; i < config.allAttributes.length; i++) {
 		const definition = config.allAttributes[i];
-		if (definition.kind === AttributeKind.DERIVED) visit(definition.id);
+		if (definition.type === AttributeType.DERIVED_NUMBER) visit(definition.id);
 	}
 	return order;
 }
@@ -563,7 +569,7 @@ export function deriveCard(
 	const derivedOrder = getDerivedAttributeOrder(config);
 	for (let i = 0; i < derivedOrder.length; i++) {
 		const definition = config.allAttributes.find((attribute) => attribute.id === derivedOrder[i]);
-		if (definition?.kind === AttributeKind.DERIVED && definition.formula && values[definition.id] !== undefined) {
+		if (definition?.type === AttributeType.DERIVED_NUMBER && definition.formula && values[definition.id] !== undefined) {
 			values[definition.id] = evaluateFormula(definition.formula, values, createFormulaContext(config, cards, card));
 		}
 	}
@@ -785,7 +791,7 @@ function applyChangeAttributes(
 		const change = changes[i];
 		if (change.condition && evaluateChangeConditions && !evaluateChangeConditions([change.condition])) continue;
 		const definition = config.allAttributes.find((attribute) => attribute.id === change.attributeId);
-		if (!definition || definition.kind !== AttributeKind.BASE) continue;
+		if (!definition || definition.type !== AttributeType.BASE_NUMBER) continue;
 		const current = getNumberAttribute(values, change.attributeId);
 		const formulaValues = deriveCard(config, { ...card, values }).values;
 		const set = change.set === undefined ? undefined : evaluateChangeNumber(change.set, formulaValues, formulaContext);
@@ -803,7 +809,7 @@ function applyCardEffect(
 	evaluateChangeConditions?: (conditions: ConditionExpression | ConditionExpression[]) => boolean,
 	formulaContext?: FormulaContext,
 ): CardState {
-	if (effect.kind === EffectType.CHANGE_ATTRIBUTES) return applyChangeAttributes(config, card, effect.changes, evaluateChangeConditions, formulaContext);
+	if (effect.kind === EffectType.CHANGE_BASE_NUMBER_ATTRIBUTES) return applyChangeAttributes(config, card, effect.changes, evaluateChangeConditions, formulaContext);
 	if (effect.kind === EffectType.ADD_TAG) {
 		for (let i = 0; i < card.tags.length; i++) {
 			if (card.tags[i].tagId === effect.tagId) return card;
@@ -1173,7 +1179,7 @@ function resolveRuntimeCardId(runtime: EffectRuntime, target: TargetRef): string
 }
 
 function applyChangeRelationshipEffect(runtime: EffectRuntime, effect: InlineEffect): void {
-	if (effect.kind !== EffectType.CHANGE_RELATIONSHIP_ATTRIBUTES) return;
+	if (effect.kind !== EffectType.CHANGE_RELATIONSHIP_NUMBER_ATTRIBUTES) return;
 	const sourceId = resolveRuntimeCardId(runtime, effect.relationship.source);
 	const targetId = resolveRuntimeCardId(runtime, effect.relationship.target);
 	if (!sourceId || !targetId) return;
@@ -1198,7 +1204,7 @@ function applyChangeRelationshipEffect(runtime: EffectRuntime, effect: InlineEff
 			if (!evaluateConditions(change.condition, context)) continue;
 		}
 		const definition = runtime.config.allAttributes.find((attribute) => attribute.id === change.attributeId);
-		if (!definition || definition.scope !== AttributeScope.RELATIONSHIP) continue;
+		if (!definition || definition.type !== AttributeType.RELATIONSHIP_NUMBER) continue;
 		const currentValue = getNumberAttribute(values, change.attributeId);
 		const set = change.set === undefined ? undefined : evaluateFormula(change.set, values, formulaContext);
 		const delta = change.delta === undefined ? 0 : evaluateFormula(change.delta, values, formulaContext);
@@ -1270,13 +1276,15 @@ function applyConfirmPromiseEffect(runtime: EffectRuntime, effect: InlineEffect)
 }
 
 function applyAddAttributeEffect(runtime: EffectRuntime, effect: InlineEffect): void {
-	if (effect.kind !== EffectType.ADD_ATTRIBUTE) return;
+	if (effect.kind !== EffectType.ADD_CARD_ATTRIBUTE) return;
 	const source = getCard(runtime.cards, runtime.sourceId);
 	if (!source) return;
 	const targetIds = getEffectTargetIds(runtime, effect);
 	for (let i = 0; i < targetIds.length; i++) {
 		const card = getCard(runtime.cards, targetIds[i]);
 		if (!card || card.values[effect.attributeId] !== undefined) continue;
+		const definition = runtime.config.allAttributes.find((attribute) => attribute.id === effect.attributeId);
+		if (!definition || definition.type === AttributeType.RELATIONSHIP_NUMBER) continue;
 		const context = getConditionContext(runtime.config, effect.condition, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, card, runtime.slotMap, runtime.cards, runtime.agreements, runtime.dialogueHistory, runtime.time);
 		context.host = snapshotFromDerived(deriveCard(runtime.config, card, runtime.cards), card);
 		if (!evaluateConditions(effect.condition, context)) continue;
@@ -1310,8 +1318,8 @@ function applyLearnSkillEffect(runtime: EffectRuntime, effect: InlineEffect): vo
 
 
 const effectHandlers: Record<InlineEffect["kind"], EffectHandler> = {
-	[EffectType.CHANGE_ATTRIBUTES]: applyTargetedEffect,
-	[EffectType.ADD_ATTRIBUTE]: applyAddAttributeEffect,
+	[EffectType.CHANGE_BASE_NUMBER_ATTRIBUTES]: applyTargetedEffect,
+	[EffectType.ADD_CARD_ATTRIBUTE]: applyAddAttributeEffect,
 	[EffectType.LEARN_SKILL]: applyLearnSkillEffect,
 	[EffectType.ADD_TAG]: applyTargetedEffect,
 	[EffectType.REMOVE_TAG]: applyTargetedEffect,
@@ -1321,7 +1329,7 @@ const effectHandlers: Record<InlineEffect["kind"], EffectHandler> = {
 	[EffectType.REMOVE_CARD]: applyRemoveCardEffect,
 	[EffectType.MOVE_ITEM_CARD]: applyMoveItemEffect,
 	[EffectType.START_DIALOGUE]: applyStartDialogueEffect,
-	[EffectType.CHANGE_RELATIONSHIP_ATTRIBUTES]: applyChangeRelationshipEffect,
+	[EffectType.CHANGE_RELATIONSHIP_NUMBER_ATTRIBUTES]: applyChangeRelationshipEffect,
 	[EffectType.CREATE_AGREEMENT]: applyCreateAgreementEffect,
 	[EffectType.CONFIRM_PROMISE]: applyConfirmPromiseEffect,
 };
@@ -1346,7 +1354,7 @@ function planActionEffects(
 		const context = getConditionContext(config, effect.condition, source, target, null, slotMap, cards);
 		if (!evaluateConditions(effect.condition, context)) continue;
 		let planned: InlineEffect = { ...effect, condition: undefined };
-		if (effect.kind === EffectType.CHANGE_ATTRIBUTES) {
+		if (effect.kind === EffectType.CHANGE_BASE_NUMBER_ATTRIBUTES) {
 			const changes = effect.changes.filter((change) => {
 				if (!change.condition) return true;
 				const changeContext = getConditionContext(config, change.condition, source, target, source, slotMap, cards);
@@ -1367,7 +1375,7 @@ interface CardSnapshot {
 }
 
 type CardChangeEvent =
-	| ({ kind: "attributeChanged" } & AttributeChange)
+	| ({ kind: "baseNumberAttributeChanged" } & AttributeChange)
 	| { kind: "tagAdded"; tagId: number }
 	| { kind: "tagRemoved"; tagId: number };
 
@@ -1400,7 +1408,7 @@ function buildCardChangeEvents(before: CardSnapshot | undefined, after: CardStat
 		const newValue = after.values[id];
 		if (sameAttributeValue(oldValue, newValue)) continue;
 		events.push({
-			kind: "attributeChanged",
+			kind: "baseNumberAttributeChanged",
 			attributeId: id,
 			oldExists: before?.present.has(id) ?? false,
 			newExists: after.values[id] !== undefined,
@@ -1416,7 +1424,7 @@ function buildCardChangeEvents(before: CardSnapshot | undefined, after: CardStat
 }
 
 function matchesReactionTrigger(trigger: import("../../card_story_game_types/index.ts").CardReactionTrigger, event: CardChangeEvent): boolean {
-	if (trigger.kind === CardReactionTriggerKind.ATTRIBUTE_CHANGED && event.kind === CardReactionTriggerKind.ATTRIBUTE_CHANGED) {
+	if (trigger.kind === CardReactionTriggerKind.BASE_NUMBER_ATTRIBUTE_CHANGED && event.kind === CardReactionTriggerKind.BASE_NUMBER_ATTRIBUTE_CHANGED) {
 		return trigger.attributeIds === undefined || trigger.attributeIds.includes(event.attributeId);
 	}
 	if (trigger.kind === CardReactionTriggerKind.TAG_ADDED && event.kind === CardReactionTriggerKind.TAG_ADDED) {
@@ -1462,7 +1470,7 @@ function applyCardReactions(runtime: EffectRuntime, before: Map<string, CardSnap
 			const context = getConditionContext(runtime.config, reaction.condition, currentCard, currentCard, null, runtime.slotMap, runtime.cards, runtime.agreements, runtime.dialogueHistory, runtime.time);
 			context.host = hostSnapshot;
 			context.reaction = {
-				attributeChanges: events.filter((event): event is Extract<CardChangeEvent, { kind: "attributeChanged" }> => event.kind === "attributeChanged"),
+				attributeChanges: events.filter((event): event is Extract<CardChangeEvent, { kind: "baseNumberAttributeChanged" }> => event.kind === "baseNumberAttributeChanged"),
 				tagIdsAdded: events.filter((event) => event.kind === "tagAdded").map((event) => event.tagId),
 				tagIdsRemoved: events.filter((event) => event.kind === "tagRemoved").map((event) => event.tagId),
 			};
@@ -1602,13 +1610,13 @@ function applyTagAutoEffects(
 		const tagSnapshot = snapshotFromTag(currentTag);
 		if (!evaluateConditions(effect.condition, { sourceTag: tagSnapshot, host: hostSnapshot })) continue;
 		const tagCondition = (conditions: ConditionExpression | ConditionExpression[]): boolean => evaluateConditions(conditions, { sourceTag: tagSnapshot, host: snapshotFromDerived(deriveCard(config, currentHost)) });
-		if (effect.kind === EffectType.CHANGE_ATTRIBUTES && effect.target?.card === ConditionTarget.HOST) {
+		if (effect.kind === EffectType.CHANGE_BASE_NUMBER_ATTRIBUTES && effect.target?.card === ConditionTarget.HOST) {
 			currentHost = applyChangeAttributes(config, currentHost, effect.changes, tagCondition, {
 				evaluateConditions: tagCondition,
 			});
 			continue;
 		}
-		if (effect.kind === EffectType.CHANGE_ATTRIBUTES && (effect.target?.card === ConditionTarget.SOURCE_TAG || !effect.target)) {
+		if (effect.kind === EffectType.CHANGE_BASE_NUMBER_ATTRIBUTES && (effect.target?.card === ConditionTarget.SOURCE_TAG || !effect.target)) {
 			const values = { ...currentTag.values };
 			for (let j = 0; j < effect.changes.length; j++) {
 				const change = effect.changes[j];

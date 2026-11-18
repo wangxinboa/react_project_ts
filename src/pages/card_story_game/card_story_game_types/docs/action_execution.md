@@ -7,7 +7,7 @@ Action 是原子操作。
 ```text
 1. 解析动作槽位与目标卡
 2. 使用动作开始前的状态快照，统一判定所有 effect 条件
-3. 使用同一份快照，判定 changeAttributes.changes 内的条件
+3. 使用同一份快照，判定 changeBaseNumberAttributes.changes 内的条件
 4. 生成执行计划
 5. 按 effects 数组顺序执行已选中的效果
 6. 最后统一处理 removeCard
@@ -18,18 +18,18 @@ Action 是原子操作。
 以下条件全部使用 action 开始前的卡牌状态：
 
 - `effect.condition`
-- `changeAttributes.changes[].condition`
+- `changeBaseNumberAttributes.changes[].condition`
 
 后续 effect 不能看到前面 effect 修改后的属性值。
 
 ```json
 [
   {
-    "kind": "changeAttributes",
+    "kind": "changeBaseNumberAttributes",
     "changes": [{ "attributeId": 1, "delta": -10 }]
   },
   {
-    "kind": "changeAttributes",
+    "kind": "changeBaseNumberAttributes",
     "condition": {
       "target": { "card": "sourceCard" },
       "attributes": [{ "id": 1, "lt": 40 }]

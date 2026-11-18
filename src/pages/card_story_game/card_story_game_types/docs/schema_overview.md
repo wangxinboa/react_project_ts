@@ -10,8 +10,8 @@
 
 ## 属性
 
-- 属性值支持 `number / cardRef / cardRefList`，统一存放在 `CardState.values`。
-- `AttributeDefinition.valueType` 决定值类型。
+- 属性种类由 `AttributeType` 决定：`baseNumber / derivedNumber / cardRef / cardRefList / relationshipNumber`。
+- `baseNumber / cardRef / cardRefList` 存放在 `CardState.values`；`relationshipNumber` 存放在关系边。
 - 属性上限由派生上限属性和 Reaction 共同实现；不再使用 `NumberBounds`。
 - `location / carrier / backpack` 是属性，不是 CardState 硬编码字段。
 
@@ -19,8 +19,8 @@
 
 - `card.values` 中存在 key 表示属性存在。
 - derived 属性用值为 0 的 key 表示存在，具体数值由 `deriveCard` 计算。
-- `AttributeCheck.hasAttribute` / `hasAttributes` / `hasAnyAttribute` 只判断存在，不判断数值。
-- `addAttribute` effect 用于让属性开始存在。
+- `AttributeCheck.hasAttribute / hasAttributes / hasAnyAttribute` 是每个检查类型都有的可选存在性判断。
+- `addCardAttribute` effect 用于让卡牌属性开始存在。
 
 ## 数字表达式
 
@@ -28,7 +28,7 @@
 - 动态计算使用 `FormulaNode`。
 - Formula 内部的 `args`、`clamp`、`normalize` 等统一使用 `Formula`；常量使用 `literal`。
 - 支持 `literal / numberAttributeValue / floor / abs / add / sub / mul / div / clamp / normalize / refListsAttributeCount / refListsAttributeSum / select`。
-- Condition 的数字比较、ActionSlot 数量、NpcBehavior 间隔、refListsMatch 数量、changeAttributes 的 delta/set 都使用 `NumberExpression`。
+- Condition 的数字比较、ActionSlot 数量、NpcBehavior 间隔、refListsMatch 数量、changeBaseNumberAttributes 的 delta/set 都使用 `NumberExpression`。
 
 ## Condition 与 TargetRef
 
@@ -41,10 +41,12 @@ interface TargetRef {
 
 - `ConditionTarget`：`sourceCard / sourceTag / targetCard / host / slot / referencedCard`。
 - `Condition.target` 是 `TargetRef`。
-- `AttributeCheck`：
-  - `id`：number 属性；
-  - `refId` + `refExists`：cardRef；
-  - `refListId` + `refListsMatch`：cardRefList。
+- `AttributeCheck` 由 `type` 区分：
+  - `baseNumber` / `derivedNumber`：`attributeId` + 数值比较；
+  - `relationshipNumber`：`attributeId` + `relationship`；
+  - `cardRef`：`attributeId` + `refExists`；
+  - `cardRefList`：`attributeId` + `refListsMatch`。
+- `attributes` 数组统一承载值判断和存在性判断；存在性字段可单独使用，也可与数值判断组合。
 - 详细说明见 [TargetRef 上下文说明](./target_ref_contexts.md)。
 
 ## Effect
@@ -77,13 +79,13 @@ interface TargetRef {
 - `Condition.worldTime` 使用 `BaseNumberCheck` 判断世界时间（分钟）；`target` 可省略，但不能在没有 target 时写卡牌判定字段。
 - `Formula.select` 使用 `branches: [{ condition, value }]` 按顺序匹配，首个成立分支生效；都不成立时使用 `else`，没有 `else` 返回 0。
 - 当前核心属性：生命力、灵性、气血上限、气血控制上限、气血失控、武道意志、精神力上限、灵性法术容量上限、法力上限、灵性占用、生命力占用、灵性余量、生命力余量。
-- 生命力、灵性为 base；其余进阶属性为 derived，并由 `addAttribute` 按门槛显化。
+- 生命力、灵性为 base；其余进阶属性为 derived，并由 `addCardAttribute` 按门槛显化。
 - 生命力 >= 6 显化气血上限、武道意志；灵性 >= 6 显化精神力上限、法术容量上限；两者都 >= 6 才显化资源/余量属性。
 - UI 平铺显示已存在的属性，不按属性树分组。
 - 上限属性是普通派生属性；`NumberBounds` / `typeParams` / `numberAttributeBound` / `maxAttributeId` 已移除。
 - 损伤/污染通过 Tag 表达；骨折通过 `Formula.select` 影响体力上限，感染/梦魇污染通过 Tag auto 影响属性。
 - `CardTemplate.reactions` 是卡牌监听定义 id 数组；定义放在 `allCardReactions`，数组顺序即优先级，第一版只执行一轮。
-- `CardReactionDefinition` 是可复用的卡牌监听定义；`trigger` 支持 `attributeChanged` / `tagAdded` / `tagRemoved`，条件可用 `attributeChanges` 数组同时读取多个属性的旧值、新值和存在性；数组内按 AND 判断，反应在一次变化批次中执行一次。
+- `CardReactionDefinition` 是可复用的卡牌监听定义；`trigger` 支持 `baseNumberAttributeChanged` / `tagAdded` / `tagRemoved`，条件可用 `attributeChanges` 数组同时读取多个属性的旧值、新值和存在性；数组内按 AND 判断，反应在一次变化批次中执行一次。
 - `startDialogue` effect 启动对话；玩家 incoming 默认使用 targetCard，NPC outgoing 可用 slot。
 - 对话状态保存 sourceCardId / targetCardId / slotMap。
 - 详细触发方式见项目状态与配置案例。
@@ -123,9 +125,9 @@ interface CardState {
 }
 ```
 
-- 关系属性使用 `AttributeDefinition.scope = "relationship"`；默认 `scope` 为 `card`。
-- AttributeCheck 支持 `relationshipId + relationship` 检查关系属性。
-- `changeRelationshipAttributes` 修改有向关系值。
+- 关系属性使用 `AttributeType.RELATIONSHIP_NUMBER`。
+- AttributeCheck 使用 `type: "relationshipNumber"` + `relationship` 检查关系属性。
+- `changeRelationshipNumberAttributes` 修改有向关系值。
 - 关系懒创建，缺失时按 0 计算。
 
 ## NPC

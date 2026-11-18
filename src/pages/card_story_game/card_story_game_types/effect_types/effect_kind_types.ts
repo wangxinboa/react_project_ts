@@ -1,9 +1,9 @@
 /** 所有 effect 的 kind。 */
 export const EffectType = {
-	CHANGE_ATTRIBUTES: "changeAttributes",
-	ADD_ATTRIBUTE: "addAttribute",
+	CHANGE_BASE_NUMBER_ATTRIBUTES: "changeBaseNumberAttributes",
+	ADD_CARD_ATTRIBUTE: "addCardAttribute",
 	LEARN_SKILL: "learnSkill",
-	CHANGE_RELATIONSHIP_ATTRIBUTES: "changeRelationshipAttributes",
+	CHANGE_RELATIONSHIP_NUMBER_ATTRIBUTES: "changeRelationshipNumberAttributes",
 	ADD_TAG: "addTag",
 	REMOVE_TAG: "removeTag",
 	CHANGE_TEMPLATE: "changeTemplate",
