@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 101,
+	"schemaVersion": 113,
 	"allTags": [
 		{
 			"id": 24,
@@ -108,7 +108,8 @@
 			"kind": "state",
 			"attributes": [
 				{
-					"id": 7,
+					"type": "initBaseNumber",
+					"attributeId": 7,
 					"value": 1
 				}
 			],
@@ -117,11 +118,12 @@
 					"effects": [
 						{
 							"id": 68,
-							"kind": "changeBaseNumberAttributes",
+							"kind": "changeAttributes",
 							"changes": [
 								{
 									"attributeId": 3,
-									"delta": -1
+									"type": "changeBaseNumber",
+									"sub": 1
 								}
 							],
 							"desc": "修改属性：生命 -1",
@@ -143,11 +145,12 @@
 						},
 						{
 							"id": 69,
-							"kind": "changeBaseNumberAttributes",
+							"kind": "changeAttributes",
 							"changes": [
 								{
 									"attributeId": 7,
-									"delta": -1
+									"type": "changeBaseNumber",
+									"sub": 1
 								}
 							],
 							"desc": "修改属性：严重度 -1",
@@ -198,14 +201,15 @@
 				{
 					"effects": [
 						{
-							"kind": "changeBaseNumberAttributes",
+							"kind": "changeAttributes",
 							"target": {
 								"card": "host"
 							},
 							"changes": [
 								{
 									"attributeId": 3,
-									"delta": -1
+									"type": "changeBaseNumber",
+									"sub": 1
 								}
 							]
 						}
@@ -222,14 +226,15 @@
 				{
 					"effects": [
 						{
-							"kind": "changeBaseNumberAttributes",
+							"kind": "changeAttributes",
 							"target": {
 								"card": "host"
 							},
 							"changes": [
 								{
 									"attributeId": 4,
-									"delta": -1
+									"type": "changeBaseNumber",
+									"sub": 1
 								}
 							]
 						}
@@ -1095,56 +1100,54 @@
 			"desc": "在饥荒中挣扎的流民",
 			"attributes": [
 				{
-					"id": 1,
+					"type": "initBaseNumber",
+					"attributeId": 1,
 					"value": 30
 				},
 				{
-					"id": 2,
+					"type": "initBaseNumber",
+					"attributeId": 2,
 					"value": 20
 				},
 				{
-					"id": 3,
+					"type": "initBaseNumber",
+					"attributeId": 3,
 					"value": 4
 				},
 				{
-					"id": 4,
+					"type": "initBaseNumber",
+					"attributeId": 4,
 					"value": 4
 				},
 				{
-					"id": 11,
+					"type": "initBaseNumber",
+					"attributeId": 11,
 					"value": 20
 				},
 				{
-					"id": 16,
+					"type": "initBaseNumber",
+					"attributeId": 16,
 					"value": 5
 				},
 				{
-					"id": 13,
-					"value": 0
+					"type": "initDerivedNumber",
+					"attributeId": 13
 				},
 				{
-					"id": 14,
-					"value": 0
+					"type": "initDerivedNumber",
+					"attributeId": 14
 				},
 				{
-					"id": 18,
-					"value": 0
+					"type": "initDerivedNumber",
+					"attributeId": 18
 				},
 				{
-					"id": 22,
-					"value": 0
+					"type": "initDerivedNumber",
+					"attributeId": 22
 				},
 				{
-					"id": 23,
-					"value": 0
-				},
-				{
-					"id": 10,
-					"value": []
-				},
-				{
-					"id": 312,
-					"value": []
+					"type": "initDerivedNumber",
+					"attributeId": 23
 				}
 			],
 			"auto": [
@@ -1173,56 +1176,54 @@
 			"desc": "被污染改写的流民",
 			"attributes": [
 				{
-					"id": 1,
+					"type": "initBaseNumber",
+					"attributeId": 1,
 					"value": 30
 				},
 				{
-					"id": 2,
+					"type": "initBaseNumber",
+					"attributeId": 2,
 					"value": 20
 				},
 				{
-					"id": 3,
+					"type": "initBaseNumber",
+					"attributeId": 3,
 					"value": 4
 				},
 				{
-					"id": 4,
+					"type": "initBaseNumber",
+					"attributeId": 4,
 					"value": 4
 				},
 				{
-					"id": 11,
+					"type": "initBaseNumber",
+					"attributeId": 11,
 					"value": 20
 				},
 				{
-					"id": 16,
+					"type": "initBaseNumber",
+					"attributeId": 16,
 					"value": 5
 				},
 				{
-					"id": 13,
-					"value": 0
+					"type": "initDerivedNumber",
+					"attributeId": 13
 				},
 				{
-					"id": 14,
-					"value": 0
+					"type": "initDerivedNumber",
+					"attributeId": 14
 				},
 				{
-					"id": 18,
-					"value": 0
+					"type": "initDerivedNumber",
+					"attributeId": 18
 				},
 				{
-					"id": 22,
-					"value": 0
+					"type": "initDerivedNumber",
+					"attributeId": 22
 				},
 				{
-					"id": 23,
-					"value": 0
-				},
-				{
-					"id": 10,
-					"value": []
-				},
-				{
-					"id": 312,
-					"value": []
+					"type": "initDerivedNumber",
+					"attributeId": 23
 				}
 			],
 			"auto": [
@@ -1256,23 +1257,28 @@
 			],
 			"attributes": [
 				{
-					"id": 5,
+					"type": "initBaseNumber",
+					"attributeId": 5,
 					"value": 20
 				},
 				{
-					"id": 6,
+					"type": "initBaseNumber",
+					"attributeId": 6,
 					"value": 100
 				},
 				{
-					"id": 12,
+					"type": "initBaseNumber",
+					"attributeId": 12,
 					"value": 0
 				},
 				{
-					"id": 15,
+					"type": "initBaseNumber",
+					"attributeId": 15,
 					"value": 3
 				},
 				{
-					"id": 17,
+					"type": "initBaseNumber",
+					"attributeId": 17,
 					"value": 0
 				}
 			],
@@ -1298,15 +1304,18 @@
 			"cardType": "item",
 			"attributes": [
 				{
-					"id": 12,
+					"type": "initBaseNumber",
+					"attributeId": 12,
 					"value": 0
 				},
 				{
-					"id": 15,
+					"type": "initBaseNumber",
+					"attributeId": 15,
 					"value": 5
 				},
 				{
-					"id": 17,
+					"type": "initBaseNumber",
+					"attributeId": 17,
 					"value": 0
 				}
 			],
@@ -1321,56 +1330,54 @@
 			"desc": "同样在饥饿中挣扎的人",
 			"attributes": [
 				{
-					"id": 1,
+					"type": "initBaseNumber",
+					"attributeId": 1,
 					"value": 30
 				},
 				{
-					"id": 2,
+					"type": "initBaseNumber",
+					"attributeId": 2,
 					"value": 20
 				},
 				{
-					"id": 3,
+					"type": "initBaseNumber",
+					"attributeId": 3,
 					"value": 4
 				},
 				{
-					"id": 4,
+					"type": "initBaseNumber",
+					"attributeId": 4,
 					"value": 4
 				},
 				{
-					"id": 11,
+					"type": "initBaseNumber",
+					"attributeId": 11,
 					"value": 10
 				},
 				{
-					"id": 16,
+					"type": "initBaseNumber",
+					"attributeId": 16,
 					"value": 3
 				},
 				{
-					"id": 13,
-					"value": 0
+					"type": "initDerivedNumber",
+					"attributeId": 13
 				},
 				{
-					"id": 14,
-					"value": 0
+					"type": "initDerivedNumber",
+					"attributeId": 14
 				},
 				{
-					"id": 18,
-					"value": 0
+					"type": "initDerivedNumber",
+					"attributeId": 18
 				},
 				{
-					"id": 22,
-					"value": 0
+					"type": "initDerivedNumber",
+					"attributeId": 22
 				},
 				{
-					"id": 23,
-					"value": 0
-				},
-				{
-					"id": 10,
-					"value": []
-				},
-				{
-					"id": 312,
-					"value": []
+					"type": "initDerivedNumber",
+					"attributeId": 23
 				}
 			],
 			"auto": [
@@ -1409,15 +1416,18 @@
 			"cardType": "item",
 			"attributes": [
 				{
-					"id": 12,
+					"type": "initBaseNumber",
+					"attributeId": 12,
 					"value": 0
 				},
 				{
-					"id": 15,
+					"type": "initBaseNumber",
+					"attributeId": 15,
 					"value": 2
 				},
 				{
-					"id": 17,
+					"type": "initBaseNumber",
+					"attributeId": 17,
 					"value": 0
 				}
 			],
@@ -1437,23 +1447,28 @@
 			],
 			"attributes": [
 				{
-					"id": 5,
+					"type": "initBaseNumber",
+					"attributeId": 5,
 					"value": 45
 				},
 				{
-					"id": 6,
+					"type": "initBaseNumber",
+					"attributeId": 6,
 					"value": 100
 				},
 				{
-					"id": 12,
+					"type": "initBaseNumber",
+					"attributeId": 12,
 					"value": 0
 				},
 				{
-					"id": 15,
+					"type": "initBaseNumber",
+					"attributeId": 15,
 					"value": 3
 				},
 				{
-					"id": 17,
+					"type": "initBaseNumber",
+					"attributeId": 17,
 					"value": 0
 				}
 			],
@@ -1528,28 +1543,30 @@
 				},
 				"costs": [
 					{
-						"kind": "changeBaseNumberAttributes",
+						"kind": "changeAttributes",
 						"target": {
 							"card": "sourceCard"
 						},
 						"changes": [
 							{
 								"attributeId": 2,
-								"delta": -2
+								"type": "changeBaseNumber",
+								"sub": 2
 							}
 						]
 					}
 				],
 				"effects": [
 					{
-						"kind": "changeBaseNumberAttributes",
+						"kind": "changeAttributes",
 						"target": {
 							"card": "sourceCard"
 						},
 						"changes": [
 							{
 								"attributeId": 3,
-								"delta": 1
+								"type": "changeBaseNumber",
+								"add": 1
 							}
 						]
 					}
@@ -1580,28 +1597,30 @@
 				},
 				"costs": [
 					{
-						"kind": "changeBaseNumberAttributes",
+						"kind": "changeAttributes",
 						"target": {
 							"card": "sourceCard"
 						},
 						"changes": [
 							{
 								"attributeId": 2,
-								"delta": -2
+								"type": "changeBaseNumber",
+								"sub": 2
 							}
 						]
 					}
 				],
 				"effects": [
 					{
-						"kind": "changeBaseNumberAttributes",
+						"kind": "changeAttributes",
 						"target": {
 							"card": "sourceCard"
 						},
 						"changes": [
 							{
 								"attributeId": 4,
-								"delta": 1
+								"type": "changeBaseNumber",
+								"add": 1
 							}
 						]
 					},
@@ -1651,7 +1670,8 @@
 					"8": "village",
 					"312": [
 						"skill_teacher_71"
-					]
+					],
+					"10": []
 				}
 			},
 			{
@@ -1787,19 +1807,22 @@
 			"effects": [
 				{
 					"id": 70,
-					"kind": "changeBaseNumberAttributes",
+					"kind": "changeAttributes",
 					"changes": [
 						{
 							"attributeId": 2,
-							"delta": 18
+							"type": "changeBaseNumber",
+							"add": 18
 						},
 						{
 							"attributeId": 1,
-							"delta": -3
+							"type": "changeBaseNumber",
+							"sub": 3
 						},
 						{
 							"attributeId": 3,
-							"delta": 1
+							"type": "changeBaseNumber",
+							"add": 1
 						}
 					],
 					"desc": "修改属性：体力 +18、饱食 -3、损伤 -4、生命 +1",
@@ -1870,19 +1893,22 @@
 			"effects": [
 				{
 					"id": 72,
-					"kind": "changeBaseNumberAttributes",
+					"kind": "changeAttributes",
 					"changes": [
 						{
 							"attributeId": 2,
-							"delta": -18
+							"type": "changeBaseNumber",
+							"sub": 18
 						},
 						{
 							"attributeId": 1,
-							"delta": -10
+							"type": "changeBaseNumber",
+							"sub": 10
 						},
 						{
 							"attributeId": 3,
-							"delta": -1
+							"type": "changeBaseNumber",
+							"sub": 1
 						}
 					],
 					"desc": "修改属性：体力 -18、饱食 -10、生命 -2、损伤 +2",
@@ -1894,8 +1920,52 @@
 					"id": 73,
 					"kind": "addCard",
 					"templateId": 40,
-					"desc": "生成卡牌：干硬面包",
-					"to": "sourceBackpack"
+					"desc": "生成卡牌：干硬面包"
+				},
+				{
+					"id": 6101,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "createdCard",
+						"effectId": 73
+					},
+					"changes": [
+						{
+							"type": "changeCardRef",
+							"attributeId": 9,
+							"value": {
+								"card": {
+									"card": "sourceCard"
+								}
+							}
+						},
+						{
+							"type": "changeCardRef",
+							"attributeId": 8,
+							"value": null
+						}
+					],
+					"desc": "设置新卡归属"
+				},
+				{
+					"id": 6102,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "sourceCard"
+					},
+					"changes": [
+						{
+							"type": "changeCardRefList",
+							"attributeId": 10,
+							"add": [
+								{
+									"card": "createdCard",
+									"effectId": 73
+								}
+							]
+						}
+					],
+					"desc": "加入背包"
 				}
 			],
 			"createdAt": 1767974400002,
@@ -1924,11 +1994,12 @@
 			"effects": [
 				{
 					"id": 74,
-					"kind": "changeBaseNumberAttributes",
+					"kind": "changeAttributes",
 					"changes": [
 						{
 							"attributeId": 3,
-							"delta": -1
+							"type": "changeBaseNumber",
+							"sub": 1
 						}
 					],
 					"desc": "修改属性：损伤 +25、生命 -12",
@@ -1981,19 +2052,22 @@
 			"effects": [
 				{
 					"id": 77,
-					"kind": "changeBaseNumberAttributes",
+					"kind": "changeAttributes",
 					"changes": [
 						{
 							"attributeId": 4,
-							"delta": 1
+							"type": "changeBaseNumber",
+							"add": 1
 						},
 						{
 							"attributeId": 3,
-							"delta": -1
+							"type": "changeBaseNumber",
+							"sub": 1
 						},
 						{
 							"attributeId": 1,
-							"delta": -5
+							"type": "changeBaseNumber",
+							"sub": 5
 						}
 					],
 					"desc": "修改属性：灵性 +20、污染 +15、生命 -8、饱食 -5",
@@ -2099,48 +2173,53 @@
 			"effects": [
 				{
 					"id": 80,
-					"kind": "changeBaseNumberAttributes",
+					"kind": "changeAttributes",
 					"changes": [
 						{
 							"attributeId": 1,
-							"delta": 30
+							"type": "changeBaseNumber",
+							"add": 30
 						},
 						{
 							"attributeId": 2,
-							"delta": 5
+							"type": "changeBaseNumber",
+							"add": 5
 						},
 						{
 							"attributeId": 1,
-							"delta": 25,
 							"condition": {
 								"hasTag": 32,
 								"target": {
 									"card": "slot",
 									"slot": "food"
 								}
-							}
+							},
+							"type": "changeBaseNumber",
+							"add": 25
 						},
 						{
 							"attributeId": 2,
-							"delta": 10,
 							"condition": {
 								"hasTag": 32,
 								"target": {
 									"card": "slot",
 									"slot": "food"
 								}
-							}
+							},
+							"type": "changeBaseNumber",
+							"add": 10
 						},
 						{
 							"attributeId": 3,
-							"delta": 1,
 							"condition": {
 								"hasTag": 32,
 								"target": {
 									"card": "slot",
 									"slot": "food"
 								}
-							}
+							},
+							"type": "changeBaseNumber",
+							"add": 1
 						}
 					],
 					"desc": "修改属性：饱食 +30、体力 +5；条件满足时额外：饱食 +25、体力 +10、生命 +2",
@@ -2184,11 +2263,12 @@
 			"effects": [
 				{
 					"id": 82,
-					"kind": "changeBaseNumberAttributes",
+					"kind": "changeAttributes",
 					"changes": [
 						{
 							"attributeId": 1,
-							"delta": -1
+							"type": "changeBaseNumber",
+							"sub": 1
 						}
 					],
 					"desc": "修改属性：饱食 -1",
@@ -2198,15 +2278,17 @@
 				},
 				{
 					"id": 83,
-					"kind": "changeBaseNumberAttributes",
+					"kind": "changeAttributes",
 					"changes": [
 						{
 							"attributeId": 2,
-							"delta": -1
+							"type": "changeBaseNumber",
+							"sub": 1
 						},
 						{
 							"attributeId": 3,
-							"delta": -1
+							"type": "changeBaseNumber",
+							"sub": 1
 						}
 					],
 					"desc": "修改属性：体力 -1、生命 -1",
@@ -2228,11 +2310,12 @@
 				},
 				{
 					"id": 84,
-					"kind": "changeBaseNumberAttributes",
+					"kind": "changeAttributes",
 					"changes": [
 						{
 							"attributeId": 2,
-							"delta": -0.5
+							"type": "changeBaseNumber",
+							"sub": 0.5
 						}
 					],
 					"desc": "修改属性：体力 -0.5",
@@ -2255,15 +2338,17 @@
 				},
 				{
 					"id": 85,
-					"kind": "changeBaseNumberAttributes",
+					"kind": "changeAttributes",
 					"changes": [
 						{
 							"attributeId": 2,
-							"delta": 0.5
+							"type": "changeBaseNumber",
+							"add": 0.5
 						},
 						{
 							"attributeId": 3,
-							"delta": 0.5
+							"type": "changeBaseNumber",
+							"add": 0.5
 						}
 					],
 					"desc": "修改属性：体力 +0.5、损伤 -0.5、生命 +0.5",
@@ -2310,11 +2395,12 @@
 			"effects": [
 				{
 					"id": 86,
-					"kind": "changeBaseNumberAttributes",
+					"kind": "changeAttributes",
 					"changes": [
 						{
 							"attributeId": 6,
-							"delta": -1
+							"type": "changeBaseNumber",
+							"sub": 1
 						}
 					],
 					"desc": "修改属性：新鲜度 -1",
@@ -2340,6 +2426,51 @@
 					"kind": "addCard",
 					"templateId": 43,
 					"desc": "生成卡牌：木柴"
+				},
+				{
+					"id": 6103,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "createdCard",
+						"effectId": 87
+					},
+					"changes": [
+						{
+							"type": "changeCardRef",
+							"attributeId": 9,
+							"value": {
+								"card": {
+									"card": "sourceCard"
+								}
+							}
+						},
+						{
+							"type": "changeCardRef",
+							"attributeId": 8,
+							"value": null
+						}
+					],
+					"desc": "设置新卡归属"
+				},
+				{
+					"id": 6104,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "sourceCard"
+					},
+					"changes": [
+						{
+							"type": "changeCardRefList",
+							"attributeId": 10,
+							"add": [
+								{
+									"card": "createdCard",
+									"effectId": 87
+								}
+							]
+						}
+					],
+					"desc": "加入背包"
 				}
 			],
 			"createdAt": 1767974400010,
@@ -2420,6 +2551,51 @@
 					"kind": "addCard",
 					"templateId": 44,
 					"desc": "生成卡牌：烤面包"
+				},
+				{
+					"id": 6105,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "createdCard",
+						"effectId": 90
+					},
+					"changes": [
+						{
+							"type": "changeCardRef",
+							"attributeId": 9,
+							"value": {
+								"card": {
+									"card": "sourceCard"
+								}
+							}
+						},
+						{
+							"type": "changeCardRef",
+							"attributeId": 8,
+							"value": null
+						}
+					],
+					"desc": "设置新卡归属"
+				},
+				{
+					"id": 6106,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "sourceCard"
+					},
+					"changes": [
+						{
+							"type": "changeCardRefList",
+							"attributeId": 10,
+							"add": [
+								{
+									"card": "createdCard",
+									"effectId": 90
+								}
+							]
+						}
+					],
+					"desc": "加入背包"
 				}
 			],
 			"createdAt": 1767974400011,
@@ -2450,15 +2626,17 @@
 			"effects": [
 				{
 					"id": 91,
-					"kind": "changeBaseNumberAttributes",
+					"kind": "changeAttributes",
 					"changes": [
 						{
 							"attributeId": 1,
-							"delta": 30
+							"type": "changeBaseNumber",
+							"add": 30
 						},
 						{
 							"attributeId": 2,
-							"delta": 5
+							"type": "changeBaseNumber",
+							"add": 5
 						}
 					],
 					"desc": "修改属性：饱食 +30、体力 +5",
@@ -2502,12 +2680,20 @@
 			"effects": [
 				{
 					"id": 93,
-					"kind": "changeLocation",
-					"toLocation": "forest",
-					"desc": "移动到森林",
+					"kind": "changeAttributes",
 					"target": {
 						"card": "sourceCard"
-					}
+					},
+					"changes": [
+						{
+							"type": "changeCardRef",
+							"attributeId": 8,
+							"value": {
+								"literal": "forest"
+							}
+						}
+					],
+					"desc": "移动到森林"
 				}
 			],
 			"createdAt": 1767974400030,
@@ -2537,12 +2723,20 @@
 			"effects": [
 				{
 					"id": 94,
-					"kind": "changeLocation",
-					"toLocation": "village",
-					"desc": "移动到村庄",
+					"kind": "changeAttributes",
 					"target": {
 						"card": "sourceCard"
-					}
+					},
+					"changes": [
+						{
+							"type": "changeCardRef",
+							"attributeId": 8,
+							"value": {
+								"literal": "village"
+							}
+						}
+					],
+					"desc": "移动到村庄"
 				}
 			],
 			"createdAt": 1767974400031,
@@ -2571,12 +2765,46 @@
 			"effects": [
 				{
 					"id": 95,
-					"kind": "moveItemCard",
+					"kind": "changeAttributes",
 					"target": {
 						"card": "targetCard"
 					},
-					"to": "sourceBackpack",
+					"changes": [
+						{
+							"type": "changeCardRef",
+							"attributeId": 9,
+							"value": {
+								"card": {
+									"card": "sourceCard"
+								}
+							}
+						},
+						{
+							"type": "changeCardRef",
+							"attributeId": 8,
+							"value": null
+						}
+					],
 					"desc": "移动物品"
+				},
+				{
+					"id": 5001,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "sourceCard"
+					},
+					"changes": [
+						{
+							"type": "changeCardRefList",
+							"attributeId": 10,
+							"add": [
+								{
+									"card": "targetCard"
+								}
+							]
+						}
+					],
+					"desc": "加入背包"
 				}
 			],
 			"createdAt": 1767974400050,
@@ -2601,9 +2829,9 @@
 						},
 						"attributes": [
 							{
-								"refExists": false,
 								"type": "cardRef",
-								"attributeId": 9
+								"attributeId": 9,
+								"refValueExists": false
 							}
 						]
 					}
@@ -2622,12 +2850,49 @@
 			"effects": [
 				{
 					"id": 96,
-					"kind": "moveItemCard",
+					"kind": "changeAttributes",
 					"target": {
 						"card": "targetCard"
 					},
-					"to": "sourceLocation",
+					"changes": [
+						{
+							"type": "changeCardRef",
+							"attributeId": 9,
+							"value": null
+						},
+						{
+							"type": "changeCardRef",
+							"attributeId": 8,
+							"value": {
+								"copyCardRef": {
+									"card": {
+										"card": "sourceCard"
+									},
+									"attributeId": 8
+								}
+							}
+						}
+					],
 					"desc": "移动物品"
+				},
+				{
+					"id": 5002,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "sourceCard"
+					},
+					"changes": [
+						{
+							"type": "changeCardRefList",
+							"attributeId": 10,
+							"remove": [
+								{
+									"card": "targetCard"
+								}
+							]
+						}
+					],
+					"desc": "移出背包"
 				}
 			],
 			"createdAt": 1767974400051,
@@ -2652,9 +2917,9 @@
 						},
 						"attributes": [
 							{
-								"refExists": true,
 								"type": "cardRef",
-								"attributeId": 9
+								"attributeId": 9,
+								"refValueExists": true
 							}
 						]
 					}
@@ -2710,18 +2975,20 @@
 			"effects": [
 				{
 					"id": 98,
-					"kind": "changeBaseNumberAttributes",
+					"kind": "changeAttributes",
 					"target": {
 						"card": "sourceCard"
 					},
 					"changes": [
 						{
 							"attributeId": 2,
-							"delta": -5
+							"type": "changeBaseNumber",
+							"sub": 5
 						},
 						{
 							"attributeId": 1,
-							"delta": -5
+							"type": "changeBaseNumber",
+							"sub": 5
 						}
 					]
 				}
@@ -2777,11 +3044,69 @@
 			"effects": [
 				{
 					"id": 420,
-					"kind": "learnSkill",
+					"kind": "addCard",
 					"target": {
 						"card": "sourceCard"
 					},
-					"skillSlot": "skill"
+					"templateFrom": {
+						"card": "slot",
+						"slot": "skill"
+					},
+					"condition": {
+						"kind": "and",
+						"items": [
+							{
+								"target": {
+									"card": "slot",
+									"slot": "skill"
+								},
+								"isCardType": "skill"
+							},
+							{
+								"target": {
+									"card": "sourceCard"
+								},
+								"attributes": [
+									{
+										"type": "cardRefList",
+										"attributeId": 312,
+										"refListsMatch": {
+											"condition": {
+												"target": {
+													"card": "referencedCard"
+												},
+												"isSameTemplateAs": {
+													"card": "slot",
+													"slot": "skill"
+												}
+											},
+											"max": 0
+										}
+									}
+								]
+							}
+						]
+					}
+				},
+				{
+					"id": 6107,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "sourceCard"
+					},
+					"changes": [
+						{
+							"type": "changeCardRefList",
+							"attributeId": 312,
+							"add": [
+								{
+									"card": "createdCard",
+									"effectId": 420
+								}
+							]
+						}
+					],
+					"desc": "加入技能列表"
 				}
 			],
 			"slots": [
@@ -2898,37 +3223,39 @@
 							"effects": [
 								{
 									"id": 101,
-									"kind": "changeRelationshipNumberAttributes",
-									"relationship": {
-										"source": {
-											"card": "sourceCard"
-										},
-										"target": {
-											"card": "targetCard"
-										}
-									},
+									"kind": "changeAttributes",
 									"changes": [
 										{
 											"attributeId": 19,
-											"delta": 5
+											"type": "changeRelationshipNumber",
+											"relationship": {
+												"source": {
+													"card": "sourceCard"
+												},
+												"target": {
+													"card": "targetCard"
+												}
+											},
+											"add": 5
 										}
 									]
 								},
 								{
 									"id": 102,
-									"kind": "changeRelationshipNumberAttributes",
-									"relationship": {
-										"source": {
-											"card": "targetCard"
-										},
-										"target": {
-											"card": "sourceCard"
-										}
-									},
+									"kind": "changeAttributes",
 									"changes": [
 										{
 											"attributeId": 19,
-											"delta": 3
+											"type": "changeRelationshipNumber",
+											"relationship": {
+												"source": {
+													"card": "targetCard"
+												},
+												"target": {
+													"card": "sourceCard"
+												}
+											},
+											"add": 3
 										}
 									]
 								},
@@ -3135,7 +3462,7 @@
 			"effects": [
 				{
 					"id": 104,
-					"kind": "changeBaseNumberAttributes",
+					"kind": "changeAttributes",
 					"target": {
 						"card": "host"
 					},
@@ -3145,7 +3472,8 @@
 							"set": {
 								"op": "numberAttributeValue",
 								"attributeId": 22
-							}
+							},
+							"type": "changeBaseNumber"
 						}
 					]
 				}
@@ -3179,7 +3507,7 @@
 			"effects": [
 				{
 					"id": 105,
-					"kind": "changeBaseNumberAttributes",
+					"kind": "changeAttributes",
 					"target": {
 						"card": "host"
 					},
@@ -3189,7 +3517,8 @@
 							"set": {
 								"op": "numberAttributeValue",
 								"attributeId": 23
-							}
+							},
+							"type": "changeBaseNumber"
 						}
 					]
 				}
@@ -3258,19 +3587,29 @@
 			"effects": [
 				{
 					"id": 401,
-					"kind": "addCardAttribute",
-					"attributeId": 301,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 301,
+							"type": "initDerivedNumber"
+						}
+					]
 				},
 				{
 					"id": 402,
-					"kind": "addCardAttribute",
-					"attributeId": 304,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 304,
+							"type": "initDerivedNumber"
+						}
+					]
 				}
 			]
 		},
@@ -3299,19 +3638,29 @@
 			"effects": [
 				{
 					"id": 403,
-					"kind": "addCardAttribute",
-					"attributeId": 305,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 305,
+							"type": "initDerivedNumber"
+						}
+					]
 				},
 				{
 					"id": 404,
-					"kind": "addCardAttribute",
-					"attributeId": 306,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 306,
+							"type": "initDerivedNumber"
+						}
+					]
 				}
 			]
 		},
@@ -3351,59 +3700,94 @@
 			"effects": [
 				{
 					"id": 405,
-					"kind": "addCardAttribute",
-					"attributeId": 302,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 302,
+							"type": "initDerivedNumber"
+						}
+					]
 				},
 				{
 					"id": 406,
-					"kind": "addCardAttribute",
-					"attributeId": 303,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 303,
+							"type": "initDerivedNumber"
+						}
+					]
 				},
 				{
 					"id": 407,
-					"kind": "addCardAttribute",
-					"attributeId": 307,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 307,
+							"type": "initDerivedNumber"
+						}
+					]
 				},
 				{
 					"id": 408,
-					"kind": "addCardAttribute",
-					"attributeId": 308,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 308,
+							"type": "initDerivedNumber"
+						}
+					]
 				},
 				{
 					"id": 409,
-					"kind": "addCardAttribute",
-					"attributeId": 309,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 309,
+							"type": "initDerivedNumber"
+						}
+					]
 				},
 				{
 					"id": 410,
-					"kind": "addCardAttribute",
-					"attributeId": 310,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 310,
+							"type": "initDerivedNumber"
+						}
+					]
 				},
 				{
 					"id": 411,
-					"kind": "addCardAttribute",
-					"attributeId": 311,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 311,
+							"type": "initDerivedNumber"
+						}
+					]
 				}
 			]
 		},
@@ -3443,59 +3827,94 @@
 			"effects": [
 				{
 					"id": 412,
-					"kind": "addCardAttribute",
-					"attributeId": 302,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 302,
+							"type": "initDerivedNumber"
+						}
+					]
 				},
 				{
 					"id": 413,
-					"kind": "addCardAttribute",
-					"attributeId": 303,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 303,
+							"type": "initDerivedNumber"
+						}
+					]
 				},
 				{
 					"id": 414,
-					"kind": "addCardAttribute",
-					"attributeId": 307,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 307,
+							"type": "initDerivedNumber"
+						}
+					]
 				},
 				{
 					"id": 415,
-					"kind": "addCardAttribute",
-					"attributeId": 308,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 308,
+							"type": "initDerivedNumber"
+						}
+					]
 				},
 				{
 					"id": 416,
-					"kind": "addCardAttribute",
-					"attributeId": 309,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 309,
+							"type": "initDerivedNumber"
+						}
+					]
 				},
 				{
 					"id": 417,
-					"kind": "addCardAttribute",
-					"attributeId": 310,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 310,
+							"type": "initDerivedNumber"
+						}
+					]
 				},
 				{
 					"id": 418,
-					"kind": "addCardAttribute",
-					"attributeId": 311,
+					"kind": "addAttribute",
 					"target": {
 						"card": "host"
-					}
+					},
+					"attributes": [
+						{
+							"attributeId": 311,
+							"type": "initDerivedNumber"
+						}
+					]
 				}
 			]
 		}

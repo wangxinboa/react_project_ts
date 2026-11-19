@@ -1,5 +1,5 @@
 import { validateFormula } from "../pages/card_story_game/formula/formula_validate.ts";
-import { AttributeType } from "../pages/card_story_game/card_story_game_types/attribute_types.ts";
+import { AttributeType } from "../pages/card_story_game/card_story_game_types/attribute_types/attribute_types.ts";
 import type { FamineRefugeeConfig } from "../pages/card_story_game/game/famine_refugee/famine_refugee_types.ts";
 
 export interface FamineSceneEntry {

@@ -1,4 +1,4 @@
-import type { Formula } from "./formula_types.ts";
+import type { Formula } from "../formula_types.ts";
 
 /** 属性值：number / cardRef / cardRefList。 */
 export type AttributeValue = number | string | string[];
@@ -14,12 +14,6 @@ export const AttributeType = {
 
 export type AttributeType = (typeof AttributeType)[keyof typeof AttributeType];
 
-/** 模板/标签上的属性初始绑定。 */
-export interface AttributeBinding {
-	id: number;
-	value: AttributeValue;
-}
-
 interface AttributeDefinitionBase {
 	id: number;
 	key: string;
@@ -30,18 +24,18 @@ interface AttributeDefinitionBase {
 /** 全局属性定义，卡牌模板和标签共用。 */
 export type AttributeDefinition =
 	| (AttributeDefinitionBase & {
-		type: typeof AttributeType.BASE_NUMBER;
-	})
+			type: typeof AttributeType.BASE_NUMBER;
+	  })
 	| (AttributeDefinitionBase & {
-		type: typeof AttributeType.DERIVED_NUMBER;
-		formula: Formula;
-	})
+			type: typeof AttributeType.DERIVED_NUMBER;
+			formula: Formula;
+	  })
 	| (AttributeDefinitionBase & {
-		type: typeof AttributeType.CARD_REF;
-	})
+			type: typeof AttributeType.CARD_REF;
+	  })
 	| (AttributeDefinitionBase & {
-		type: typeof AttributeType.CARD_REF_LIST;
-	})
+			type: typeof AttributeType.CARD_REF_LIST;
+	  })
 	| (AttributeDefinitionBase & {
-		type: typeof AttributeType.RELATIONSHIP_NUMBER;
-	});
+			type: typeof AttributeType.RELATIONSHIP_NUMBER;
+	  });

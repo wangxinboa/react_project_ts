@@ -1,4 +1,4 @@
-import type { AttributeBinding } from "./attribute_types.ts";
+import type { TemplateAttributeInit } from "./attribute_types/attribute_init_types.ts";
 import type { ConditionExpression } from "./condition_expression_types/condition_expression_types.ts";
 import type { EffectCall } from "./effect_types/effect_types.ts";
 
@@ -32,7 +32,7 @@ export interface TagItem {
 	/** derived 标签的判定条件 */
 	condition?: ConditionExpression;
 	/** state 标签自身的属性绑定 */
-	attributes?: AttributeBinding[];
+	attributes?: TemplateAttributeInit[];
 	/** state 标签每小时执行的自定义效果 */
 	auto?: TagAuto[];
 }

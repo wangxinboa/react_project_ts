@@ -1,4 +1,4 @@
-import type { AttributeBinding } from "../attribute_types.ts";
+import type { TemplateAttributeInit } from "../attribute_types/attribute_init_types.ts";
 import type { ConditionExpression } from "../condition_expression_types/condition_expression_types.ts";
 import type { EffectCall } from "../effect_types/effect_types.ts";
 import type { NumberExpression } from "../formula_types.ts";
@@ -46,7 +46,7 @@ export interface CardTemplate {
 	/** 初始 state 标签 id 列表 */
 	tags?: number[];
 	/** 初始属性绑定 */
-	attributes?: AttributeBinding[];
+	attributes?: TemplateAttributeInit[];
 	/** 每小时执行的 auto 动作 id */
 	auto?: number[];
 	/** 主动动作 id；由 sourceCard 发起，目标通过 slots 放置；NPC 行为按此数组顺序尝试 */

@@ -1,5 +1,5 @@
 import type { BaseNumberCheck } from "./base_number_check_types.ts";
-import type { AttributeType } from "../attribute_types.ts";
+import type { AttributeType } from "../attribute_types/attribute_types.ts";
 
 /** 反应中可读取的卡牌基础数值属性变化。 */
 export interface BaseNumberAttributeChangeCheck {

@@ -1,32 +1,42 @@
+export const EffectType = {
+	CHANGE_ATTRIBUTES: "changeAttributes",
+	ADD_ATTRIBUTE: "addAttribute",
+	ADD_TAG: "addTag",
+	REMOVE_TAG: "removeTag",
+	CHANGE_TEMPLATE: "changeTemplate",
+	ADD_CARD: "addCard",
+	REMOVE_CARD: "removeCard",
+	START_DIALOGUE: "startDialogue",
+	CREATE_AGREEMENT: "createAgreement",
+	CONFIRM_PROMISE: "confirmPromise",
+} as const;
+
+export type EffectType = (typeof EffectType)[keyof typeof EffectType];
+
 import type { ConditionExpression } from "../condition_expression_types/condition_expression_types.ts";
 import type { TargetRef } from "../condition_expression_types/target_ref.ts";
-import type { AddCardAttributeEffect, ChangeBaseNumberAttributesEffect, ChangeRelationshipNumberAttributesEffect } from "./attribute_effects.ts";
+import type { AddAttributeEffect } from "./attribute_effects/add_attribute_effects.ts";
+import type { ChangeCardAttributesEffect } from "./attribute_effects/change_attribute_effects.ts";
 import type { CreateAgreementEffect, ConfirmPromiseEffect } from "./agreement_effects.ts";
 import type { AddTagEffect, RemoveTagEffect } from "./tag_effects.ts";
 import type { ChangeTemplateEffect } from "./template_effects.ts";
 import type { AddCardEffect, RemoveCardEffect } from "./card_effects.ts";
-import type { ChangeLocationEffect } from "./location_effects.ts";
-import type { MoveItemCardEffect } from "./item_effects.ts";
 import type { StartDialogueEffect } from "./dialogue_effects.ts";
-import type { LearnSkillEffect } from "./skill_effects.ts";
 
 
 /** 所有效果类型。 */
 export type EffectKind =
-	| ChangeBaseNumberAttributesEffect
-	| AddCardAttributeEffect
+	| ChangeCardAttributesEffect
+	| AddAttributeEffect
 	| AddTagEffect
 	| RemoveTagEffect
 	| ChangeTemplateEffect
 	| AddCardEffect
 	| RemoveCardEffect
-	| ChangeLocationEffect
-	| MoveItemCardEffect
 	| StartDialogueEffect
-	| ChangeRelationshipNumberAttributesEffect
 	| CreateAgreementEffect
 	| ConfirmPromiseEffect
-	| LearnSkillEffect;
+;
 
 /** Effect 作用对象；与 Condition target 使用同一套 TargetRef。 */
 export type EffectTarget = TargetRef;

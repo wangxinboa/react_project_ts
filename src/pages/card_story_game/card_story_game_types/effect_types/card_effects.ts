@@ -1,16 +1,15 @@
-import type { EffectType } from "./effect_kind_types.ts";
-/** sourceBackpack：进入执行者背包；sourceLocation：生成在执行者当前地点。 */
-export const AddCardDestination = {
-	SOURCE_BACKPACK: "sourceBackpack",
-	SOURCE_LOCATION: "sourceLocation",
-} as const;
+import type { AttributeInit } from "../attribute_types/attribute_init_types.ts";
+import type { TargetRef } from "../condition_expression_types/target_ref.ts";
+import type { EffectType } from "./effect_types.ts";
 
-export type AddCardDestination = (typeof AddCardDestination)[keyof typeof AddCardDestination];
 /** 生成一张新卡；默认进入执行者背包。 */
 export type AddCardEffect = {
 	kind: typeof EffectType.ADD_CARD;
-	templateId: number;
-	to?: AddCardDestination;
+	templateId?: number;
+	/** 从目标卡实例读取模板 id；与 templateId 二选一 */
+	templateFrom?: TargetRef;
+	/** 覆盖新卡的初始属性 */
+	attributes?: AttributeInit[];
 };
 
 /** 从场景中移除目标卡。 */

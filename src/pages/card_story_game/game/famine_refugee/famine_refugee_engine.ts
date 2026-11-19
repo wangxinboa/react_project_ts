@@ -1,7 +1,7 @@
 import { evaluateFormula } from "../../formula/formula_eval.ts";
 import type { FormulaContext } from "../../formula/formula_eval.ts";
-import type { AttributeValue, BaseNumberCheck, NumberExpression, TargetRef } from "../../card_story_game_types/index.ts";
-import { AddCardDestination, EffectType, FormulaOp, PromiseConfirmation, PromiseTimeRelation, AttributeType, CardReactionTriggerKind, CardType, ConditionGroupKind, ConditionNotKind, ConditionTarget, MoveItemDestination, TagKind } from "../../card_story_game_types/index.ts";
+import type { AttributeValue, BaseNumberCheck, NumberExpression, TargetRef, CardRefValue, AttributeInit, TemplateAttributeInit } from "../../card_story_game_types/index.ts";
+import { AttributeInitType, AttributeChangeType, EffectType, FormulaOp, PromiseConfirmation, PromiseTimeRelation, AttributeType, CardReactionTriggerKind, CardType, ConditionGroupKind, ConditionNotKind, ConditionTarget, TagKind } from "../../card_story_game_types/index.ts";
 import { getNumberAttribute, getNumberValues, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import type {
 	ActionSlot,
@@ -39,7 +39,7 @@ interface EntitySnapshot {
 	cardId?: string;
 }
 
-interface AttributeChange {
+interface AttributeValueChange {
 	attributeId: number;
 	oldExists: boolean;
 	newExists: boolean;
@@ -48,7 +48,7 @@ interface AttributeChange {
 }
 
 interface ReactionContext {
-	attributeChanges: AttributeChange[];
+	attributeChanges: AttributeValueChange[];
 	tagIdsAdded: number[];
 	tagIdsRemoved: number[];
 }
@@ -104,15 +104,23 @@ function getTagDefinition(config: FamineRefugeeConfig, tagId: number): FamineTag
 	return null;
 }
 
+function applyTemplateAttributeInits(values: Record<number, AttributeValue>, attributes: TemplateAttributeInit[] | undefined, onlyMissing: boolean): void {
+	for (let i = 0; i < (attributes ?? []).length; i++) {
+		const init = attributes![i];
+		if (init.type === AttributeInitType.INIT_BASE_NUMBER) {
+			if (onlyMissing && values[init.attributeId] !== undefined) continue;
+			values[init.attributeId] = init.value;
+		} else if (init.type === AttributeInitType.INIT_DERIVED_NUMBER) {
+			if (onlyMissing && values[init.attributeId] !== undefined) continue;
+			values[init.attributeId] = 0;
+		}
+	}
+}
+
 function createTagInstance(config: FamineRefugeeConfig, tagId: number): TagInstanceState {
 	const definition = getTagDefinition(config, tagId);
 	const values: Record<number, number> = {};
-	if (definition?.attributes) {
-		for (let i = 0; i < definition.attributes.length; i++) {
-			const binding = definition.attributes[i];
-			if (typeof binding.value === "number") values[binding.id] = binding.value;
-		}
-	}
+	applyTemplateAttributeInits(values, definition?.attributes, false);
 	return { tagId, values };
 }
 
@@ -266,7 +274,7 @@ function evaluateAttributeChecks(condition: Condition, entity: EntitySnapshot, c
 			}
 			if (check.type === "cardRef") {
 				const exists = value !== undefined && value !== "" && (!Array.isArray(value) || value.length > 0);
-				if (exists !== check.refExists) return false;
+				if (exists !== check.refValueExists) return false;
 				continue;
 			}
 			if (check.type === "cardRefList") {
@@ -382,6 +390,7 @@ function hasCardCondition(condition: Condition): boolean {
 		|| condition.isAnyTemplate !== undefined
 		|| condition.isCardType !== undefined
 		|| condition.isAnyCardType !== undefined
+		|| condition.isSameTemplateAs !== undefined
 		|| condition.agreements !== undefined
 		|| condition.dialogues !== undefined
 		|| condition.attributeChanges !== undefined;
@@ -393,6 +402,10 @@ function evaluateCondition(condition: Condition, context: ConditionContext): boo
 	} else {
 		const entity = resolveTargetEntity(condition.target, context);
 		if (!entity) return false;
+		if (condition.isSameTemplateAs) {
+			const other = resolveTargetEntity(condition.isSameTemplateAs, context);
+			if (!other || entity.templateId === undefined || entity.templateId !== other.templateId) return false;
+		}
 		if (condition.worldTime !== undefined && !matchesAttribute(context.time ?? 0, condition.worldTime, {}, context)) return false;
 		if (condition.attributeChanges !== undefined && !evaluateAttributeChanges(condition.attributeChanges, context)) return false;
 		if (condition.memberOfRefList) {
@@ -470,10 +483,7 @@ function getDerivedTags(
 function createCardState(config: FamineRefugeeConfig, saveCard: SaveCard): CardState {
 	const template = getTemplate(config, saveCard.templateId);
 	const values: Record<number, AttributeValue> = {};
-	for (let i = 0; i < (template.attributes ?? []).length; i++) {
-		const binding = (template.attributes ?? [])[i];
-		values[binding.id] = binding.value;
-	}
+	applyTemplateAttributeInits(values, template.attributes, false);
 	if (saveCard.values) {
 		const keys = Object.keys(saveCard.values);
 		for (let i = 0; i < keys.length; i++) values[Number(keys[i])] = saveCard.values[Number(keys[i])];
@@ -782,7 +792,7 @@ function evaluateChangeNumber(
 function applyChangeAttributes(
 	config: FamineRefugeeConfig,
 	card: CardState,
-	changes: Array<{ attributeId: number; delta?: NumberExpression; set?: NumberExpression; condition?: ConditionExpression }>,
+	changes: Array<{ attributeId: number; add?: NumberExpression; sub?: NumberExpression; set?: NumberExpression; condition?: ConditionExpression }>,
 	evaluateChangeConditions?: (conditions: ConditionExpression | ConditionExpression[]) => boolean,
 	formulaContext?: FormulaContext,
 ): CardState {
@@ -795,8 +805,9 @@ function applyChangeAttributes(
 		const current = getNumberAttribute(values, change.attributeId);
 		const formulaValues = deriveCard(config, { ...card, values }).values;
 		const set = change.set === undefined ? undefined : evaluateChangeNumber(change.set, formulaValues, formulaContext);
-		const delta = evaluateChangeNumber(change.delta, formulaValues, formulaContext, 0);
-		const next = set ?? current + delta;
+		const add = evaluateChangeNumber(change.add, formulaValues, formulaContext, 0);
+		const sub = evaluateChangeNumber(change.sub, formulaValues, formulaContext, 0);
+		const next = set ?? current + add - sub;
 		values[change.attributeId] = next;
 	}
 	return { ...card, values };
@@ -809,7 +820,10 @@ function applyCardEffect(
 	evaluateChangeConditions?: (conditions: ConditionExpression | ConditionExpression[]) => boolean,
 	formulaContext?: FormulaContext,
 ): CardState {
-	if (effect.kind === EffectType.CHANGE_BASE_NUMBER_ATTRIBUTES) return applyChangeAttributes(config, card, effect.changes, evaluateChangeConditions, formulaContext);
+	if (effect.kind === EffectType.CHANGE_ATTRIBUTES) {
+		const baseChanges = effect.changes.filter((change) => change.type === AttributeChangeType.CHANGE_BASE_NUMBER);
+		return applyChangeAttributes(config, card, baseChanges, evaluateChangeConditions, formulaContext);
+	}
 	if (effect.kind === EffectType.ADD_TAG) {
 		for (let i = 0; i < card.tags.length; i++) {
 			if (card.tags[i].tagId === effect.tagId) return card;
@@ -823,20 +837,10 @@ function applyCardEffect(
 		}
 		return { ...card, tags };
 	}
-	if (effect.kind === EffectType.CHANGE_LOCATION) {
-		const values = { ...card.values };
-		values[getAttributeId(config, "location")] = effect.toLocation;
-		return { ...card, values };
-	}
 	if (effect.kind === EffectType.CHANGE_TEMPLATE) {
 		const template = getTemplate(config, effect.templateId);
 		const values = { ...card.values };
-		for (let i = 0; i < (template.attributes ?? []).length; i++) {
-			const binding = (template.attributes ?? [])[i];
-			if (typeof values[binding.id] !== "number") {
-				values[binding.id] = binding.value;
-			}
-		}
+		applyTemplateAttributeInits(values, template.attributes, true);
 		return { ...card, templateId: effect.templateId, values };
 	}
 	return card;
@@ -949,6 +953,7 @@ interface EffectRuntime {
 	targetId?: string;
 	hostId?: string;
 	slotMap: Record<string, string[]>;
+	createdCards: Record<number, string>;
 	cards: CardState[];
 	nextCardId: number;
 	removeIds: Set<string>;
@@ -965,6 +970,10 @@ function getEffectTargetIds(runtime: EffectRuntime, effect: InlineEffect): strin
 	if (effect.target?.card === ConditionTarget.SLOT && effect.target.slot) return runtime.slotMap[effect.target.slot] ?? [];
 	if (effect.target?.card === ConditionTarget.TARGET_CARD && runtime.targetId) return [runtime.targetId];
 	if (effect.target?.card === ConditionTarget.HOST && runtime.hostId) return [runtime.hostId];
+	if (effect.target?.card === ConditionTarget.CREATED_CARD && effect.target.effectId !== undefined) {
+		const cardId = runtime.createdCards[effect.target.effectId];
+		return cardId ? [cardId] : [];
+	}
 	if (effect.target?.card === ConditionTarget.SOURCE_CARD || !effect.target) return [runtime.sourceId];
 	return [];
 }
@@ -998,119 +1007,24 @@ function applyCreateCardEffect(runtime: EffectRuntime, effect: InlineEffect): vo
 	if (!source) return;
 	const context = getConditionContext(runtime.config, effect.condition, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, null, runtime.slotMap, runtime.cards, {}, [], runtime.time);
 	if (!evaluateConditions(effect.condition, context)) return;
+	const fromCardId = effect.templateFrom ? resolveRuntimeCardId(runtime, effect.templateFrom) : undefined;
+	const templateId = effect.templateId ?? (fromCardId ? getCard(runtime.cards, fromCardId)?.templateId : undefined);
+	if (templateId === undefined) return;
+	const template = getTemplate(runtime.config, templateId);
+	const values: Record<number, AttributeValue> = {};
+	applyTemplateAttributeInits(values, template.attributes, false);
 	const id = `card_${runtime.nextCardId}`;
 	runtime.nextCardId += 1;
-	const sourceLocation = getStringAttribute(source.values, getAttributeId(runtime.config, "location")) ?? "";
-	if (effect.to === AddCardDestination.SOURCE_LOCATION) {
-		runtime.cards = [...runtime.cards, createCardState(runtime.config, { id, templateId: effect.templateId, values: { [getAttributeId(runtime.config, "location")]: sourceLocation } })];
-		return;
+	let created = createCardState(runtime.config, { id, templateId, values });
+	runtime.createdCards[effect.id] = id;
+	const relationshipInits: Extract<AttributeInit, { type: typeof AttributeInitType.INIT_RELATIONSHIP_NUMBER }>[] = [];
+	for (let i = 0; i < (effect.attributes ?? []).length; i++) {
+		const init = effect.attributes![i];
+		if (init.type === AttributeInitType.INIT_RELATIONSHIP_NUMBER) relationshipInits.push(init);
+		else created = applyAttributeInit(runtime, created, init);
 	}
-	const sourceBackpack = getStringListAttribute(source.values, getAttributeId(runtime.config, "backpack"));
-	const created = createCardState(runtime.config, { id, templateId: effect.templateId, values: { [getAttributeId(runtime.config, "carrier")]: source.id, [getAttributeId(runtime.config, "location")]: "" } });
-	const ownerValues = { ...source.values };
-	ownerValues[getAttributeId(runtime.config, "backpack")] = [...sourceBackpack, id];
-	runtime.cards = [...runtime.cards.map((card) => (card.id === source.id ? { ...card, values: ownerValues } : card)), created];
-}
-
-function simulateMoveItemCard(
-	config: FamineRefugeeConfig,
-	cards: CardState[],
-	itemId: string,
-	to: MoveItemDestination,
-	source: CardState,
-	target: CardState | null,
-): CardState[] | null {
-	const item = getCard(cards, itemId);
-	if (!item) return null;
-	const backpackId = getAttributeId(config, "backpack");
-	const carrierId = getAttributeId(config, "carrier");
-	const locationId = getAttributeId(config, "location");
-	const weightId = getAttributeId(config, "weight");
-	const capacityId = getAttributeId(config, "carryCapacity");
-	const slotsId = getAttributeId(config, "carrySlots");
-
-	let updated = cards.map((card) => {
-		const backpack = getStringListAttribute(card.values, backpackId);
-		if (!backpack.includes(itemId)) return card;
-		const values = { ...card.values };
-		values[backpackId] = backpack.filter((id) => id !== itemId);
-		return { ...card, values };
-	});
-	const values = { ...item.values };
-	if (to === MoveItemDestination.SOURCE_BACKPACK || to === MoveItemDestination.TARGET_BACKPACK) {
-		const carrier = to === MoveItemDestination.SOURCE_BACKPACK ? source : target;
-		if (!carrier) return null;
-		const current = getCard(updated, carrier.id);
-		if (!current) return null;
-		const backpack = getStringListAttribute(current.values, backpackId);
-		const derived = deriveCard(config, current, updated);
-		const slots = getNumberAttribute(derived.values, slotsId);
-		let weight = getNumberAttribute(item.values, weightId);
-		for (let i = 0; i < backpack.length; i++) {
-			const carried = getCard(updated, backpack[i]);
-			if (carried) weight += getNumberAttribute(carried.values, weightId);
-		}
-		if (backpack.length + 1 > slots) return null;
-		if (weight > getNumberAttribute(derived.values, capacityId)) return null;
-		values[carrierId] = carrier.id;
-		values[locationId] = "";
-		updated = updated.map((card) => {
-			if (card.id !== carrier.id) return card;
-			const own = { ...card.values };
-			own[backpackId] = [...getStringListAttribute(card.values, backpackId), itemId];
-			return { ...card, values: own };
-		});
-	} else {
-		const place = to === MoveItemDestination.SOURCE_LOCATION ? source : target;
-		values[carrierId] = "";
-		values[locationId] = place ? (getStringAttribute(place.values, locationId) ?? "") : "";
-	}
-	return updated.map((card) => (card.id === itemId ? { ...card, values } : card));
-}
-
-function getMoveItemIds(effect: InlineEffect, slotMap: Record<string, string[]>, targetId?: string): string[] {
-	if (effect.kind !== EffectType.MOVE_ITEM_CARD) return [];
-	return effect.target?.card === ConditionTarget.SLOT && effect.target.slot
-		? slotMap[effect.target.slot] ?? []
-		: targetId ? [targetId] : [];
-}
-
-function validateMoveItemEffects(
-	config: FamineRefugeeConfig,
-	effects: InlineEffect[],
-	slotMap: Record<string, string[]>,
-	sourceId: string,
-	targetId: string | undefined,
-	cards: CardState[],
-): boolean {
-	const source = getCard(cards, sourceId);
-	if (!source) return false;
-	const target = targetId ? getCard(cards, targetId) : null;
-	let simulated = cards;
-	for (let i = 0; i < effects.length; i++) {
-		const effect = effects[i];
-		if (effect.kind !== EffectType.MOVE_ITEM_CARD) continue;
-		const itemIds = getMoveItemIds(effect, slotMap, targetId);
-		for (let j = 0; j < itemIds.length; j++) {
-			const next = simulateMoveItemCard(config, simulated, itemIds[j], effect.to, source, target);
-			if (!next) return false;
-			simulated = next;
-		}
-	}
-	return true;
-}
-
-function applyMoveItemEffect(runtime: EffectRuntime, effect: InlineEffect): void {
-	if (effect.kind !== EffectType.MOVE_ITEM_CARD) return;
-	const source = getCard(runtime.cards, runtime.sourceId);
-	if (!source) return;
-	const target = runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null;
-	const itemIds = getMoveItemIds(effect, runtime.slotMap, runtime.targetId);
-	for (let i = 0; i < itemIds.length; i++) {
-		const next = simulateMoveItemCard(runtime.config, runtime.cards, itemIds[i], effect.to, source, target);
-		if (!next) return;
-		runtime.cards = next;
-	}
+	runtime.cards = [...runtime.cards, created];
+	for (let i = 0; i < relationshipInits.length; i++) applyRelationshipAttributeInit(runtime, relationshipInits[i]);
 }
 
 function applyRemoveCardEffect(runtime: EffectRuntime, effect: InlineEffect): void {
@@ -1175,45 +1089,8 @@ function resolveRuntimeCardId(runtime: EffectRuntime, target: TargetRef): string
 	if (target.card === ConditionTarget.TARGET_CARD) return runtime.targetId;
 	if (target.card === ConditionTarget.HOST) return runtime.hostId;
 	if (target.card === ConditionTarget.SLOT && target.slot) return runtime.slotMap[target.slot]?.[0];
+	if (target.card === ConditionTarget.CREATED_CARD && target.effectId !== undefined) return runtime.createdCards[target.effectId];
 	return undefined;
-}
-
-function applyChangeRelationshipEffect(runtime: EffectRuntime, effect: InlineEffect): void {
-	if (effect.kind !== EffectType.CHANGE_RELATIONSHIP_NUMBER_ATTRIBUTES) return;
-	const sourceId = resolveRuntimeCardId(runtime, effect.relationship.source);
-	const targetId = resolveRuntimeCardId(runtime, effect.relationship.target);
-	if (!sourceId || !targetId) return;
-	const source = getCard(runtime.cards, sourceId);
-	if (!source) return;
-	const current = source.relationships?.[targetId] ?? { values: {} };
-	const values = { ...current.values };
-	const formulaContext: FormulaContext = {
-		...createFormulaContext(runtime.config, runtime.cards),
-		evaluateConditions: (conditions) => evaluateConditions(conditions, {
-			sourceCard: snapshotFromDerived(deriveCard(runtime.config, source, runtime.cards), source),
-			targetCard: runtime.targetId ? snapshotFromDerived(deriveCard(runtime.config, getCard(runtime.cards, runtime.targetId) ?? source, runtime.cards)) : undefined,
-			slot: undefined,
-			cards: runtime.cards,
-			config: runtime.config,
-		}),
-	};
-	for (let i = 0; i < effect.changes.length; i++) {
-		const change = effect.changes[i];
-		if (change.condition) {
-			const context = getConditionContext(runtime.config, change.condition, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, source, runtime.slotMap, runtime.cards, {}, [], runtime.time);
-			if (!evaluateConditions(change.condition, context)) continue;
-		}
-		const definition = runtime.config.allAttributes.find((attribute) => attribute.id === change.attributeId);
-		if (!definition || definition.type !== AttributeType.RELATIONSHIP_NUMBER) continue;
-		const currentValue = getNumberAttribute(values, change.attributeId);
-		const set = change.set === undefined ? undefined : evaluateFormula(change.set, values, formulaContext);
-		const delta = change.delta === undefined ? 0 : evaluateFormula(change.delta, values, formulaContext);
-		const next = set ?? currentValue + delta;
-		values[change.attributeId] = next;
-	}
-	const relationships = { ...(source.relationships ?? {}) };
-	relationships[targetId] = { ...current, values };
-	runtime.cards = replaceCard(runtime.cards, { ...source, relationships });
 }
 
 function applyCreateAgreementEffect(runtime: EffectRuntime, effect: InlineEffect): void {
@@ -1275,61 +1152,164 @@ function applyConfirmPromiseEffect(runtime: EffectRuntime, effect: InlineEffect)
 	};
 }
 
+function applyAttributeInit(runtime: EffectRuntime, card: CardState, init: Exclude<AttributeInit, { type: typeof AttributeInitType.INIT_RELATIONSHIP_NUMBER }>): CardState {
+	const definition = runtime.config.allAttributes.find((attribute) => attribute.id === init.attributeId);
+	if (!definition || definition.type === AttributeType.RELATIONSHIP_NUMBER) return card;
+	const values = { ...card.values };
+	if (init.type === AttributeInitType.INIT_BASE_NUMBER) {
+		if (definition.type !== AttributeType.BASE_NUMBER || values[init.attributeId] !== undefined) return card;
+		values[init.attributeId] = evaluateFormula(init.value, values, createFormulaContext(runtime.config, runtime.cards, card));
+		return { ...card, values };
+	}
+	if (init.type === AttributeInitType.INIT_DERIVED_NUMBER) {
+		if (definition.type !== AttributeType.DERIVED_NUMBER || values[init.attributeId] !== undefined) return card;
+		values[init.attributeId] = 0;
+		return { ...card, values };
+	}
+	if (init.type === AttributeInitType.INIT_CARD_REF) {
+		if (definition.type !== AttributeType.CARD_REF || values[init.attributeId] !== undefined) return card;
+		values[init.attributeId] = resolveCardRefValue(runtime, init.value);
+		return { ...card, values };
+	}
+	if (init.type === AttributeInitType.INIT_CARD_REF_LIST) {
+		if (definition.type !== AttributeType.CARD_REF_LIST || values[init.attributeId] !== undefined) return card;
+		values[init.attributeId] = resolveAttributeChangeTargets(runtime, init.value);
+		return { ...card, values };
+	}
+	return card;
+}
+
+function applyRelationshipAttributeInit(runtime: EffectRuntime, init: Extract<AttributeInit, { type: typeof AttributeInitType.INIT_RELATIONSHIP_NUMBER }>): void {
+	const sourceId = resolveRuntimeCardId(runtime, init.relationship.source);
+	const targetId = resolveRuntimeCardId(runtime, init.relationship.target);
+	if (!sourceId || !targetId) return;
+	const source = getCard(runtime.cards, sourceId);
+	if (!source) return;
+	const definition = runtime.config.allAttributes.find((attribute) => attribute.id === init.attributeId);
+	if (!definition || definition.type !== AttributeType.RELATIONSHIP_NUMBER) return;
+	const current = source.relationships?.[targetId] ?? { values: {} };
+	if (current.values[init.attributeId] !== undefined) return;
+	const values = { ...current.values, [init.attributeId]: init.value };
+	runtime.cards = replaceCard(runtime.cards, { ...source, relationships: { ...(source.relationships ?? {}), [targetId]: { ...current, values } } });
+}
+
 function applyAddAttributeEffect(runtime: EffectRuntime, effect: InlineEffect): void {
-	if (effect.kind !== EffectType.ADD_CARD_ATTRIBUTE) return;
+	if (effect.kind !== EffectType.ADD_ATTRIBUTE) return;
 	const source = getCard(runtime.cards, runtime.sourceId);
 	if (!source) return;
 	const targetIds = getEffectTargetIds(runtime, effect);
+	const relationshipInits = effect.attributes.filter((init): init is Extract<AttributeInit, { type: typeof AttributeInitType.INIT_RELATIONSHIP_NUMBER }> => init.type === AttributeInitType.INIT_RELATIONSHIP_NUMBER);
+	const cardInits = effect.attributes.filter((init) => init.type !== AttributeInitType.INIT_RELATIONSHIP_NUMBER);
+	let applied = false;
 	for (let i = 0; i < targetIds.length; i++) {
 		const card = getCard(runtime.cards, targetIds[i]);
-		if (!card || card.values[effect.attributeId] !== undefined) continue;
-		const definition = runtime.config.allAttributes.find((attribute) => attribute.id === effect.attributeId);
-		if (!definition || definition.type === AttributeType.RELATIONSHIP_NUMBER) continue;
+		if (!card) continue;
 		const context = getConditionContext(runtime.config, effect.condition, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, card, runtime.slotMap, runtime.cards, runtime.agreements, runtime.dialogueHistory, runtime.time);
 		context.host = snapshotFromDerived(deriveCard(runtime.config, card, runtime.cards), card);
 		if (!evaluateConditions(effect.condition, context)) continue;
-		runtime.cards = replaceCard(runtime.cards, { ...card, values: { ...card.values, [effect.attributeId]: 0 } });
+		applied = true;
+		let updated = card;
+		for (let j = 0; j < cardInits.length; j++) updated = applyAttributeInit(runtime, updated, cardInits[j]);
+		runtime.cards = replaceCard(runtime.cards, updated);
+	}
+	if (applied) {
+		for (let i = 0; i < relationshipInits.length; i++) applyRelationshipAttributeInit(runtime, relationshipInits[i]);
 	}
 }
 
-function applyLearnSkillEffect(runtime: EffectRuntime, effect: InlineEffect): void {
-	if (effect.kind !== EffectType.LEARN_SKILL || !runtime.targetId) return;
-	const target = getCard(runtime.cards, runtime.targetId);
+
+function resolveCardRefValue(runtime: EffectRuntime, value: CardRefValue): string {
+	if (value === null) return "";
+	if ("literal" in value) return value.literal;
+	if ("card" in value) return resolveRuntimeCardId(runtime, value.card) ?? "";
+	const ownerId = resolveRuntimeCardId(runtime, value.copyCardRef.card);
+	const owner = ownerId ? getCard(runtime.cards, ownerId) : null;
+	return owner ? getStringAttribute(owner.values, value.copyCardRef.attributeId) ?? "" : "";
+}
+
+function resolveAttributeChangeTargets(runtime: EffectRuntime, refs: TargetRef[] | undefined): string[] {
+	const ids: string[] = [];
+	for (let i = 0; i < (refs ?? []).length; i++) {
+		const id = resolveRuntimeCardId(runtime, refs![i]);
+		if (id) ids.push(id);
+	}
+	return ids;
+}
+
+function applyAttributeChangesEffect(runtime: EffectRuntime, effect: InlineEffect): void {
+	if (effect.kind !== EffectType.CHANGE_ATTRIBUTES) return;
 	const source = getCard(runtime.cards, runtime.sourceId);
-	if (!source || !target) return;
-	const skillCardId = (runtime.slotMap[effect.skillSlot] ?? [])[0];
-	if (!skillCardId) return;
-	const teacherSkills = getSkillListIds(runtime.config, target);
-	if (!teacherSkills.includes(skillCardId)) return;
-	const template = getSkillCardTemplate(runtime.config, runtime.cards, skillCardId);
-	if (!template) return;
-	const sourceSkills = getSkillListIds(runtime.config, source);
-	for (let i = 0; i < sourceSkills.length; i++) {
-		const owned = getCard(runtime.cards, sourceSkills[i]);
-		if (owned?.templateId === template.id) return;
+	if (!source) return;
+	const targetIds = getEffectTargetIds(runtime, effect);
+	const targets = targetIds.length > 0 ? targetIds : [runtime.sourceId];
+	for (let i = 0; i < targets.length; i++) {
+		for (let j = 0; j < effect.changes.length; j++) {
+			const change = effect.changes[j];
+			if (change.type === AttributeChangeType.CHANGE_RELATIONSHIP_NUMBER) continue;
+			const target = getCard(runtime.cards, targets[i]);
+			if (!target) continue;
+			const context = getConditionContext(runtime.config, change.condition, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, target, runtime.slotMap, runtime.cards, {}, [], runtime.time);
+			if (!evaluateConditions(change.condition, context)) continue;
+			const definition = runtime.config.allAttributes.find((attribute) => attribute.id === change.attributeId);
+			if (!definition) continue;
+			if (change.type === AttributeChangeType.CHANGE_BASE_NUMBER) {
+				if (definition.type !== AttributeType.BASE_NUMBER) continue;
+				const updated = applyChangeAttributes(runtime.config, target, [change], undefined, {
+					...createFormulaContext(runtime.config, runtime.cards, target),
+					evaluateConditions: (conditions) => evaluateConditions(conditions, context),
+				});
+				runtime.cards = replaceCard(runtime.cards, updated);
+				continue;
+			}
+			if (change.type === AttributeChangeType.CHANGE_CARD_REF) {
+				if (definition.type !== AttributeType.CARD_REF) continue;
+				const values = { ...target.values, [change.attributeId]: resolveCardRefValue(runtime, change.value) };
+				runtime.cards = replaceCard(runtime.cards, { ...target, values });
+				continue;
+			}
+			if (change.type === AttributeChangeType.CHANGE_CARD_REF_LIST) {
+				if (definition.type !== AttributeType.CARD_REF_LIST) continue;
+				const current = getStringListAttribute(target.values, change.attributeId);
+				const remove = new Set(resolveAttributeChangeTargets(runtime, change.remove));
+				const next = current.filter((id) => !remove.has(id));
+				const add = resolveAttributeChangeTargets(runtime, change.add);
+				for (let k = 0; k < add.length; k++) if (!next.includes(add[k])) next.push(add[k]);
+				runtime.cards = replaceCard(runtime.cards, { ...target, values: { ...target.values, [change.attributeId]: next } });
+			}
+		}
 	}
-	const newId = `skill_${source.id}_${template.id}`;
-	if (getCard(runtime.cards, newId)) return;
-	const newCard = createCardState(runtime.config, { id: newId, templateId: template.id });
-	const values = { ...source.values, [getAttributeId(runtime.config, "skillList")]: [...sourceSkills, newId] };
-	runtime.cards = [...runtime.cards, newCard];
-	runtime.cards = replaceCard(runtime.cards, { ...source, values });
+	for (let i = 0; i < effect.changes.length; i++) {
+		const change = effect.changes[i];
+		if (change.type !== AttributeChangeType.CHANGE_RELATIONSHIP_NUMBER) continue;
+		const context = getConditionContext(runtime.config, change.condition, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, source, runtime.slotMap, runtime.cards, {}, [], runtime.time);
+		if (!evaluateConditions(change.condition, context)) continue;
+		const definition = runtime.config.allAttributes.find((attribute) => attribute.id === change.attributeId);
+		if (!definition || definition.type !== AttributeType.RELATIONSHIP_NUMBER) continue;
+		const sourceId = resolveRuntimeCardId(runtime, change.relationship.source);
+		const targetId = resolveRuntimeCardId(runtime, change.relationship.target);
+		if (!sourceId || !targetId) continue;
+		const relationshipSource = getCard(runtime.cards, sourceId);
+		if (!relationshipSource) continue;
+		const current = relationshipSource.relationships?.[targetId] ?? { values: {} };
+		const values = { ...current.values };
+		const formulaContext = createFormulaContext(runtime.config, runtime.cards, relationshipSource);
+		const set = change.set === undefined ? undefined : evaluateFormula(change.set, values, formulaContext);
+		const add = change.add === undefined ? 0 : evaluateFormula(change.add, values, formulaContext);
+		const sub = change.sub === undefined ? 0 : evaluateFormula(change.sub, values, formulaContext);
+		values[change.attributeId] = set ?? getNumberAttribute(values, change.attributeId) + add - sub;
+		runtime.cards = replaceCard(runtime.cards, { ...relationshipSource, relationships: { ...(relationshipSource.relationships ?? {}), [targetId]: { ...current, values } } });
+	}
 }
-
 
 const effectHandlers: Record<InlineEffect["kind"], EffectHandler> = {
-	[EffectType.CHANGE_BASE_NUMBER_ATTRIBUTES]: applyTargetedEffect,
-	[EffectType.ADD_CARD_ATTRIBUTE]: applyAddAttributeEffect,
-	[EffectType.LEARN_SKILL]: applyLearnSkillEffect,
+	[EffectType.CHANGE_ATTRIBUTES]: applyAttributeChangesEffect,
+	[EffectType.ADD_ATTRIBUTE]: applyAddAttributeEffect,
 	[EffectType.ADD_TAG]: applyTargetedEffect,
 	[EffectType.REMOVE_TAG]: applyTargetedEffect,
 	[EffectType.CHANGE_TEMPLATE]: applyTargetedEffect,
-	[EffectType.CHANGE_LOCATION]: applyTargetedEffect,
 	[EffectType.ADD_CARD]: applyCreateCardEffect,
 	[EffectType.REMOVE_CARD]: applyRemoveCardEffect,
-	[EffectType.MOVE_ITEM_CARD]: applyMoveItemEffect,
 	[EffectType.START_DIALOGUE]: applyStartDialogueEffect,
-	[EffectType.CHANGE_RELATIONSHIP_NUMBER_ATTRIBUTES]: applyChangeRelationshipEffect,
 	[EffectType.CREATE_AGREEMENT]: applyCreateAgreementEffect,
 	[EffectType.CONFIRM_PROMISE]: applyConfirmPromiseEffect,
 };
@@ -1353,17 +1333,17 @@ function planActionEffects(
 		if (!effect) continue;
 		const context = getConditionContext(config, effect.condition, source, target, null, slotMap, cards);
 		if (!evaluateConditions(effect.condition, context)) continue;
-		let planned: InlineEffect = { ...effect, condition: undefined };
-		if (effect.kind === EffectType.CHANGE_BASE_NUMBER_ATTRIBUTES) {
+		if (effect.kind === EffectType.CHANGE_ATTRIBUTES) {
 			const changes = effect.changes.filter((change) => {
 				if (!change.condition) return true;
 				const changeContext = getConditionContext(config, change.condition, source, target, source, slotMap, cards);
 				return evaluateConditions(change.condition, changeContext);
 			});
 			if (changes.length === 0) continue;
-			planned = { ...effect, changes: changes.map((change) => ({ ...change, condition: undefined })), condition: undefined };
+			effects.push({ ...effect, changes: changes.map((change) => ({ ...change, condition: undefined })), condition: undefined });
+			continue;
 		}
-		effects.push(planned);
+		effects.push({ ...effect, condition: undefined });
 	}
 	return { effects, slotMap };
 }
@@ -1375,7 +1355,7 @@ interface CardSnapshot {
 }
 
 type CardChangeEvent =
-	| ({ kind: "baseNumberAttributeChanged" } & AttributeChange)
+	| ({ kind: "baseNumberAttributeChanged" } & AttributeValueChange)
 	| { kind: "tagAdded"; tagId: number }
 	| { kind: "tagRemoved"; tagId: number };
 
@@ -1502,6 +1482,7 @@ function applyCardReactionsForCard(config: FamineRefugeeConfig, card: CardState,
 		targetId: card.id,
 		hostId: card.id,
 		slotMap: {},
+		createdCards: {},
 		cards: [card],
 		nextCardId: 0,
 		removeIds: new Set<string>(),
@@ -1563,10 +1544,7 @@ function applyActionEffects(
 	time = 0,
 ): { cards: CardState[]; nextCardId: number; dialogue?: DialogueState; agreements?: Record<string, AgreementState>; dialogueHistory?: DialogueHistoryEntry[]; nextAgreementId?: number } {
 	const plan = planActionEffects(config, action, sourceId, assignments, cards, targetId);
-	if (!validateMoveItemEffects(config, plan.effects, plan.slotMap, sourceId, targetId, cards)) {
-		return { cards, nextCardId };
-	}
-	const runtime: EffectRuntime = { config, sourceId, targetId, hostId: targetId, slotMap: plan.slotMap, cards: cards.slice(), nextCardId, removeIds: new Set<string>(), agreements: { ...agreements }, dialogueHistory: dialogueHistory.map((entry) => ({ ...entry, participantIds: [...entry.participantIds], visitedNodeIds: [...entry.visitedNodeIds], chosenOptionIds: [...entry.chosenOptionIds] })), nextAgreementId, time };
+	const runtime: EffectRuntime = { config, sourceId, targetId, hostId: targetId, slotMap: plan.slotMap, createdCards: {}, cards: cards.slice(), nextCardId, removeIds: new Set<string>(), agreements: { ...agreements }, dialogueHistory: dialogueHistory.map((entry) => ({ ...entry, participantIds: [...entry.participantIds], visitedNodeIds: [...entry.visitedNodeIds], chosenOptionIds: [...entry.chosenOptionIds] })), nextAgreementId, time };
 	const before = snapshotCards(config, runtime.cards);
 	const runtimeSource = getCard(runtime.cards, runtime.sourceId);
 	const ownedSkillIds = new Set(runtimeSource ? getSkillListIds(config, runtimeSource) : []);
@@ -1610,23 +1588,25 @@ function applyTagAutoEffects(
 		const tagSnapshot = snapshotFromTag(currentTag);
 		if (!evaluateConditions(effect.condition, { sourceTag: tagSnapshot, host: hostSnapshot })) continue;
 		const tagCondition = (conditions: ConditionExpression | ConditionExpression[]): boolean => evaluateConditions(conditions, { sourceTag: tagSnapshot, host: snapshotFromDerived(deriveCard(config, currentHost)) });
-		if (effect.kind === EffectType.CHANGE_BASE_NUMBER_ATTRIBUTES && effect.target?.card === ConditionTarget.HOST) {
-			currentHost = applyChangeAttributes(config, currentHost, effect.changes, tagCondition, {
+		if (effect.kind === EffectType.CHANGE_ATTRIBUTES && effect.target?.card === ConditionTarget.HOST) {
+			currentHost = applyChangeAttributes(config, currentHost, effect.changes.filter((change) => change.type === AttributeChangeType.CHANGE_BASE_NUMBER), tagCondition, {
 				evaluateConditions: tagCondition,
 			});
 			continue;
 		}
-		if (effect.kind === EffectType.CHANGE_BASE_NUMBER_ATTRIBUTES && (effect.target?.card === ConditionTarget.SOURCE_TAG || !effect.target)) {
+		if (effect.kind === EffectType.CHANGE_ATTRIBUTES && (effect.target?.card === ConditionTarget.SOURCE_TAG || !effect.target)) {
 			const values = { ...currentTag.values };
 			for (let j = 0; j < effect.changes.length; j++) {
 				const change = effect.changes[j];
+				if (change.type !== AttributeChangeType.CHANGE_BASE_NUMBER) continue;
 				if (change.condition && !tagCondition(change.condition)) continue;
 				const definition = config.allAttributes.find((attribute) => attribute.id === change.attributeId);
 				if (!definition) continue;
 				const current = getNumberAttribute(values, change.attributeId);
 				const set = change.set === undefined ? undefined : evaluateChangeNumber(change.set, values, { evaluateConditions: tagCondition });
-				const delta = evaluateChangeNumber(change.delta, values, { evaluateConditions: tagCondition }, 0);
-				const next = set ?? current + delta;
+				const add = evaluateChangeNumber(change.add, values, { evaluateConditions: tagCondition }, 0);
+				const sub = evaluateChangeNumber(change.sub, values, { evaluateConditions: tagCondition }, 0);
+				const next = set ?? current + add - sub;
 				values[change.attributeId] = next;
 			}
 			currentTag = { ...currentTag, values };

@@ -303,7 +303,7 @@ export default function FamineRefugeePage() {
 			result[slot.id] = getEligibleCards(config, game, placementAction, slot.id, placementTargetId);
 		}
 		return result;
-	}, [config, game, placementAction]);
+	}, [config, game, placementAction, placementTargetId]);
 
 	const assignedCardIds = useMemo(() => {
 		const ids = new Set<string>();

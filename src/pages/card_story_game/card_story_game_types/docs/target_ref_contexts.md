@@ -21,17 +21,20 @@ export interface TargetRef {
 "host"
 "slot"
 "referencedCard"
+"createdCard"
 ```
 
 `TargetRef` 只回答“判断/作用哪张卡”。属性的具体判断放在 `AttributeCheck`：
 
 ```ts
 { type: "baseNumber", attributeId: 3, gt: 0 }
-{ type: "cardRef", attributeId: 21, refExists: false }
+{ type: "cardRef", attributeId: 21, refValueExists: false }
 { type: "cardRefList", attributeId: 22, refListsMatch: { count: 0 } }
 ```
 
 `type: "cardRef"` / `type: "cardRefList"` 属于 `AttributeCheck`，不属于 `TargetRef`。
+
+`createdCard` 通过 `effectId` 指向当前动作内更早的 `addCard` effect。
 
 ---
 
@@ -87,7 +90,7 @@ slot       = 可选，动作额外卡槽中的卡
 {
   "target": { "card": "targetCard" },
   "attributes": [
-    { "type": "cardRef", "attributeId": 21, "refExists": true }
+    { "type": "cardRef", "attributeId": 21, "refValueExists": true }
   ]
 }
 ```
@@ -146,9 +149,9 @@ targetCard = incoming 的响应目标（仅 incoming）
 ```json
 {
   "id": 100,
-  "kind": "changeBaseNumberAttributes",
+  "kind": "changeAttributes",
   "target": { "card": "slot", "slot": "food" },
-  "changes": [{ "attributeId": 8, "delta": -10 }]
+  "changes": [{ "type": "changeBaseNumber", "attributeId": 8, "sub": 10 }]
 }
 ```
 
@@ -157,9 +160,9 @@ incoming 动作修改当前目标：
 ```json
 {
   "id": 101,
-  "kind": "changeBaseNumberAttributes",
+  "kind": "changeAttributes",
   "target": { "card": "targetCard" },
-  "changes": [{ "attributeId": 1, "delta": 10 }]
+  "changes": [{ "type": "changeBaseNumber", "attributeId": 1, "add": 10 }]
 }
 ```
 

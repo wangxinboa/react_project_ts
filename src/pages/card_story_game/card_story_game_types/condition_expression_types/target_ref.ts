@@ -12,6 +12,8 @@ export const ConditionTarget = {
 	SLOT: "slot",
 	/** refListsMatch.condition 中当前遍历到的引用卡 */
 	REFERENCED_CARD: "referencedCard",
+	/** 当前动作中某个 addCard effect 创建出的卡 */
+	CREATED_CARD: "createdCard",
 } as const;
 
 export type ConditionTarget = (typeof ConditionTarget)[keyof typeof ConditionTarget];
@@ -21,4 +23,6 @@ export interface TargetRef {
 	card: ConditionTarget;
 	/** card 为 slot 时指定卡槽 */
 	slot?: string;
+	/** card 为 createdCard 时指定创建它的 addCard effect id */
+	effectId?: number;
 }

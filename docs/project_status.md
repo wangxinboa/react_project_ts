@@ -32,14 +32,14 @@
 ## 已完成：原型
 
 - 地点：place / passage，玩家 `location` 属性表示当前地点。
-- 进入卡：incoming + `changeLocation`。
+- 进入卡：incoming + `changeAttributes` 的 `cardRef` 更新。
 - 动作：outgoing 一对多卡槽、incoming 一对一响应。
 - 公式：动作时间、属性派生、引用列表统计、属性硬边界读取。
 - 标签：state / derived，标签实例和 auto。
 - 背包：拾起、放下、旅行携带；背包物品可参与主动动作卡槽。
 - 可操作范围：当前地点公共卡 + 自身背包；他人背包默认不可见不可选。
 - 负重：`weight / carryCapacity / carrySlots`，顶部显示负重与背包数量。
-- `moveItemCard`：在背包、地点、目标背包之间移动物品，并校验容量。
+- 物品移动由多个 `changeAttributes` 原语组合；容量/负重校验由 JSON 条件负责。
 - `addCard`：默认进入 sourceCard 背包，`to` 可指定地点，不处理容量。
 - NPC：`behavior.decisionInterval` 控制决策，动作池复用 `outgoing`。
 - 共识：`allAgreements` + `AgreementState` + 全局 `agreements` map；第一版是承诺类，对话选项创建，卡牌保存 agreementIds。
@@ -59,7 +59,7 @@
 
 ## 待做
 
-- 完善 EffectResult / createdCard 设计。
+- `createdCard + effectId` 已用于 addCard 创建结果引用。
 - 超重后果（体力损耗、受伤、自动放下）的人物规则。
 - 扩展 NPC 行为系统。
 - 编辑器：动作 slots、模板、属性、公式、Effect。
@@ -71,7 +71,7 @@
 
 - 动作 Drawer 的 `targets` 字段已不属于新规范，但编辑器仍在读写。
 - 模板表单和新 schema 尚未对齐。
-- `addCard` 不检查容量；`moveItemCard` 检查容量，两者语义暂不一致。
+- `addCard` 不检查容量。
 - NPC 行为只按 `outgoing` 顺序尝试，没有真正的效用/优先级系统。
 - 行为决策挂在 tick 上，NPC 动作耗时只影响下一次决策，不单独推进全局时间。
 - Tag auto 仍按自身顺序执行，不受 Action 原子规则约束。

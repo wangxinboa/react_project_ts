@@ -53,7 +53,7 @@ export type RelationshipNumberAttributeCheck = BaseNumberCheck & AttributeExiste
 export type CardRefAttributeCheck = AttributeExistenceFields & {
 	type: typeof AttributeCheckType.CARD_REF;
 	attributeId: number;
-	refExists: boolean;
+	refValueExists: boolean;
 };
 
 /** 卡牌引用列表匹配。 */

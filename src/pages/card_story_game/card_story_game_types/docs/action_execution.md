@@ -7,7 +7,7 @@ Action 是原子操作。
 ```text
 1. 解析动作槽位与目标卡
 2. 使用动作开始前的状态快照，统一判定所有 effect 条件
-3. 使用同一份快照，判定 changeBaseNumberAttributes.changes 内的条件
+3. 使用同一份快照，判定 changeAttributes.changes 内的条件
 4. 生成执行计划
 5. 按 effects 数组顺序执行已选中的效果
 6. 最后统一处理 removeCard
@@ -18,23 +18,23 @@ Action 是原子操作。
 以下条件全部使用 action 开始前的卡牌状态：
 
 - `effect.condition`
-- `changeBaseNumberAttributes.changes[].condition`
+- `changeAttributes.changes[].condition`
 
 后续 effect 不能看到前面 effect 修改后的属性值。
 
 ```json
 [
   {
-    "kind": "changeBaseNumberAttributes",
-    "changes": [{ "attributeId": 1, "delta": -10 }]
+    "kind": "changeAttributes",
+    "changes": [{ "type": "changeBaseNumber", "attributeId": 1, "sub": 10 }]
   },
   {
-    "kind": "changeBaseNumberAttributes",
+    "kind": "changeAttributes",
     "condition": {
       "target": { "card": "sourceCard" },
       "attributes": [{ "id": 1, "lt": 40 }]
     },
-    "changes": [{ "attributeId": 5, "delta": -2 }]
+    "changes": [{ "type": "changeBaseNumber", "attributeId": 5, "sub": 2 }]
   }
 ]
 ```
@@ -71,12 +71,3 @@ effect C 执行
 ## Tag auto
 
 Tag auto 不属于 Action，执行时机另行定义。
-
-## moveItemCard 事务
-
-同一动作内的所有 `moveItemCard` 会先统一模拟预检：
-
-- 任一移动失败，整个动作不执行任何物品移动；
-- 接收方也会校验 `carrySlots` 和 `carryCapacity`；
-- source / target 使用同一套规则，不区分玩家或 NPC；
-- 预检通过后按 effect 顺序执行。

@@ -1,9 +1,8 @@
-import type { AttributeValue } from "../../card_story_game_types/attribute_types.ts";
+import type { AttributeValue } from "../../card_story_game_types/attribute_types/attribute_types.ts";
 import type { PromiseResult } from "../../card_story_game_types/agreement_types.ts";
 import type { NumberExpression } from "../../card_story_game_types/formula_types.ts";
 import type {
 	ActionSlot,
-	AttributeBinding,
 	AttributeDefinition,
 	CardReactionDefinition,
 	CardTemplate,
@@ -21,7 +20,6 @@ export type {
 	ActionSlot,
 	DialogueNode,
 	DialogueOption,
-	AttributeBinding,
 	AttributeCheck,
 	Condition,
 	ConditionExpression,
@@ -59,7 +57,6 @@ export type FamineAction = RuleAction & {
 	effects: EffectCall[];
 };
 
-export type TemplateAttributeBinding = AttributeBinding;
 
 /** 原型模板。 */
 export type FamineTemplate = CardTemplate;
@@ -68,6 +65,7 @@ export interface SaveCard {
 	id: string;
 	templateId: number;
 	values?: Record<string, AttributeValue>;
+	relationships?: Record<string, RelationshipState>;
 }
 
 export interface SaveData {

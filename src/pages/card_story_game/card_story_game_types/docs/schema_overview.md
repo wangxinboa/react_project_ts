@@ -20,7 +20,7 @@
 - `card.values` 中存在 key 表示属性存在。
 - derived 属性用值为 0 的 key 表示存在，具体数值由 `deriveCard` 计算。
 - `AttributeCheck.hasAttribute / hasAttributes / hasAnyAttribute` 是每个检查类型都有的可选存在性判断。
-- `addCardAttribute` effect 用于让卡牌属性开始存在。
+- `addAttribute` effect 用 `attributes` 初始化卡牌属性存在性。
 
 ## 数字表达式
 
@@ -28,7 +28,15 @@
 - 动态计算使用 `FormulaNode`。
 - Formula 内部的 `args`、`clamp`、`normalize` 等统一使用 `Formula`；常量使用 `literal`。
 - 支持 `literal / numberAttributeValue / floor / abs / add / sub / mul / div / clamp / normalize / refListsAttributeCount / refListsAttributeSum / select`。
-- Condition 的数字比较、ActionSlot 数量、NpcBehavior 间隔、refListsMatch 数量、changeBaseNumberAttributes 的 delta/set 都使用 `NumberExpression`。
+- Condition 的数字比较、ActionSlot 数量、NpcBehavior 间隔、refListsMatch 数量、changeAttributes 中 baseNumber 的 add/sub/set 都使用 `NumberExpression`。
+
+## 属性初始化
+
+- 模板和 Tag 使用同一套 `TemplateAttributeInit` 类型，只允许 `initBaseNumber / initDerivedNumber`。
+- 模板不初始化 `cardRef / cardRefList / relationshipNumber`。
+- `SaveCard.values` 保存完整实例级属性值；`SaveCard.relationships` 保存实例关系。
+- `addCard` / `addAttribute` 在运行时可以使用全部五类初始化，因为执行时具备实例上下文。
+- `AttributeBinding` 已移除。
 
 ## Condition 与 TargetRef
 
@@ -44,7 +52,7 @@ interface TargetRef {
 - `AttributeCheck` 由 `type` 区分：
   - `baseNumber` / `derivedNumber`：`attributeId` + 数值比较；
   - `relationshipNumber`：`attributeId` + `relationship`；
-  - `cardRef`：`attributeId` + `refExists`；
+  - `cardRef`：`attributeId` + `refValueExists`；
   - `cardRefList`：`attributeId` + `refListsMatch`。
 - `attributes` 数组统一承载值判断和存在性判断；存在性字段可单独使用，也可与数值判断组合。
 - 详细说明见 [TargetRef 上下文说明](./target_ref_contexts.md)。
@@ -54,8 +62,9 @@ interface TargetRef {
 - 效果类型按类别拆在 `effect_types/`。
 - `EffectTarget` 与 Condition 一样使用 `TargetRef`。
 - 单次效果内联；复用效果放 `allEffects` 并用 `{ effectId }` 引用。
-- `addCard` 是游戏业务原子效果：创建并放置卡牌，默认进入执行者背包，不处理容量。
-- `moveItemCard` 在背包和地点之间移动物品。
+- `changeAttributes.changes[].type` 使用 `AttributeChangeType`：`changeBaseNumber / changeRelationshipNumber / changeCardRef / changeCardRefList`。
+- `addCard` 是卡牌创建原语：支持初始属性和模板来源；创建结果通过 `createdCard + effectId` 引用。
+- 移动物品、改变位置、学习技能都由 `changeAttributes` / `addCard` 等原语在配置中组合。
 
 ## Action
 
@@ -79,7 +88,7 @@ interface TargetRef {
 - `Condition.worldTime` 使用 `BaseNumberCheck` 判断世界时间（分钟）；`target` 可省略，但不能在没有 target 时写卡牌判定字段。
 - `Formula.select` 使用 `branches: [{ condition, value }]` 按顺序匹配，首个成立分支生效；都不成立时使用 `else`，没有 `else` 返回 0。
 - 当前核心属性：生命力、灵性、气血上限、气血控制上限、气血失控、武道意志、精神力上限、灵性法术容量上限、法力上限、灵性占用、生命力占用、灵性余量、生命力余量。
-- 生命力、灵性为 base；其余进阶属性为 derived，并由 `addCardAttribute` 按门槛显化。
+- 生命力、灵性为 base；其余进阶属性为 derived，并由 `addAttribute` 按门槛显化。
 - 生命力 >= 6 显化气血上限、武道意志；灵性 >= 6 显化精神力上限、法术容量上限；两者都 >= 6 才显化资源/余量属性。
 - UI 平铺显示已存在的属性，不按属性树分组。
 - 上限属性是普通派生属性；`NumberBounds` / `typeParams` / `numberAttributeBound` / `maxAttributeId` 已移除。
@@ -127,7 +136,7 @@ interface CardState {
 
 - 关系属性使用 `AttributeType.RELATIONSHIP_NUMBER`。
 - AttributeCheck 使用 `type: "relationshipNumber"` + `relationship` 检查关系属性。
-- `changeRelationshipNumberAttributes` 修改有向关系值。
+- `changeAttributes` 中 `type: "relationshipNumber"` 的 change 修改有向关系值。
 - 关系懒创建，缺失时按 0 计算。
 
 ## NPC
@@ -143,7 +152,7 @@ interface CardState {
 - 人物通过 `skillList`（`cardRefList` 属性）引用技能卡实例；技能卡放在 `state.cards` 中，但不进入场景/背包。
 - 技能区展示人物拥有的技能；点击动作进入动作模式后，技能区、背包区继续显示，点击卡牌只填卡槽，不切换 inspector。
 - 技能的 `actionIds` 决定可搭配动作；动作卡槽不限制候选来源，由 Condition 判断能否放入。
-- 学习动作通过 `memberOfRefList` 判断技能卡是否属于老师 `skillList`，效果 `learnSkill` 通过 `skillSlot` 读取选中的技能卡。
+- 学习动作通过 `memberOfRefList` 判断技能卡是否属于老师 `skillList`，再用 `addCard` 创建新卡，并通过 `TargetRef.createdCard + effectId` 加入玩家技能列表。
 - 技能消耗和效果使用现有 `EffectCall`，技能效果先于动作效果执行。
 - 当前演示动作：`修炼`；技能 `基础拳法` / `灵视` 都通过 `actionIds` 搭配修炼；`学习` 动作从老师 `skillList` 选择技能卡并复制新实例。
 
