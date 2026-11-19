@@ -30,6 +30,12 @@
 - 支持 `literal / numberAttributeValue / floor / abs / add / sub / mul / div / clamp / normalize / refListsAttributeCount / refListsAttributeSum / select`。
 - Condition 的数字比较、ActionSlot 数量、NpcBehavior 间隔、refListsMatch 数量、changeAttributes 中 baseNumber 的 add/sub/set 都使用 `NumberExpression`。
 
+## 场景文件拆分
+
+- `famine_refugee_config.json`：`card_story_game_types` 中定义的配置。
+- `famine_refugee_save.json`：`saveData / initialLog / gameOver / tick` 等实例和运行配置。
+- `CardTemplate` 的 `outgoing / incoming / behavior` 是初始动作配置；运行时复制到 `CardState`，`SaveCard` 可覆盖。
+
 ## 属性初始化
 
 - 模板和 Tag 使用同一套 `TemplateAttributeInit` 类型，只允许 `initBaseNumber / initDerivedNumber`。
@@ -141,8 +147,8 @@ interface CardState {
 
 ## NPC
 
-- `CardTemplate.behavior.decisionInterval` 控制决策间隔。
-- 动作池复用 `outgoing`，按数组顺序尝试。
+- `CardTemplate.behavior` 初始化实例行为；`CardState.behavior.decisionInterval` 控制 NPC 决策间隔。
+- 模板 `outgoing` 初始化实例动作池；运行时使用 `CardState.outgoing`，按数组顺序尝试。
 - 具体执行仍复用 Action 的原子规则。
 
 ## 技能卡

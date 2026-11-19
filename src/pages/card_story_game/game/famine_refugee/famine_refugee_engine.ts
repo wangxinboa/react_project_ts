@@ -493,6 +493,10 @@ function createCardState(config: FamineRefugeeConfig, saveCard: SaveCard): CardS
 		templateId: saveCard.templateId,
 		values,
 		nextBehaviorTime: 0,
+		outgoing: saveCard.outgoing ? [...saveCard.outgoing] : template.outgoing ? [...template.outgoing] : [],
+		incoming: saveCard.incoming ? [...saveCard.incoming] : template.incoming ? [...template.incoming] : [],
+		behavior: saveCard.behavior ?? template.behavior,
+		relationships: saveCard.relationships,
 		tags: (template.tags ?? []).map((tagId) => createTagInstance(config, tagId)),
 	};
 }
@@ -693,10 +697,9 @@ export function getEligibleCards(
 }
 
 function getPlayerActionsFromSource(config: FamineRefugeeConfig, source: CardState): FamineAction[] {
-	const derived = deriveCard(config, source, [source]);
 	const actions: FamineAction[] = [];
-	for (let i = 0; i < (derived.template.outgoing ?? []).length; i++) {
-		const action = findAction(config, (derived.template.outgoing ?? [])[i]);
+	for (let i = 0; i < (source.outgoing ?? []).length; i++) {
+		const action = findAction(config, (source.outgoing ?? [])[i]);
 		if (action) actions.push(action);
 	}
 	return actions;
@@ -1671,11 +1674,11 @@ function runNpcBehaviors(config: FamineRefugeeConfig, state: FamineState): Famin
 		const npc = getCard(current.cards, npcIds[n]);
 		if (!npc || npc.id === player.id) continue;
 		const template = getTemplate(config, npc.templateId);
-		const behavior = template.behavior;
+		const behavior = npc.behavior;
 		if (!behavior || (npc.nextBehaviorTime ?? 0) > current.time) continue;
 		let acted = false;
-		for (let i = 0; i < (template.outgoing ?? []).length && !acted; i++) {
-			const action = findAction(config, (template.outgoing ?? [])[i]);
+		for (let i = 0; i < (npc.outgoing ?? []).length && !acted; i++) {
+			const action = findAction(config, (npc.outgoing ?? [])[i]);
 			if (!action) continue;
 			const sourceSnapshot = snapshotFromDerived(deriveCard(config, npc, current.cards), npc);
 			if (!evaluateConditions(action.condition, { sourceCard: sourceSnapshot, cards: current.cards, config, time: current.time })) continue;
@@ -1778,10 +1781,9 @@ export function getIncomingActions(
 		}
 	}
 	if (!player || !target) return [];
-	const template = getTemplate(config, target.templateId);
 	const actions: FamineAction[] = [];
-	for (let i = 0; i < (template.incoming ?? []).length; i++) {
-		const action = findAction(config, (template.incoming ?? [])[i]);
+	for (let i = 0; i < (target.incoming ?? []).length; i++) {
+		const action = findAction(config, (target.incoming ?? [])[i]);
 		if (action) actions.push(action);
 	}
 	return actions;

@@ -53,7 +53,7 @@
 
 - 标签 / 动作 / 模板三个页面已接入。
 - 动作 Drawer 仍保留 `targets` 过渡字段，尚未迁移到 slots / 新 target 结构。
-- 模板 Drawer 尚未接入新的模板字段、behavior、属性绑定。
+- 模板 Drawer 支持初始 outgoing / incoming / behavior；运行时副本保存在 CardState。
 - 属性、公式、Effect 的完整编辑器尚未实现。
 - 原型配置尚未并入 `GameConfig`。
 

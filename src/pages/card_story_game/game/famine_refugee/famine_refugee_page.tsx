@@ -151,7 +151,7 @@ export default function FamineRefugeePage() {
 	const loadScene = useCallback(async (scene: FamineSceneEntry): Promise<void> => {
 		setLoadError("");
 		try {
-			const loaded = await serviceGetFamineRefugeeConfig(scene.file);
+			const loaded = await serviceGetFamineRefugeeConfig(scene.configFile, scene.saveFile);
 			setConfig(loaded);
 			setGame(createInitialState(loaded));
 			setSelectedCardId(loaded.saveData.playerCardId);
@@ -969,7 +969,7 @@ export default function FamineRefugeePage() {
 				</section>
 
 				<footer className={style.footer}>
-					每个动作按命名卡槽放置目标；卡槽之间不能复用同一张卡。修改 `public/scenes/famine_refugee.json`
+					每个动作按命名卡槽放置目标；卡槽之间不能复用同一张卡。修改 `public/scenes/famine_refugee_config.json` + `public/scenes/famine_refugee_save.json`
 					后刷新页面调整配置。
 				</footer>
 				{game.dialogue && dialogueNode ? (

@@ -1,6 +1,7 @@
 import type { AttributeValue } from "../../card_story_game_types/attribute_types/attribute_types.ts";
 import type { PromiseResult } from "../../card_story_game_types/agreement_types.ts";
 import type { NumberExpression } from "../../card_story_game_types/formula_types.ts";
+import type { NpcBehavior } from "../../card_story_game_types/card_template_types/card_template_types.ts";
 import type {
 	ActionSlot,
 	AttributeDefinition,
@@ -66,6 +67,12 @@ export interface SaveCard {
 	templateId: number;
 	values?: Record<string, AttributeValue>;
 	relationships?: Record<string, RelationshipState>;
+	/** 实例主动动作 id；按顺序尝试 */
+	outgoing?: number[];
+	/** 实例 incoming 动作 id */
+	incoming?: number[];
+	/** 实例 NPC 行为 */
+	behavior?: NpcBehavior;
 }
 
 export interface SaveData {
@@ -109,6 +116,12 @@ export interface CardState {
 	relationships?: Record<string, RelationshipState>;
 	/** 已知/参与的共识 id */
 	agreementIds?: string[];
+	/** 实例主动动作 id；按顺序尝试 */
+	outgoing?: number[];
+	/** 实例 incoming 动作 id */
+	incoming?: number[];
+	/** 实例 NPC 行为 */
+	behavior?: NpcBehavior;
 	tags: TagInstanceState[];
 }
 

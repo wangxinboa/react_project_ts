@@ -1,0 +1,179 @@
+{
+	"saveData": {
+		"playerCardId": "player",
+		"cards": [
+			{
+				"id": "player",
+				"templateId": 38,
+				"values": {
+					"8": "village",
+					"10": [],
+					"312": [
+						"skill_player_70"
+					]
+				},
+				"outgoing": [
+					49,
+					53,
+					64
+				]
+			},
+			{
+				"id": "bread",
+				"templateId": 40,
+				"values": {
+					"8": "village"
+				}
+			},
+			{
+				"id": "stone",
+				"templateId": 41,
+				"values": {
+					"8": "village"
+				}
+			},
+			{
+				"id": "stranger",
+				"templateId": 38,
+				"values": {
+					"8": "village",
+					"312": [
+						"skill_teacher_71"
+					],
+					"10": [],
+					"11": 10,
+					"16": 3
+				},
+				"outgoing": [
+					53,
+					50
+				],
+				"incoming": [
+					66
+				],
+				"behavior": {
+					"decisionInterval": 60
+				}
+			},
+			{
+				"id": "village",
+				"templateId": 45
+			},
+			{
+				"id": "forest",
+				"templateId": 46
+			},
+			{
+				"id": "entry_forest",
+				"templateId": 47,
+				"values": {
+					"8": "village"
+				}
+			},
+			{
+				"id": "entry_village",
+				"templateId": 48,
+				"values": {
+					"8": "forest"
+				}
+			},
+			{
+				"id": "skill_player_70",
+				"templateId": 70
+			},
+			{
+				"id": "skill_teacher_71",
+				"templateId": 71
+			}
+		],
+		"time": 480
+	},
+	"initialLog": "你是一个在饥荒中挣扎的流民。",
+	"gameOver": [
+		{
+			"target": {
+				"card": "sourceCard"
+			},
+			"attributes": [
+				{
+					"lte": 0,
+					"type": "baseNumber",
+					"attributeId": 3
+				}
+			]
+		}
+	],
+	"tick": {
+		"logRules": [
+			{
+				"when": [
+					{
+						"attributes": [
+							{
+								"lte": 0,
+								"type": "baseNumber",
+								"attributeId": 3
+							}
+						],
+						"target": {
+							"card": "sourceCard"
+						}
+					}
+				],
+				"message": "你倒下了。"
+			},
+			{
+				"when": [
+					{
+						"attributes": [
+							{
+								"lte": 0,
+								"type": "baseNumber",
+								"attributeId": 1
+							}
+						],
+						"target": {
+							"card": "sourceCard"
+						}
+					}
+				],
+				"message": "饥饿在侵蚀你的身体，体力和生命下降。"
+			},
+			{
+				"when": [
+					{
+						"attributes": [
+							{
+								"lt": 20,
+								"type": "baseNumber",
+								"attributeId": 1
+							}
+						],
+						"target": {
+							"card": "sourceCard"
+						}
+					}
+				],
+				"message": "你饿得发慌，体力继续流失。"
+			},
+			{
+				"when": [
+					{
+						"attributes": [
+							{
+								"gte": 50,
+								"type": "baseNumber",
+								"attributeId": 1
+							}
+						],
+						"target": {
+							"card": "sourceCard"
+						}
+					}
+				],
+				"message": "你勉强吃饱，身体恢复了一点。"
+			}
+		],
+		"defaultLog": "时间推进。"
+	}
+}

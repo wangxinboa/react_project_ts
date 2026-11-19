@@ -4,7 +4,8 @@
 		{
 			"id": "famine_refugee",
 			"label": "饥荒流民",
-			"file": "famine_refugee.json"
+			"configFile": "famine_refugee_config.json",
+			"saveFile": "famine_refugee_save.json"
 		}
 	]
 }

@@ -32,6 +32,7 @@ export interface SkillDefinition {
 }
 
 /** NPC 自主行为配置；动作池复用 outgoing，按数组顺序尝试。 */
+/** NPC 实例的自主行为配置。 */
 export interface NpcBehavior {
 	/** 决策间隔（分钟）；支持 NumberExpression，求值后至少 1 分钟 */
 	decisionInterval: NumberExpression;
@@ -49,11 +50,11 @@ export interface CardTemplate {
 	attributes?: TemplateAttributeInit[];
 	/** 每小时执行的 auto 动作 id */
 	auto?: number[];
-	/** 主动动作 id；由 sourceCard 发起，目标通过 slots 放置；NPC 行为按此数组顺序尝试 */
+	/** 初始主动动作 id；由 sourceCard 发起，目标通过 slots 放置 */
 	outgoing?: number[];
-	/** 响应动作 id；source 为执行者，target 为当前卡，一对一 */
+	/** 初始响应动作 id；source 为执行者，target 为当前卡 */
 	incoming?: number[];
-	/** NPC 自主行为；没有该字段则不自动行动 */
+	/** 初始 NPC 自主行为；没有该字段则不自动行动 */
 	behavior?: NpcBehavior;
 	/** 卡牌级监听定义 id；数组顺序即优先级 */
 	reactions?: number[];

@@ -5,7 +5,8 @@ import type { FamineRefugeeConfig } from "../pages/card_story_game/game/famine_r
 export interface FamineSceneEntry {
 	id: string;
 	label: string;
-	file: string;
+	configFile: string;
+	saveFile: string;
 }
 
 export interface FamineSceneIndex {
@@ -30,35 +31,46 @@ export async function serviceGetFamineSceneIndex(): Promise<FamineSceneIndex> {
 	return raw as FamineSceneIndex;
 }
 
-export async function serviceGetFamineRefugeeConfig(sceneFile = "famine_refugee.json"): Promise<FamineRefugeeConfig> {
-	const response = await fetch(`${import.meta.env.BASE_URL}scenes/${sceneFile}`);
-	if (!response.ok) {
-		throw new Error(`原型配置加载失败：HTTP ${response.status}`);
-	}
-
-	const raw: unknown = await response.json();
+export async function serviceGetFamineRefugeeConfig(
+	configFile = "famine_refugee_config.json",
+	saveFile = "famine_refugee_save.json",
+): Promise<FamineRefugeeConfig> {
+	const [configResponse, saveResponse] = await Promise.all([
+		fetch(`${import.meta.env.BASE_URL}scenes/${configFile}`),
+		fetch(`${import.meta.env.BASE_URL}scenes/${saveFile}`),
+	]);
+	if (!configResponse.ok) throw new Error(`原型配置加载失败：HTTP ${configResponse.status}`);
+	if (!saveResponse.ok) throw new Error(`原型存档加载失败：HTTP ${saveResponse.status}`);
+	const configRaw: unknown = await configResponse.json();
+	const saveRaw: unknown = await saveResponse.json();
 	if (
-		typeof raw !== "object" ||
-		raw === null ||
-		!Array.isArray((raw as { allAttributes?: unknown }).allAttributes) ||
-		!Array.isArray((raw as { cardTemplates?: unknown }).cardTemplates) ||
-		typeof (raw as { saveData?: unknown }).saveData !== "object"
+		typeof configRaw !== "object" || configRaw === null ||
+		!Array.isArray((configRaw as { allAttributes?: unknown }).allAttributes) ||
+		!Array.isArray((configRaw as { cardTemplates?: unknown }).cardTemplates) ||
+		!Array.isArray((configRaw as { allActions?: unknown }).allActions) ||
+		typeof saveRaw !== "object" || saveRaw === null ||
+		typeof (saveRaw as { saveData?: unknown }).saveData !== "object"
 	) {
-		throw new Error("原型配置格式错误：allAttributes / cardTemplates / saveData 缺失");
+		throw new Error("原型配置格式错误：config 或 save 缺失");
 	}
-	const config = raw as FamineRefugeeConfig;
+	const config = { ...(configRaw as object), ...(saveRaw as object) } as FamineRefugeeConfig;
 	for (let i = 0; i < config.allAttributes.length; i++) {
 		const definition = config.allAttributes[i];
 		if (definition.type !== AttributeType.DERIVED_NUMBER) continue;
 		const issues = validateFormula(definition.formula, `allAttributes[${i}].formula`);
-		if (issues.length > 0) {
-			throw new Error(`原型配置公式错误：${issues[0].path} ${issues[0].message}`);
-		}
+		if (issues.length > 0) throw new Error(`原型配置公式错误：${issues[0].path} ${issues[0].message}`);
 	}
 	for (let i = 0; i < config.allActions.length; i++) {
 		const issues = validateFormula(config.allActions[i].timeCost, `allActions[${i}].timeCost`);
-		if (issues.length > 0) {
-			throw new Error(`原型配置时间公式错误：${issues[0].path} ${issues[0].message}`);
+		if (issues.length > 0) throw new Error(`原型配置时间公式错误：${issues[0].path} ${issues[0].message}`);
+	}
+	for (let i = 0; i < config.cardTemplates.length; i++) {
+		const template = config.cardTemplates[i];
+		for (let j = 0; j < (template.attributes ?? []).length; j++) {
+			const init = template.attributes?.[j];
+			if (init?.type === "initBaseNumber" && typeof init.value !== "number") {
+				throw new Error(`模板属性初始化必须是静态数字：cardTemplates[${i}].attributes[${j}]`);
+			}
 		}
 	}
 	return config;
