@@ -31,7 +31,7 @@
 
 ## 已完成：原型
 
-- 地点：place / passage，玩家 `location` 属性表示当前地点。
+- 地点：place / passage；卡牌 `location` 指向地点，地点 `contents` 保存内容，双向同步。
 - 进入卡：incoming + `changeAttributes` 的 `cardRef` 更新。
 - 动作：outgoing 一对多卡槽、incoming 一对一响应。
 - 公式：动作时间、属性派生、引用列表统计、属性硬边界读取。

@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 115,
+	"schemaVersion": 117,
 	"allTags": [
 		{
 			"id": 24,
@@ -334,6 +334,12 @@
 			"label": "所在地点",
 			"desc": "所在地点",
 			"type": "cardRef"
+		},
+		{
+			"id": 21,
+			"key": "contents",
+			"type": "cardRefList",
+			"label": "地点内容"
 		},
 		{
 			"id": 9,
@@ -2088,6 +2094,26 @@
 						}
 					],
 					"desc": "加入背包"
+				},
+				{
+					"id": 5003,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "sourceCard",
+						"cardRefAttributeId": 8
+					},
+					"changes": [
+						{
+							"type": "changeCardRefList",
+							"attributeId": 21,
+							"remove": [
+								{
+									"card": "targetCard"
+								}
+							]
+						}
+					],
+					"desc": "从地点内容移除"
 				}
 			],
 			"createdAt": 1767974400050,
@@ -2176,6 +2202,26 @@
 						}
 					],
 					"desc": "移出背包"
+				},
+				{
+					"id": 5004,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "sourceCard",
+						"cardRefAttributeId": 8
+					},
+					"changes": [
+						{
+							"type": "changeCardRefList",
+							"attributeId": 21,
+							"add": [
+								{
+									"card": "targetCard"
+								}
+							]
+						}
+					],
+					"desc": "加入地点内容"
 				}
 			],
 			"createdAt": 1767974400051,

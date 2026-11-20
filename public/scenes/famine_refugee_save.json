@@ -57,11 +57,25 @@
 			},
 			{
 				"id": "village",
-				"templateId": 45
+				"templateId": 45,
+				"values": {
+					"21": [
+						"player",
+						"bread",
+						"stone",
+						"stranger",
+						"entry_forest"
+					]
+				}
 			},
 			{
 				"id": "forest",
-				"templateId": 46
+				"templateId": 46,
+				"values": {
+					"21": [
+						"entry_village"
+					]
+				}
 			},
 			{
 				"id": "entry_forest",

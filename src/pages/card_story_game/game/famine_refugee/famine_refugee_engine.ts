@@ -1,7 +1,7 @@
 import { evaluateFormula } from "../../formula/formula_eval.ts";
 import type { FormulaContext } from "../../formula/formula_eval.ts";
 import type { AttributeValue, BaseNumberCheck, NumberExpression, TargetRef, CardRefValue, AttributeInit, TemplateAttributeInit } from "../../card_story_game_types/index.ts";
-import { AttributeInitType, AttributeChangeType, EffectType, FormulaOp, PromiseConfirmation, PromiseTimeRelation, AttributeType, CardReactionTriggerKind, CardType, ConditionGroupKind, ConditionNotKind, ConditionTarget, TagKind } from "../../card_story_game_types/index.ts";
+import { AttributeInitType, AttributeChangeType, EffectType, FormulaOp, PromiseConfirmation, PromiseTimeRelation, AttributeType, CardReactionTriggerKind, CardType, ConditionGroupKind, ConditionNotKind, TargetCardType, TagKind } from "../../card_story_game_types/index.ts";
 import { getNumberAttribute, getNumberValues, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import type {
 	ActionSlot,
@@ -143,12 +143,24 @@ function matchesAttribute(
 }
 
 function resolveTargetEntity(target: TargetRef, context: ConditionContext): EntitySnapshot | undefined {
-	if (target.card === ConditionTarget.SOURCE_CARD) return context.sourceCard;
-	if (target.card === ConditionTarget.SOURCE_TAG) return context.sourceTag;
-	if (target.card === ConditionTarget.TARGET_CARD) return context.targetCard;
-	if (target.card === ConditionTarget.HOST) return context.host;
-	if (target.card === ConditionTarget.REFERENCED_CARD) return context.referencedCard;
-	return context.slot;
+	let entity: EntitySnapshot | undefined;
+	if (target.card === TargetCardType.SOURCE_CARD) entity = context.sourceCard;
+	else if (target.card === TargetCardType.SOURCE_TAG) entity = context.sourceTag;
+	else if (target.card === TargetCardType.TARGET_CARD) entity = context.targetCard;
+	else if (target.card === TargetCardType.HOST) entity = context.host;
+	else if (target.card === TargetCardType.REFERENCED_CARD) entity = context.referencedCard;
+	else entity = context.slot;
+	if (!entity || target.cardRefAttributeId === undefined) return entity;
+	const referencedId = getStringAttribute(entity.values, target.cardRefAttributeId);
+	if (!referencedId || !context.config || !context.cards) return undefined;
+	const referenced = getCard(context.cards, referencedId);
+	return referenced ? snapshotFromDerived(deriveCard(context.config, referenced, context.cards), referenced) : undefined;
+}
+
+function dereferenceRuntimeCardId(runtime: EffectRuntime, cardId: string | undefined, attributeId: number | undefined): string | undefined {
+	if (!cardId || attributeId === undefined) return cardId;
+	const card = getCard(runtime.cards, cardId);
+	return card ? getStringAttribute(card.values, attributeId) || undefined : undefined;
 }
 
 function evaluateAgreementCheck(condition: Condition, entity: EntitySnapshot, context: ConditionContext): boolean {
@@ -659,6 +671,8 @@ function slotMatches(config: FamineRefugeeConfig, slot: ActionSlot, card: CardSt
 
 export function getAccessibleCards(config: FamineRefugeeConfig, cards: CardState[], actor: CardState): CardState[] {
 	const locationId = getStringAttribute(actor.values, getAttributeId(config, "location"));
+	const place = locationId ? getCard(cards, locationId) : null;
+	const contents = new Set(place ? getStringListAttribute(place.values, getAttributeId(config, "contents")) : []);
 	const result: CardState[] = [];
 	for (let i = 0; i < cards.length; i++) {
 		const card = cards[i];
@@ -670,7 +684,7 @@ export function getAccessibleCards(config: FamineRefugeeConfig, cards: CardState
 			continue;
 		}
 		if (carrier) continue;
-		if (getStringAttribute(card.values, getAttributeId(config, "location")) === locationId) result.push(card);
+		if (contents.has(card.id)) result.push(card);
 	}
 	return result;
 }
@@ -746,7 +760,7 @@ function getConditionSlotId(conditions: ConditionExpression | ConditionExpressio
 			if (nested) return nested;
 			continue;
 		}
-		if (condition.target && condition.target.card === ConditionTarget.SLOT && condition.target.slot) return condition.target.slot;
+		if (condition.target && condition.target.card === TargetCardType.SLOT && condition.target.slot) return condition.target.slot;
 	}
 	return null;
 }
@@ -970,15 +984,16 @@ interface EffectRuntime {
 type EffectHandler = (runtime: EffectRuntime, effect: InlineEffect) => void;
 
 function getEffectTargetIds(runtime: EffectRuntime, effect: InlineEffect): string[] {
-	if (effect.target?.card === ConditionTarget.SLOT && effect.target.slot) return runtime.slotMap[effect.target.slot] ?? [];
-	if (effect.target?.card === ConditionTarget.TARGET_CARD && runtime.targetId) return [runtime.targetId];
-	if (effect.target?.card === ConditionTarget.HOST && runtime.hostId) return [runtime.hostId];
-	if (effect.target?.card === ConditionTarget.CREATED_CARD && effect.target.effectId !== undefined) {
+	let ids: string[] = [];
+	if (effect.target?.card === TargetCardType.SLOT && effect.target.slot) ids = runtime.slotMap[effect.target.slot] ?? [];
+	else if (effect.target?.card === TargetCardType.TARGET_CARD && runtime.targetId) ids = [runtime.targetId];
+	else if (effect.target?.card === TargetCardType.HOST && runtime.hostId) ids = [runtime.hostId];
+	else if (effect.target?.card === TargetCardType.CREATED_CARD && effect.target.effectId !== undefined) {
 		const cardId = runtime.createdCards[effect.target.effectId];
-		return cardId ? [cardId] : [];
-	}
-	if (effect.target?.card === ConditionTarget.SOURCE_CARD || !effect.target) return [runtime.sourceId];
-	return [];
+		ids = cardId ? [cardId] : [];
+	} else if (effect.target?.card === TargetCardType.SOURCE_CARD || !effect.target) ids = [runtime.sourceId];
+	if (effect.target?.cardRefAttributeId === undefined) return ids;
+	return ids.map((id) => dereferenceRuntimeCardId(runtime, id, effect.target!.cardRefAttributeId)).filter((id): id is string => Boolean(id));
 }
 
 function applyTargetedEffect(runtime: EffectRuntime, effect: InlineEffect): void {
@@ -1040,7 +1055,7 @@ function applyStartDialogueEffect(runtime: EffectRuntime, effect: InlineEffect):
 	if (effect.kind !== EffectType.START_DIALOGUE) return;
 	const dialogue = runtime.config.allDialogues.find((item) => item.id === effect.dialogueId);
 	if (!dialogue || dialogue.nodes.length === 0) return;
-	const targetIds = effect.target?.card === ConditionTarget.SLOT && effect.target.slot
+	const targetIds = effect.target?.card === TargetCardType.SLOT && effect.target.slot
 		? runtime.slotMap[effect.target.slot] ?? []
 		: runtime.targetId ? [runtime.targetId] : [];
 	const source = getCard(runtime.cards, runtime.sourceId);
@@ -1088,12 +1103,13 @@ function applyStartDialogueEffect(runtime: EffectRuntime, effect: InlineEffect):
 }
 
 function resolveRuntimeCardId(runtime: EffectRuntime, target: TargetRef): string | undefined {
-	if (target.card === ConditionTarget.SOURCE_CARD) return runtime.sourceId;
-	if (target.card === ConditionTarget.TARGET_CARD) return runtime.targetId;
-	if (target.card === ConditionTarget.HOST) return runtime.hostId;
-	if (target.card === ConditionTarget.SLOT && target.slot) return runtime.slotMap[target.slot]?.[0];
-	if (target.card === ConditionTarget.CREATED_CARD && target.effectId !== undefined) return runtime.createdCards[target.effectId];
-	return undefined;
+	let id: string | undefined;
+	if (target.card === TargetCardType.SOURCE_CARD) id = runtime.sourceId;
+	else if (target.card === TargetCardType.TARGET_CARD) id = runtime.targetId;
+	else if (target.card === TargetCardType.HOST) id = runtime.hostId;
+	else if (target.card === TargetCardType.SLOT && target.slot) id = runtime.slotMap[target.slot]?.[0];
+	else if (target.card === TargetCardType.CREATED_CARD && target.effectId !== undefined) id = runtime.createdCards[target.effectId];
+	return dereferenceRuntimeCardId(runtime, id, target.cardRefAttributeId);
 }
 
 function applyCreateAgreementEffect(runtime: EffectRuntime, effect: InlineEffect): void {
@@ -1591,13 +1607,13 @@ function applyTagAutoEffects(
 		const tagSnapshot = snapshotFromTag(currentTag);
 		if (!evaluateConditions(effect.condition, { sourceTag: tagSnapshot, host: hostSnapshot })) continue;
 		const tagCondition = (conditions: ConditionExpression | ConditionExpression[]): boolean => evaluateConditions(conditions, { sourceTag: tagSnapshot, host: snapshotFromDerived(deriveCard(config, currentHost)) });
-		if (effect.kind === EffectType.CHANGE_ATTRIBUTES && effect.target?.card === ConditionTarget.HOST) {
+		if (effect.kind === EffectType.CHANGE_ATTRIBUTES && effect.target?.card === TargetCardType.HOST) {
 			currentHost = applyChangeAttributes(config, currentHost, effect.changes.filter((change) => change.type === AttributeChangeType.CHANGE_BASE_NUMBER), tagCondition, {
 				evaluateConditions: tagCondition,
 			});
 			continue;
 		}
-		if (effect.kind === EffectType.CHANGE_ATTRIBUTES && (effect.target?.card === ConditionTarget.SOURCE_TAG || !effect.target)) {
+		if (effect.kind === EffectType.CHANGE_ATTRIBUTES && (effect.target?.card === TargetCardType.SOURCE_TAG || !effect.target)) {
 			const values = { ...currentTag.values };
 			for (let j = 0; j < effect.changes.length; j++) {
 				const change = effect.changes[j];
@@ -1751,17 +1767,14 @@ function advanceMinutes(config: FamineRefugeeConfig, state: FamineState, minutes
 export function getVisibleCards(config: FamineRefugeeConfig, state: FamineState): CardState[] {
 	const player = getPlayerCard(config, state);
 	if (!player) return [];
-	const locationAttributeId = getAttributeId(config, "location");
-	const locationId = getStringAttribute(player.values, locationAttributeId);
-	const cards: CardState[] = [];
-	for (let i = 0; i < state.cards.length; i++) {
-		const card = state.cards[i];
-		if (card.id === player.id) continue;
-		if (getTemplate(config, card.templateId).cardType === CardType.PLACE) {
-			if (card.id === locationId) cards.push(card);
-			continue;
-		}
-		if (getStringAttribute(card.values, locationAttributeId) === locationId) cards.push(card);
+	const locationId = getStringAttribute(player.values, getAttributeId(config, "location"));
+	const place = locationId ? getCard(state.cards, locationId) : null;
+	if (!place) return [];
+	const cards: CardState[] = [place];
+	const contents = getStringListAttribute(place.values, getAttributeId(config, "contents"));
+	for (let i = 0; i < contents.length; i++) {
+		const card = getCard(state.cards, contents[i]);
+		if (card && card.id !== player.id && card.id !== place.id) cards.push(card);
 	}
 	return cards;
 }
@@ -1864,13 +1877,15 @@ function getDialogueParticipants(state: FamineState): { dialogue: DialogueState;
 
 export function getDialogueSpeakerCard(state: FamineState, speaker: TargetRef): CardState | null {
 	if (!state.dialogue) return null;
-	if (speaker.card === ConditionTarget.SOURCE_CARD) return getCard(state.cards, state.dialogue.sourceCardId);
-	if (speaker.card === ConditionTarget.TARGET_CARD) return state.dialogue.targetCardId ? getCard(state.cards, state.dialogue.targetCardId) : null;
-	if (speaker.card === ConditionTarget.SLOT && speaker.slot) {
-		const id = state.dialogue.slotMap[speaker.slot]?.[0];
-		return id ? getCard(state.cards, id) : null;
-	}
-	return null;
+	let id: string | undefined;
+	if (speaker.card === TargetCardType.SOURCE_CARD) id = state.dialogue.sourceCardId;
+	else if (speaker.card === TargetCardType.TARGET_CARD) id = state.dialogue.targetCardId;
+	else if (speaker.card === TargetCardType.SLOT && speaker.slot) id = state.dialogue.slotMap[speaker.slot]?.[0];
+	if (!id) return null;
+	const card = getCard(state.cards, id);
+	if (!card || speaker.cardRefAttributeId === undefined) return card ?? null;
+	const referencedId = getStringAttribute(card.values, speaker.cardRefAttributeId);
+	return referencedId ? getCard(state.cards, referencedId) ?? null : null;
 }
 
 export function getDialogueOptions(config: FamineRefugeeConfig, state: FamineState): DialogueOption[] {

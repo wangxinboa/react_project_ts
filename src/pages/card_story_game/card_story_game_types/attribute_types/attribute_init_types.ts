@@ -1,5 +1,5 @@
 import type { RelationshipRef } from "../condition_expression_types/attribute_check_types.ts";
-import type { TargetRef } from "../condition_expression_types/target_ref.ts";
+import type { TargetRef } from "../target_ref.ts";
 import type { NumberExpression } from "../formula_types.ts";
 
 /** cardRef 属性可写入的值。 */

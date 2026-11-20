@@ -1,4 +1,4 @@
-export { ConditionTarget } from "./condition_expression_types/target_ref.ts";
+export { TargetCardType } from "./target_ref.ts";
 export { CardType } from "./card_template_types/card_template_types.ts";
 export { ConditionGroupKind, ConditionNotKind } from "./condition_expression_types/condition_expression_types.ts";
 export { AttributeCheckType } from "./condition_expression_types/attribute_check_types.ts";
@@ -7,7 +7,7 @@ export type { BaseNumberCheck } from "./condition_expression_types/base_number_c
 export type { Condition } from "./condition_expression_types/condition_expression_types.ts";
 export type { ConditionExpression, ConditionGroup, ConditionNot } from "./condition_expression_types/condition_expression_types.ts";
 export type { DialogueCheck, DialogueCountCheck } from "./condition_expression_types/dialogue_check_types.ts";
-export type { TargetRef } from "./condition_expression_types/target_ref.ts";
+export type { TargetRef } from "./target_ref.ts";
 export { FormulaOp } from "./formula_types.ts";
 export type { Formula, FormulaNode, FormulaValidationIssue, NumberExpression } from "./formula_types.ts";
 export { AttributeType } from "./attribute_types/attribute_types.ts";

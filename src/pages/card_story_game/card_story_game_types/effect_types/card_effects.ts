@@ -1,5 +1,5 @@
 import type { AttributeInit } from "../attribute_types/attribute_init_types.ts";
-import type { TargetRef } from "../condition_expression_types/target_ref.ts";
+import type { TargetRef } from "../target_ref.ts";
 import type { EffectType } from "./effect_types.ts";
 
 /** 生成一张新卡；默认进入执行者背包。 */

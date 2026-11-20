@@ -30,6 +30,13 @@
 - 支持 `literal / numberAttributeValue / floor / abs / add / sub / mul / div / clamp / normalize / refListsAttributeCount / refListsAttributeSum / select`。
 - Condition 的数字比较、ActionSlot 数量、NpcBehavior 间隔、refListsMatch 数量、changeAttributes 中 baseNumber 的 add/sub/set 都使用 `NumberExpression`。
 
+## 地点关系
+
+- 普通卡通过 `location` cardRef 指向地点卡实例。
+- 地点卡通过 `contents` cardRefList 保存地点内容。
+- 两边的更新由同一个动作中的 `changeAttributes` 组合完成。
+- 拾起 / 放下会同步维护 `carrier / backpack / location / contents`。
+
 ## 场景文件拆分
 
 - `famine_refugee_config.json`：`card_story_game_types` 中定义的配置。
@@ -48,12 +55,15 @@
 
 ```ts
 interface TargetRef {
-	card: ConditionTarget;
+	card: TargetCardType;
 	slot?: string;
+	effectId?: number;
+	cardRefAttributeId?: number;
 }
 ```
 
-- `ConditionTarget`：`sourceCard / sourceTag / targetCard / host / slot / referencedCard`。
+- `TargetCardType`：`sourceCard / sourceTag / targetCard / host / slot / referencedCard / createdCard`。
+- `cardRefAttributeId` 可在基础目标解析后，再沿一次 cardRef 属性解引用。
 - `Condition.target` 是 `TargetRef`。
 - `AttributeCheck` 由 `type` 区分：
   - `baseNumber` / `derivedNumber`：`attributeId` + 数值比较；

@@ -6,13 +6,17 @@
 
 ```ts
 export interface TargetRef {
-	card: ConditionTarget;
+	card: TargetCardType;
 	/** card 为 slot 时指定卡槽 id */
 	slot?: string;
+	/** card 为 createdCard 时指定 addCard effect id */
+	effectId?: number;
+	/** 解析基础目标后，再读取该卡的这个 cardRef 属性指向的卡 */
+	cardRefAttributeId?: number;
 }
 ```
 
-`ConditionTarget` 的取值：
+`TargetCardType` 的取值：
 
 ```ts
 "sourceCard"

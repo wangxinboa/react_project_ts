@@ -1,5 +1,5 @@
 import type { NumberExpression } from "../formula_types.ts";
-import type { TargetRef } from "./target_ref.ts";
+import type { TargetRef } from "../target_ref.ts";
 import type { BaseNumberCheck } from "./base_number_check_types.ts";
 import type { ConditionExpression } from "./condition_expression_types.ts";
 
