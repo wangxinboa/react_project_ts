@@ -14,7 +14,8 @@ export const EffectType = {
 export type EffectType = (typeof EffectType)[keyof typeof EffectType];
 
 import type { ConditionExpression } from "../condition_expression_types/condition_expression_types.ts";
-import type { TargetRef } from "../target_ref.ts";
+import type { TargetRef } from "../target_types/target_ref.ts";
+import type { TargetSetRef } from "../target_types/target_set_ref.ts";
 import type { AddAttributeEffect } from "./attribute_effects/add_attribute_effects.ts";
 import type { ChangeCardAttributesEffect } from "./attribute_effects/change_attribute_effects.ts";
 import type { CreateAgreementEffect, ConfirmPromiseEffect } from "./agreement_effects.ts";
@@ -39,7 +40,7 @@ export type EffectKind =
 ;
 
 /** Effect 作用对象；与 Condition target 使用同一套 TargetRef。 */
-export type EffectTarget = TargetRef;
+export type EffectTarget = TargetRef | TargetSetRef;
 
 /**
  * 直接写在动作 / 标签 auto 中的单次效果。

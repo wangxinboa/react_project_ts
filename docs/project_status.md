@@ -36,8 +36,8 @@
 - 动作：outgoing 一对多卡槽、incoming 一对一响应。
 - 公式：动作时间、属性派生、引用列表统计、属性硬边界读取。
 - 标签：state / derived，标签实例和 auto。
-- 背包：拾起、放下、旅行携带；背包物品可参与主动动作卡槽。
-- 可操作范围：当前地点公共卡 + 自身背包；他人背包默认不可见不可选。
+- 背包：拾起、放下、旅行携带；拾起/放下同步 `contents`；背包物品可参与主动动作卡槽。
+- 可操作范围：当前地点 `contents` + 自身背包；卡槽候选统一走 `getAccessibleCards`。
 - 负重：`weight / carryCapacity / carrySlots`，顶部显示负重与背包数量。
 - 物品移动由多个 `changeAttributes` 原语组合；容量/负重校验由 JSON 条件负责。
 - `addCard`：默认进入 sourceCard 背包，`to` 可指定地点，不处理容量。

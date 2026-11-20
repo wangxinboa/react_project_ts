@@ -1,5 +1,5 @@
 import type { PromiseConfirmation, PromiseResult, PromiseTimeRelation } from "../agreement_types.ts";
-import type { TargetRef } from "../target_ref.ts";
+import type { TargetRef } from "../target_types/target_ref.ts";
 
 /** 单卡上的共识判定。 */
 export interface AgreementCheck {

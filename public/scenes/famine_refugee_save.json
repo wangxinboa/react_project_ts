@@ -81,14 +81,16 @@
 				"id": "entry_forest",
 				"templateId": 47,
 				"values": {
-					"8": "village"
+					"8": "village",
+					"24": "forest"
 				}
 			},
 			{
 				"id": "entry_village",
 				"templateId": 48,
 				"values": {
-					"8": "forest"
+					"8": "forest",
+					"24": "village"
 				}
 			},
 			{

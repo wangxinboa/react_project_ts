@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 117,
+	"schemaVersion": 119,
 	"allTags": [
 		{
 			"id": 24,
@@ -1097,6 +1097,12 @@
 			"label": "技能列表",
 			"desc": "人物拥有的技能卡",
 			"type": "cardRefList"
+		},
+		{
+			"id": 24,
+			"key": "targetPlace",
+			"type": "cardRef",
+			"label": "通往地点"
 		}
 	],
 	"allActions": [
@@ -1968,6 +1974,46 @@
 			"slots": [],
 			"effects": [
 				{
+					"id": 5005,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "sourceCard",
+						"cardRefAttributeId": 8
+					},
+					"changes": [
+						{
+							"type": "changeCardRefList",
+							"attributeId": 21,
+							"remove": [
+								{
+									"card": "sourceCard"
+								}
+							]
+						}
+					],
+					"desc": "从旧地点移除"
+				},
+				{
+					"id": 5006,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "targetCard",
+						"cardRefAttributeId": 24
+					},
+					"changes": [
+						{
+							"type": "changeCardRefList",
+							"attributeId": 21,
+							"add": [
+								{
+									"card": "sourceCard"
+								}
+							]
+						}
+					],
+					"desc": "加入新地点"
+				},
+				{
 					"id": 93,
 					"kind": "changeAttributes",
 					"target": {
@@ -2010,6 +2056,46 @@
 			},
 			"slots": [],
 			"effects": [
+				{
+					"id": 5007,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "sourceCard",
+						"cardRefAttributeId": 8
+					},
+					"changes": [
+						{
+							"type": "changeCardRefList",
+							"attributeId": 21,
+							"remove": [
+								{
+									"card": "sourceCard"
+								}
+							]
+						}
+					],
+					"desc": "从旧地点移除"
+				},
+				{
+					"id": 5008,
+					"kind": "changeAttributes",
+					"target": {
+						"card": "targetCard",
+						"cardRefAttributeId": 24
+					},
+					"changes": [
+						{
+							"type": "changeCardRefList",
+							"attributeId": 21,
+							"add": [
+								{
+									"card": "sourceCard"
+								}
+							]
+						}
+					],
+					"desc": "加入新地点"
+				},
 				{
 					"id": 94,
 					"kind": "changeAttributes",
@@ -3066,7 +3152,11 @@
 				7
 			],
 			"createdAt": 1767974400012,
-			"cardType": "item"
+			"cardType": "item",
+			"incoming": [
+				61,
+				62
+			]
 		},
 		{
 			"id": 41,
@@ -3093,6 +3183,10 @@
 					"attributeId": 17,
 					"value": 0
 				}
+			],
+			"incoming": [
+				61,
+				62
 			]
 		},
 		{
@@ -3120,6 +3214,10 @@
 					"attributeId": 17,
 					"value": 0
 				}
+			],
+			"incoming": [
+				61,
+				62
 			]
 		},
 		{
@@ -3158,7 +3256,11 @@
 				}
 			],
 			"createdAt": 1767974400007,
-			"cardType": "item"
+			"cardType": "item",
+			"incoming": [
+				61,
+				62
+			]
 		},
 		{
 			"id": 45,
@@ -3179,14 +3281,20 @@
 			"key": "通往森林",
 			"cardType": "passage",
 			"desc": "一条通往森林的小路",
-			"createdAt": 1767974400022
+			"createdAt": 1767974400022,
+			"incoming": [
+				59
+			]
 		},
 		{
 			"id": 48,
 			"key": "通往村庄",
 			"cardType": "passage",
 			"desc": "返回村庄的小路",
-			"createdAt": 1767974400023
+			"createdAt": 1767974400023,
+			"incoming": [
+				60
+			]
 		},
 		{
 			"id": 70,

@@ -64,6 +64,7 @@ interface TargetRef {
 
 - `TargetCardType`：`sourceCard / sourceTag / targetCard / host / slot / referencedCard / createdCard`。
 - `cardRefAttributeId` 可在基础目标解析后，再沿一次 cardRef 属性解引用。
+- `TargetSetRef` 用于 effect 的 cardRefList 多目标展开；`condition.target` 仍只接受单卡 `TargetRef`。
 - `Condition.target` 是 `TargetRef`。
 - `AttributeCheck` 由 `type` 区分：
   - `baseNumber` / `derivedNumber`：`attributeId` + 数值比较；

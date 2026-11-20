@@ -1,5 +1,5 @@
 import type { CardType } from "../card_template_types/card_template_types.ts";
-import type { TargetRef } from "../target_ref.ts";
+import type { TargetRef } from "../target_types/target_ref.ts";
 import type { AttributeCheck } from "./attribute_check_types.ts";
 import type { BaseNumberAttributeChangeCheck } from "./attribute_change_check_types.ts";
 import type { DialogueCheck } from "./dialogue_check_types.ts";

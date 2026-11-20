@@ -1,7 +1,7 @@
 import { evaluateFormula } from "../../formula/formula_eval.ts";
 import type { FormulaContext } from "../../formula/formula_eval.ts";
-import type { AttributeValue, BaseNumberCheck, NumberExpression, TargetRef, CardRefValue, AttributeInit, TemplateAttributeInit } from "../../card_story_game_types/index.ts";
-import { AttributeInitType, AttributeChangeType, EffectType, FormulaOp, PromiseConfirmation, PromiseTimeRelation, AttributeType, CardReactionTriggerKind, CardType, ConditionGroupKind, ConditionNotKind, TargetCardType, TagKind } from "../../card_story_game_types/index.ts";
+import type { AttributeValue, BaseNumberCheck, NumberExpression, TargetRef, EffectTarget, CardRefValue, AttributeInit, TemplateAttributeInit } from "../../card_story_game_types/index.ts";
+import { AttributeInitType, AttributeChangeType, EffectType, FormulaOp, TargetSetSelect, PromiseConfirmation, PromiseTimeRelation, AttributeType, CardReactionTriggerKind, CardType, ConditionGroupKind, ConditionNotKind, TargetCardType, TagKind } from "../../card_story_game_types/index.ts";
 import { getNumberAttribute, getNumberValues, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import type {
 	ActionSlot,
@@ -703,9 +703,10 @@ export function getEligibleCards(
 	if (!slot) return [];
 	const target = targetId ? getCard(state.cards, targetId) ?? undefined : undefined;
 	const source = snapshotFromDerived(deriveCard(config, player, state.cards), player);
+	const accessible = getAccessibleCards(config, state.cards, player);
 	const cards: CardState[] = [];
-	for (let i = 0; i < state.cards.length; i++) {
-		if (slotMatches(config, slot, state.cards[i], source, state.cards, target)) cards.push(state.cards[i]);
+	for (let i = 0; i < accessible.length; i++) {
+		if (slotMatches(config, slot, accessible[i], source, state.cards, target)) cards.push(accessible[i]);
 	}
 	return cards;
 }
@@ -983,17 +984,49 @@ interface EffectRuntime {
 
 type EffectHandler = (runtime: EffectRuntime, effect: InlineEffect) => void;
 
+function getBaseTargetIds(runtime: EffectRuntime, target: EffectTarget): string[] {
+	if (target.card === TargetCardType.SLOT && target.slot) return runtime.slotMap[target.slot] ?? [];
+	if (target.card === TargetCardType.TARGET_CARD && runtime.targetId) return [runtime.targetId];
+	if (target.card === TargetCardType.HOST && runtime.hostId) return [runtime.hostId];
+	if (target.card === TargetCardType.CREATED_CARD && target.effectId !== undefined) {
+		const cardId = runtime.createdCards[target.effectId];
+		return cardId ? [cardId] : [];
+	}
+	if (target.card === TargetCardType.SOURCE_CARD) return [runtime.sourceId];
+	return [];
+}
+
 function getEffectTargetIds(runtime: EffectRuntime, effect: InlineEffect): string[] {
-	let ids: string[] = [];
-	if (effect.target?.card === TargetCardType.SLOT && effect.target.slot) ids = runtime.slotMap[effect.target.slot] ?? [];
-	else if (effect.target?.card === TargetCardType.TARGET_CARD && runtime.targetId) ids = [runtime.targetId];
-	else if (effect.target?.card === TargetCardType.HOST && runtime.hostId) ids = [runtime.hostId];
-	else if (effect.target?.card === TargetCardType.CREATED_CARD && effect.target.effectId !== undefined) {
-		const cardId = runtime.createdCards[effect.target.effectId];
-		ids = cardId ? [cardId] : [];
-	} else if (effect.target?.card === TargetCardType.SOURCE_CARD || !effect.target) ids = [runtime.sourceId];
-	if (effect.target?.cardRefAttributeId === undefined) return ids;
-	return ids.map((id) => dereferenceRuntimeCardId(runtime, id, effect.target!.cardRefAttributeId)).filter((id): id is string => Boolean(id));
+	const target = effect.target;
+	if (!target) return [runtime.sourceId];
+	const baseIds = getBaseTargetIds(runtime, target);
+	if ("cardRefListAttributeId" in target) {
+		const definition = runtime.config.allAttributes.find((attribute) => attribute.id === target.cardRefListAttributeId);
+		if (!definition || definition.type !== AttributeType.CARD_REF_LIST) return [];
+		const source = getCard(runtime.cards, runtime.sourceId);
+		if (!source) return [];
+		const selected: string[] = [];
+		for (let i = 0; i < baseIds.length; i++) {
+			const owner = getCard(runtime.cards, baseIds[i]);
+			if (!owner) continue;
+			const refIds = getStringListAttribute(owner.values, target.cardRefListAttributeId);
+			for (let j = 0; j < refIds.length; j++) {
+				const candidate = getCard(runtime.cards, refIds[j]);
+				if (!candidate) continue;
+				if (target.where) {
+					const context = getConditionContext(runtime.config, target.where, source, runtime.targetId ? getCard(runtime.cards, runtime.targetId) : null, null, runtime.slotMap, runtime.cards, runtime.agreements, runtime.dialogueHistory, runtime.time);
+					context.referencedCard = snapshotFromDerived(deriveCard(runtime.config, candidate, runtime.cards), candidate);
+					if (!evaluateConditions(target.where, context)) continue;
+				}
+				selected.push(candidate.id);
+			}
+		}
+		if (target.select === TargetSetSelect.FIRST) return selected.slice(0, 1);
+		if (target.select === TargetSetSelect.LAST) return selected.slice(-1);
+		return selected;
+	}
+	if (target.cardRefAttributeId === undefined) return baseIds;
+	return baseIds.map((id) => dereferenceRuntimeCardId(runtime, id, target.cardRefAttributeId)).filter((id): id is string => Boolean(id));
 }
 
 function applyTargetedEffect(runtime: EffectRuntime, effect: InlineEffect): void {
