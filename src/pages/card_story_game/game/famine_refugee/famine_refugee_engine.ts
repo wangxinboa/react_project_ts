@@ -1007,7 +1007,8 @@ function getEffectTargetIds(runtime: EffectRuntime, effect: InlineEffect): strin
 		if (!source) return [];
 		const selected: string[] = [];
 		for (let i = 0; i < baseIds.length; i++) {
-			const owner = getCard(runtime.cards, baseIds[i]);
+			const ownerId = dereferenceRuntimeCardId(runtime, baseIds[i], target.cardRefAttributeId);
+			const owner = ownerId ? getCard(runtime.cards, ownerId) : null;
 			if (!owner) continue;
 			const refIds = getStringListAttribute(owner.values, target.cardRefListAttributeId);
 			for (let j = 0; j < refIds.length; j++) {
