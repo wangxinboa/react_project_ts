@@ -4,8 +4,8 @@ import { editorTheme } from "../../editor/editor_theme.ts";
 import { CardType } from "../../card_story_game_types/index.ts";
 import type { DragEvent } from "react";
 
-import { serviceGetFamineRefugeeConfig, serviceGetFamineSceneIndex } from "../../../../services/famine_refugee.ts";
-import type { FamineSceneEntry, FamineSceneIndex } from "../../../../services/famine_refugee.ts";
+import { serviceGetFamineRefugeeConfig, serviceGetFamineSceneIndex } from "./famine_refugee_service.ts";
+import type { FamineSceneEntry, FamineSceneIndex } from "./famine_refugee_service.ts";
 import { getNumberAttribute, getStringAttribute, getStringListAttribute } from "./attribute_value.ts";
 import {
 	applyAction,

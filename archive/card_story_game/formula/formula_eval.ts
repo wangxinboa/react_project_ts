@@ -1,5 +1,5 @@
 import type { AttributeValue, ConditionExpression } from "../card_story_game_types/index.ts";
-import { getNumberAttribute } from "../game/famine_refugee/attribute_value.ts";
+import { getNumberAttribute } from "./attribute_value.ts";
 import type { NumberExpression } from "../card_story_game_types/formula_types.ts";
 import { FormulaOp } from "../card_story_game_types/formula_types.ts";
 
