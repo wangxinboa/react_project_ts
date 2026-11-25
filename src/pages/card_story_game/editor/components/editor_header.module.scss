@@ -36,20 +36,10 @@
 		font-size: 0.12rem;
 	}
 
-	> .status {
+	> .actions {
 		margin-left: auto;
 		display: flex;
 		align-items: center;
-		gap: 0.06rem;
-		color: #6b6459;
-		font-size: 0.12rem;
-		white-space: nowrap;
-
-		> .statusDot {
-			width: 0.06rem;
-			height: 0.06rem;
-			border-radius: 50%;
-			background: #c9a227;
-		}
+		gap: 0.08rem;
 	}
 }

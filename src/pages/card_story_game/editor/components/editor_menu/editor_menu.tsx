@@ -6,7 +6,6 @@ import {
 	DashboardOutlined,
 	FileTextOutlined,
 	FormOutlined,
-	SettingOutlined,
 	TagsOutlined,
 	ThunderboltOutlined,
 } from "@ant-design/icons";
@@ -30,7 +29,6 @@ const items: MenuProps["items"] = [
 	{ key: EditorMenuKey.EFFECTS, icon: <BookOutlined />, label: EditorMenuTitle[EditorMenuKey.EFFECTS] },
 	{ key: EditorMenuKey.DIALOGUES, icon: <CommentOutlined />, label: EditorMenuTitle[EditorMenuKey.DIALOGUES] },
 	{ key: EditorMenuKey.AGREEMENTS, icon: <FileTextOutlined />, label: EditorMenuTitle[EditorMenuKey.AGREEMENTS] },
-	{ key: EditorMenuKey.SETTINGS, icon: <SettingOutlined />, label: EditorMenuTitle[EditorMenuKey.SETTINGS] },
 ];
 
 /** 编辑器左侧一级菜单。 */

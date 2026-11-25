@@ -10,7 +10,6 @@ export const EditorMenuKey = {
 	EFFECTS: "effects",
 	DIALOGUES: "dialogues",
 	AGREEMENTS: "agreements",
-	SETTINGS: "settings",
 } as const;
 
 export type EditorMenuKey = (typeof EditorMenuKey)[keyof typeof EditorMenuKey];
@@ -30,7 +29,6 @@ export const EditorMenuTitle: Record<EditorMenuKey, string> = {
 	[EditorMenuKey.EFFECTS]: "效果",
 	[EditorMenuKey.DIALOGUES]: "对话",
 	[EditorMenuKey.AGREEMENTS]: "共识",
-	[EditorMenuKey.SETTINGS]: "设置",
 };
 
 const EDITOR_MENU_KEY_SET = new Set<string>(Object.values(EditorMenuKey));
