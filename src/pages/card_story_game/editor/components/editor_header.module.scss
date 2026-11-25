@@ -1,0 +1,55 @@
+.header {
+	flex-shrink: 0;
+	height: 0.56rem;
+	display: flex;
+	align-items: center;
+	gap: 0.16rem;
+	padding: 0 0.18rem;
+	background: #15120f;
+	border-bottom: 1px solid #2e2a25;
+
+	> .brand {
+		display: flex;
+		align-items: center;
+		gap: 0.08rem;
+
+		> .brandMark {
+			color: #c9a227;
+			font-size: 0.14rem;
+		}
+
+		> .brandText {
+			color: #e6ddcc;
+			font-size: 0.14rem;
+			white-space: nowrap;
+		}
+	}
+
+	> .separator {
+		width: 1px;
+		height: 0.18rem;
+		background: #2e2a25;
+	}
+
+	> .workspace {
+		color: #8a8276;
+		font-size: 0.12rem;
+	}
+
+	> .status {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: 0.06rem;
+		color: #6b6459;
+		font-size: 0.12rem;
+		white-space: nowrap;
+
+		> .statusDot {
+			width: 0.06rem;
+			height: 0.06rem;
+			border-radius: 50%;
+			background: #c9a227;
+		}
+	}
+}

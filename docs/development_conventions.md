@@ -63,16 +63,51 @@
 
 ## 组件与样式
 
+- 组件始终保持 `React.memo` 包裹，统一使用具名函数作为 `memo` 参数，保持组件名可读：
+
+  ```tsx
+  const EditorMenu = memo(function EditorMenu(props: EditorMenuProps) {
+  	return <Menu {...props} />;
+  });
+
+  export default EditorMenu;
+  ```
+
+  不要写匿名 `memo(() => ...)`，也不要从组件文件额外导出常量或函数。
+- `memo` 只避免父组件无关重渲染，不替代状态拆分、依赖收敛和回调稳定；依赖对象 / 回调仍应使用稳定引用。
 - 组件保持受控：数据从 props 进，修改通过回调出，不在组件内复制一份 props 当 state。
 - 表单类组件允许 antd Form 持有输入态；业务模型仍放在页面状态，通过变更回调同步。业务校验仍归 validate 模块，表单只负责展示错误。
 - 事件处理函数用 `useCallback`，依赖尽量收敛；列表渲染里的逐项参数暂时允许内联箭头函数。
 - 逻辑层统一用 `for` 循环（校验要收集全部问题、需要提前退出，也避免每次调用新建回调）；渲染列表保留 `map`，因为 JSX 需要数组。
 - 组件样式一律 SCSS Module，与组件同目录；全局 reset 和公共样式放在 `src/css`。
-- 父容器内的子元素用 `& > .child` 嵌套，明确层级。
+- 样式文件按组件树嵌套，不要平铺所有类名。
+- 父子结构必须使用显式子选择器 `& > .child`，不能使用无 `>` 的后代选择器；层级以 DOM 直接父子关系为准。
+
+  ```scss
+  .editor {
+  	> .body {
+  		> .content {
+  			> .pageHeader {
+  				> .pageTitle {
+  				}
+  			}
+  		}
+  	}
+  }
+  ```
+
+  只有确实需要“任意后代”语义时才使用后代选择器，并写注释说明。
 - 优先 className，不用 inline style；涉及到动态 js 变量的话，可以例外。
 - 全局 reset 只覆盖 `div`、`pre`、`input` 等标签，`section`、`header` 不在名单里。用这些标签做容器时要显式写 `box-sizing: border-box`，否则宽高会溢出。
 - antd 组件的颜色、圆角、字号由该页面 / 业务自己的 theme 文件统一（如 `editor/editor_theme.ts`）；只有 antd 没暴露 token 的结构性细节（如 Splitter 分割线）才允许用 `:global` 覆盖。
 - antd 的 `message` / `modal` 用 `App.useApp()` 获取，不用静态方法，否则拿不到主题上下文。
+
+## URL 参数
+
+- URL 查询参数 key 统一通过 `src/utils/search_params.ts` 的 `registerSearchParamKey` 注册。
+- 注册表只负责防冲突；读取 / 写入仍由持有 `useSearchParams` 的组件或 Hook 直接调用 `searchParams.get/set`，不要为了查询参数额外封装全局读取函数。
+- 同一个 key 重复注册会在模块初始化时报错，避免多个页面隐式争用参数名。
+- 编辑器等页面使用业务前缀，例如 `editorMenuKey`，不要使用 `page`、`id` 这类通用名。
 
 ## IO 与反馈
 
