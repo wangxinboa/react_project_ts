@@ -1,0 +1,13 @@
+/* Ant Design 结构性细节覆盖；颜色、圆角、字号等 token 仍放在业务 theme 中。 */
+
+/* 必选星号默认在 label 左侧，这里只调整位置，不接管 label 渲染。 */
+.ant-form-item-label > label.ant-form-item-required::before {
+	display: none !important;
+}
+
+.ant-form-item-label > label.ant-form-item-required::after {
+	display: inline-block !important;
+	margin-inline-start: 0.04rem !important;
+	color: #f87171 !important;
+	content: "*" !important;
+}

@@ -79,6 +79,7 @@
 - 表单类组件允许 antd Form 持有输入态；业务模型仍放在页面状态，通过变更回调同步。业务校验仍归 validate 模块，表单只负责展示错误。
 - 事件处理函数用 `useCallback`，依赖尽量收敛；列表渲染里的逐项参数暂时允许内联箭头函数。
 - 逻辑层统一用 `for` 循环（校验要收集全部问题、需要提前退出，也避免每次调用新建回调）；渲染列表保留 `map`，因为 JSX 需要数组。
+- 不使用嵌套三元表达式；多分支统一用 `if / else if / else` 或提前返回。
 - 组件样式一律 SCSS Module，与组件同目录；全局 reset 和公共样式放在 `src/css`。
 - 样式文件按组件树嵌套，不要平铺所有类名。
 - 父子结构必须使用显式子选择器 `& > .child`，不能使用无 `>` 的后代选择器；层级以 DOM 直接父子关系为准。
@@ -99,7 +100,7 @@
   只有确实需要“任意后代”语义时才使用后代选择器，并写注释说明。
 - 优先 className，不用 inline style；涉及到动态 js 变量的话，可以例外。
 - 全局 reset 只覆盖 `div`、`pre`、`input` 等标签，`section`、`header` 不在名单里。用这些标签做容器时要显式写 `box-sizing: border-box`，否则宽高会溢出。
-- antd 组件的颜色、圆角、字号由该页面 / 业务自己的 theme 文件统一（如 `editor/editor_theme.ts`）；只有 antd 没暴露 token 的结构性细节（如 Splitter 分割线）才允许用 `:global` 覆盖。
+- antd 组件的颜色、圆角、字号由该页面 / 业务自己的 theme 文件统一（如 `editor/editor_theme.ts`）；antd 没暴露 token 的结构性细节统一放在 `src/css/antd_overrides.css`，不要散落在组件 module 里。
 - antd 的 `message` / `modal` 用 `App.useApp()` 获取，不用静态方法，否则拿不到主题上下文。
 
 ## URL 参数

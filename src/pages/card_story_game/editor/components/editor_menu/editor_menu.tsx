@@ -3,7 +3,6 @@ import {
 	AppstoreOutlined,
 	BookOutlined,
 	CommentOutlined,
-	DashboardOutlined,
 	FileTextOutlined,
 	FormOutlined,
 	TagsOutlined,
@@ -21,7 +20,6 @@ interface EditorMenuProps {
 }
 
 const items: MenuProps["items"] = [
-	{ key: EditorMenuKey.OVERVIEW, icon: <DashboardOutlined />, label: EditorMenuTitle[EditorMenuKey.OVERVIEW] },
 	{ key: EditorMenuKey.ATTRIBUTES, icon: <FormOutlined />, label: EditorMenuTitle[EditorMenuKey.ATTRIBUTES] },
 	{ key: EditorMenuKey.TAGS, icon: <TagsOutlined />, label: EditorMenuTitle[EditorMenuKey.TAGS] },
 	{ key: EditorMenuKey.TEMPLATES, icon: <AppstoreOutlined />, label: EditorMenuTitle[EditorMenuKey.TEMPLATES] },

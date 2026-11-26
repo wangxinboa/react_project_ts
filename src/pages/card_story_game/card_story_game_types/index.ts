@@ -36,4 +36,4 @@ export { AgreementKind, PromiseConfirmation, PromiseResult, PromiseTimeRelation 
 export type { AgreementDefinition, AgreementPositionDefinition } from "./agreement_types.ts";
 export type { ActionSlot, RuleAction } from "./action_types.ts";
 export type { CardTemplate, SkillDefinition } from "./card_template_types/card_template_types.ts";
-export type { GameConfig } from "./game_config_types.ts";
+export type { GameConfig, GameRuntimeConfig } from "./game_config_types.ts";

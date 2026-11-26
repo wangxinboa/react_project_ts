@@ -2,7 +2,6 @@ import { registerSearchParamKey } from "../../../../../utils/search_params.ts";
 
 /** 编辑器左侧菜单 key。 */
 export const EditorMenuKey = {
-	OVERVIEW: "overview",
 	ATTRIBUTES: "attributes",
 	TAGS: "tags",
 	TEMPLATES: "templates",
@@ -21,7 +20,6 @@ registerSearchParamKey(EDITOR_MENU_QUERY_KEY);
 
 /** 菜单和页面共用的标题。 */
 export const EditorMenuTitle: Record<EditorMenuKey, string> = {
-	[EditorMenuKey.OVERVIEW]: "概览",
 	[EditorMenuKey.ATTRIBUTES]: "属性",
 	[EditorMenuKey.TAGS]: "标签",
 	[EditorMenuKey.TEMPLATES]: "卡牌模板",

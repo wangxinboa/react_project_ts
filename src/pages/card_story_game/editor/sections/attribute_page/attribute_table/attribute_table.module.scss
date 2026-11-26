@@ -1,0 +1,24 @@
+.tableCard {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	background: #15120f;
+	border: 1px solid #2e2a25;
+	border-radius: 4px;
+	overflow: hidden;
+
+	> .tableWrap {
+		flex: 1;
+		min-height: 0;
+		overflow: auto;
+	}
+
+	> .paginationRow {
+		flex-shrink: 0;
+		display: flex;
+		justify-content: flex-end;
+		padding: 0.1rem 0.12rem;
+		border-top: 1px solid #2e2a25;
+	}
+}

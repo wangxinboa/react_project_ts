@@ -7,7 +7,7 @@ import { EDITOR_MENU_QUERY_KEY, EditorMenuKey, EditorMenuTitle, isEditorMenuKey 
 export function useEditorMenu() {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const requestedEditorMenuKey = searchParams.get(EDITOR_MENU_QUERY_KEY);
-	const activeKey = isEditorMenuKey(requestedEditorMenuKey) ? requestedEditorMenuKey : EditorMenuKey.OVERVIEW;
+	const activeKey = isEditorMenuKey(requestedEditorMenuKey) ? requestedEditorMenuKey : EditorMenuKey.ATTRIBUTES;
 
 	const handleMenuChange = useCallback(
 		(key: EditorMenuKey) => {
